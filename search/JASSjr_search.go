@@ -25,8 +25,8 @@ import (
 Constants
 ---------
 */
-const k1 = 0.9 // BM25 k1 parameter
-const b = 0.4  // BM25 b parameter
+const k1 = 0.9  // BM25 k1 parameter
+const b = 0.55 // BM25 b parameter
 
 /*
 Struct vocabEntry
