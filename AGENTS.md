@@ -140,7 +140,7 @@ Unless the user says otherwise, use this loop:
    - `./tools/update_metrics_dashboard.sh`
 9. Evaluate the result against the latest compatible `main` artifacts.
 10. If the change is rejected:
-   - commit the attempted code change plus the branch's evaluation and benchmark artifacts before abandoning the experiment
+   - commit and push the attempted code change plus the branch's evaluation and benchmark artifacts before abandoning the experiment
    - keep the rejected branch as a historical record; do not reset it to the last accepted state
    - comment on the GitHub issue with the attempted idea, metrics, and rejection reason
    - include the rejection commit hash in the issue comment when possible
