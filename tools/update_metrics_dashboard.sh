@@ -10,22 +10,21 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 metrics_dir="$repo_root/docs/metrics"
-graphs_dir="$repo_root/docs/graphs"
 tsv_file="$metrics_dir/branch-comparisons.tsv"
-map_graph="$graphs_dir/map-vs-main.svg"
-bench_graph="$graphs_dir/benchmark-vs-main.svg"
+table_file="$metrics_dir/branch-comparisons.md"
+readme_file="$repo_root/README.md"
 
-mkdir -p "$metrics_dir" "$graphs_dir"
+mkdir -p "$metrics_dir"
 
-printf "Exporting branch comparisons against the active main baseline\n"
+printf "Exporting README branch metrics\n"
 "$repo_root/tools/export_branch_comparisons.sh" > "$tsv_file"
 
-printf "Rendering graphs\n"
-python3 "$repo_root/tools/render_metrics_graphs.py" \
+printf "Refreshing README metrics table\n"
+python3 "$repo_root/tools/render_metrics_table.py" \
   --input "$tsv_file" \
-  --map-output "$map_graph" \
-  --bench-output "$bench_graph"
+  --output "$table_file" \
+  --readme "$readme_file"
 
 printf "Metrics TSV written to %s\n" "$tsv_file"
-printf "MAP graph written to %s\n" "$map_graph"
-printf "Benchmark graph written to %s\n" "$bench_graph"
+printf "Metrics table written to %s\n" "$table_file"
+printf "README metrics table refreshed in %s\n" "$readme_file"

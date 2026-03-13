@@ -43,11 +43,11 @@ What they do:
 - `./tools/benchmark_wsj.sh`
   Runs a few indexing and search benchmarks and records timestamped timings.
 - `./tools/update_metrics_dashboard.sh`
-  Exports the non-main branch comparisons and refreshes the graphs embedded in this README.
+  Exports the README branch metrics and refreshes the metrics table embedded in this README.
 - `./tools/compare_branch_to_main.sh <branch>`
   Compares the latest evaluation and benchmark artifacts for a branch against the active baseline on `main`.
 - `./tools/export_metrics_history.sh [branch]`
-  Exports a TSV time series from saved artifacts so MAP and benchmark medians can be graphed over time.
+  Exports a TSV time series from saved artifacts so MAP and benchmark medians can be reviewed over time.
 - `./tools/export_branch_comparisons.sh`
   Exports the latest compatible artifact from every non-main branch as a branch-vs-main comparison TSV.
 
@@ -83,7 +83,7 @@ To compare a branch against the current production baseline:
 ./tools/compare_branch_to_main.sh codex/search-my-idea
 ```
 
-To export a graph-friendly TSV for the production branch:
+To export a history TSV for the production branch:
 
 ```bash
 ./tools/export_metrics_history.sh > main-metrics.tsv
@@ -95,7 +95,7 @@ To refresh the committed dashboard assets:
 ./tools/update_metrics_dashboard.sh
 ```
 
-The raw history export from `tools/export_metrics_history.sh` is designed for simple plotting of:
+The raw history export from `tools/export_metrics_history.sh` is designed for simple analysis of:
 
 - retrieval effectiveness over time, especially `map`
 - benchmark medians over time for indexing and search
@@ -105,23 +105,23 @@ That TSV also includes enough metadata to filter or separate runs:
 - `collection`, `topics`, and `qrels` for evaluation rows
 - `collection`, `topics`, `smoke_topics`, and `iterations` for benchmark rows
 
-That matters because you may occasionally record toy or verification runs alongside full WSJ/TREC runs. For production graphs, filter to the real WSJ collection and the standard `51-100` topics/qrels before plotting `map`, `Rprec`, `P_10`, or the benchmark medians.
+That matters because you may occasionally record toy or verification runs alongside full WSJ/TREC runs. For production reporting, filter to the real WSJ collection and the standard `51-100` topics/qrels before comparing `map` or the benchmark medians.
 
 ## Metrics Dashboard
 
-The README graphs are generated assets. As part of a PR, refresh them after the latest evaluation and benchmark runs so the branch carries an updated comparison TSV and updated visual summary.
+The README metrics table is a generated historical summary. It starts with the immutable `original` row, then lists one row for each non-main experiment branch with compatible evaluation and benchmark artifacts. `main` is intentionally excluded from the README table, even though PR approval still compares candidate branches against the latest `main` artifacts.
 
 Generated files:
 
 - `docs/metrics/branch-comparisons.tsv`
-- `docs/graphs/map-vs-main.svg`
-- `docs/graphs/benchmark-vs-main.svg`
+- `docs/metrics/branch-comparisons.md`
 
-The dashboard treats `main` as the active baseline and plots one point for each non-main branch with a compatible evaluation and benchmark artifact set. The `original` folders are excluded from this flow and remain read-only initialization references. If ten accepted experiment branches exist, the dashboard will show ten points.
-
-![MAP vs main](docs/graphs/map-vs-main.svg)
-
-![Benchmark vs main](docs/graphs/benchmark-vs-main.svg)
+<!-- README_METRICS_TABLE_START -->
+| Branch | MAP | MAP Δ vs original | Index median | Search topics median | Updated |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `original` | 0.2080 | baseline | 9.89 | 0.42 | 2026-03-13 14:28 |
+| `codex/search-bm25-rsj` | 0.2349 | **+0.0269** | 9.75 | 0.24 | 2026-03-13 15:19 |
+<!-- README_METRICS_TABLE_END -->
 
 ## Success Criteria
 
@@ -150,16 +150,14 @@ In practice, `map` is the main headline metric, but `Rprec`, `P_10`, `bpref`, an
 - `tools/benchmark_wsj.sh`
   Branch-aware indexing and search benchmark runner.
 - `tools/update_metrics_dashboard.sh`
-  Refreshes the committed TSV and README graph assets.
+  Refreshes the committed metrics TSV, generated Markdown table, and README metrics section.
 - `tools/compare_branch_to_main.sh`
   Branch-vs-main artifact comparison helper.
-- `tools/compare_branch_to_master.sh`
-  Compatibility wrapper that forwards to the main-based comparison helper.
 - `tools/export_metrics_history.sh`
-  TSV exporter for long-run metric history and graphing.
+  TSV exporter for long-run metric history and reporting.
 - `tools/export_branch_comparisons.sh`
-  TSV exporter for the branch-vs-main dashboard.
-- `tools/render_metrics_graphs.py`
-  SVG graph renderer for the committed dashboard assets.
+  TSV exporter for the README branch metrics table.
+- `tools/render_metrics_table.py`
+  Markdown table renderer for the committed README metrics section.
 - `program.md`
   The agent operating plan for autonomous search experiments.

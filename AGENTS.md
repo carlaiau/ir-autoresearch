@@ -20,7 +20,7 @@ Before making changes, read these files:
 - `search/JASSjr_search.go`
 - `tools/eval_wsj.sh`
 - `tools/benchmark_wsj.sh`
-- `tools/compare_branch_to_master.sh`
+- `tools/compare_branch_to_main.sh`
 - `tools/update_metrics_dashboard.sh`
 
 This repository uses shell smoke tests, not Bats.
@@ -64,11 +64,14 @@ When changing indexing or tokenization logic, preserve:
 
 ## Baseline And Success Criteria
 
-Treat `master` as the `original` baseline.
+Treat `main` as the active baseline. Treat `original` as a read-only initialization archive.
+Do not infer current workflow or approval rules from files under `experiment_evaluations/original/` or `experiment_benchmarks/original/`.
 
 Before experimentation, establish the baseline with:
 
 ```bash
+git checkout main
+git pull --ff-only
 ./tests/smoke.sh
 ./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>
 ./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>
@@ -108,7 +111,7 @@ Branch naming format:
 
 Do not use destructive git commands.
 Do not overwrite unrelated user changes.
-Do not merge to `master` unless the user explicitly asks for it.
+Do not merge to `main` unless the user explicitly asks for it.
 
 ## Experiment Loop
 
@@ -116,24 +119,30 @@ Unless the user says otherwise, use this loop:
 
 1. Inspect current repo state and GitHub state.
 2. Review open GitHub issues and PRs with `gh` to avoid duplicating work.
-3. Pick one concrete retrieval hypothesis.
-4. Create or update a GitHub issue for that hypothesis.
-5. Create a new branch from `master`:
-   - `codex/search-<tag>`
-6. Make the smallest plausible code change.
-7. Run the full validation sequence:
+3. Refresh the active baseline on `main`:
+   - `git checkout main`
+   - `git pull --ff-only`
    - `./tests/smoke.sh`
    - `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>`
    - `./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>`
-   - `./tools/compare_branch_to_master.sh <branch>`
+4. Pick one concrete retrieval hypothesis.
+5. Create or update a GitHub issue for that hypothesis.
+6. Create a new branch from `main`:
+   - `codex/search-<tag>`
+7. Make the smallest plausible code change.
+8. Run the full validation sequence:
+   - `./tests/smoke.sh`
+   - `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>`
+   - `./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>`
+   - `./tools/compare_branch_to_main.sh <branch>`
    - `./tools/update_metrics_dashboard.sh`
-8. Evaluate the result.
-9. If the change is rejected:
+9. Evaluate the result against the latest compatible `main` artifacts.
+10. If the change is rejected:
    - do not keep it
    - return the branch to the last accepted state without disturbing unrelated work
    - comment on the GitHub issue with the attempted idea, metrics, and rejection reason
    - close the issue or mark it rejected
-10. If the change is accepted:
+11. If the change is accepted:
    - commit the code change plus dashboard assets
    - open or update a PR
    - link the PR to the issue
@@ -186,8 +195,8 @@ Every PR should include:
 - a concise summary of the code change
 - the latest `map`, `Rprec`, `P_10`, `bpref`, and `recip_rank`
 - the latest benchmark medians
-- the summary from `./tools/compare_branch_to_master.sh <branch>`
-- note that `master` is treated as the `original` baseline
+- the summary from `./tools/compare_branch_to_main.sh <branch>`
+- note that `main` is the approval baseline and `original` is a read-only initialization archive
 - note that the README dashboard was refreshed
 - a link to the GitHub issue
 
@@ -208,12 +217,12 @@ Do not commit generated evaluation or benchmark artifacts.
 Do commit these dashboard assets after each accepted experiment:
 
 - `docs/metrics/branch-comparisons.tsv`
-- `docs/graphs/map-vs-original.svg`
-- `docs/graphs/benchmark-vs-original.svg`
+- `docs/metrics/branch-comparisons.md`
+- `README.md`
 
-The README dashboard treats `master` as `original` and plots one point for each non-master branch with compatible local artifacts.
+The README dashboard is a Markdown table. It starts with `original`, excludes `main`, and then lists one row per non-main branch with compatible local artifacts.
 
-If historical non-master artifacts are not present locally, still refresh the dashboard from available data and note the limitation in the PR.
+If historical non-main artifacts are not present locally, still refresh the dashboard from available data and note the limitation in the PR.
 
 ## Validation Commands
 
@@ -223,14 +232,14 @@ Core commands:
 ./tests/smoke.sh
 ./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>
 ./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>
-./tools/compare_branch_to_master.sh <branch>
+./tools/compare_branch_to_main.sh <branch>
 ./tools/update_metrics_dashboard.sh
 ```
 
 Useful exports:
 
 ```bash
-./tools/export_metrics_history.sh master
+./tools/export_metrics_history.sh
 ./tools/export_branch_comparisons.sh
 ```
 
@@ -243,4 +252,5 @@ When stopping, report:
 - experiments accepted or rejected
 - PRs opened or updated
 - best current metrics versus `original`
+- note that archived `original` artifacts are historical initialization data, not the approval baseline
 - blockers or missing prerequisites

@@ -139,16 +139,16 @@ Do not commit generated evaluation or benchmark artifacts.
 Do commit the PR dashboard assets after each accepted experiment:
 
 - `docs/metrics/branch-comparisons.tsv`
-- `docs/graphs/map-vs-main.svg`
-- `docs/graphs/benchmark-vs-main.svg`
+- `docs/metrics/branch-comparisons.md`
+- `README.md`
 
-For long-run production graphing, export the `main` history with:
+For long-run production history exports, use:
 
 - `./tools/export_metrics_history.sh`
 
-When graphing, use only rows from the real WSJ/TREC evaluation setup. Do not mix smoke or toy verification runs into production metric charts.
+When reporting, use only rows from the real WSJ/TREC evaluation setup. Do not mix smoke or toy verification runs into production metric summaries.
 
-For the README dashboard, treat `main` as the active baseline and plot one point per non-main branch using:
+For the README metrics table, keep `original` as the first row and list non-main PR branches after it using:
 
 - `./tools/export_branch_comparisons.sh`
 
@@ -165,7 +165,7 @@ Use the same high-level interaction model as the original autonomous research lo
    - the latest `trec_eval` headline metrics
    - the latest benchmark medians
    - the branch-vs-main comparison from `./tools/compare_branch_to_main.sh <branch>`
-   - the updated README dashboard that shows the branch against the latest `main` baseline
+   - the updated README metrics table that shows `original` plus the current PR branch row
    - any tradeoffs
 5. Before opening or updating the PR, refresh:
    - `./tools/update_metrics_dashboard.sh`
