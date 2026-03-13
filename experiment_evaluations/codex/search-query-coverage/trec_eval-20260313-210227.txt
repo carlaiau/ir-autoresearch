@@ -1,0 +1,36 @@
+branch: codex/search-query-coverage
+timestamp: 20260313-210227
+collection: /Users/caiau/school/autoresearch/../wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	46761
+num_rel               	all	6228
+num_rel_ret           	all	3745
+map                   	all	0.2368
+gm_map                	all	0.1104
+Rprec                 	all	0.2791
+bpref                 	all	0.3036
+recip_rank            	all	0.6342
+iprec_at_recall_0.00  	all	0.6911
+iprec_at_recall_0.10  	all	0.4721
+iprec_at_recall_0.20  	all	0.3951
+iprec_at_recall_0.30  	all	0.3418
+iprec_at_recall_0.40  	all	0.2882
+iprec_at_recall_0.50  	all	0.2379
+iprec_at_recall_0.60  	all	0.1875
+iprec_at_recall_0.70  	all	0.1298
+iprec_at_recall_0.80  	all	0.0850
+iprec_at_recall_0.90  	all	0.0460
+iprec_at_recall_1.00  	all	0.0083
+P_5                   	all	0.4640
+P_10                  	all	0.4280
+P_15                  	all	0.4040
+P_20                  	all	0.3920
+P_30                  	all	0.3640
+P_100                 	all	0.2716
+P_200                 	all	0.2003
+P_500                 	all	0.1230
+P_1000                	all	0.0749

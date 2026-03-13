@@ -1,0 +1,49 @@
+branch: codex/search-query-coverage
+timestamp: 20260313-210227
+collection: /Users/caiau/school/autoresearch/../wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+smoke_topics: /Users/caiau/school/autoresearch/tests/fixtures/smoke_topics.txt
+iterations: 5
+
+index_median: 9.18
+search_smoke_median: 0.04
+search_topics_median: 0.21
+
+[index]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-query-coverage/jassjr-index /Users/caiau/school/autoresearch/../wsj.xml
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 9.10
+Slowest: 9.22
+Median:  9.18
+
+[search_smoke]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-query-coverage/jassjr-search
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.04
+Slowest: 0.04
+Median:  0.04
+
+[search_topics]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-query-coverage/jassjr-search
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.21
+Slowest: 0.21
+Median:  0.21

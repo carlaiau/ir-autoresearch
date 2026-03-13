@@ -36,6 +36,11 @@ type vocabEntry struct {
 	where, size int32 // where on the disk and how large (in bytes) is the postings list?
 }
 
+type queryTerm struct {
+	details vocabEntry
+	idf     float64
+}
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -130,6 +135,7 @@ func main() {
 	  sorting the whole collection when most scores are zero.
 	*/
 	rsv := make([]float64, documentsInCollection)
+	coveredQueryWeight := make([]float64, documentsInCollection)
 	touchedDocs := make([]int, 0, 1024)
 
 	/*
@@ -139,6 +145,9 @@ func main() {
 	for stdin.Scan() {
 		touchedDocs = touchedDocs[:0]
 		queryId := 0
+		queryTerms := make([]queryTerm, 0, 8)
+		seenTerms := make(map[string]struct{}, 8)
+		totalQueryWeight := 0.0
 		for i, token := range strings.Fields(stdin.Text()) {
 			/*
 			  If the first token is a number then assume a TREC query number, and skip it
@@ -151,6 +160,9 @@ func main() {
 			}
 
 			token = normalizeToken(token)
+			if _, seen := seenTerms[token]; seen {
+				continue
+			}
 
 			/*
 			  Does the term exist in the collection?
@@ -180,17 +192,39 @@ func main() {
 			}
 
 			idf := math.Log(float64(documentsInCollection) / float64(postings))
+			queryTerms = append(queryTerms, queryTerm{
+				details: termDetails,
+				idf:     idf,
+			})
+			seenTerms[token] = struct{}{}
+			totalQueryWeight += idf
+		}
 
+		for _, term := range queryTerms {
 			/*
 			  Process the postings list by simply adding the BM25 component for this document into the accumulators array
 			*/
+			currentListAsBytes := make([]byte, term.details.size)
+			_, err := postingsFile.ReadAt(currentListAsBytes, int64(term.details.where))
+			check(err)
+			currentList := make([]int32, len(currentListAsBytes)/4)
+			err = binary.Read(bytes.NewReader(currentListAsBytes), binary.NativeEndian, currentList)
+			check(err)
 			for i := 0; i < len(currentList); i += 2 {
 				d := int(currentList[i])
 				tf := float64(currentList[i+1])
 				if rsv[d] == 0 {
 					touchedDocs = append(touchedDocs, d)
 				}
-				rsv[d] += idf * ((tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLengths[d])/averageDocumentLength))))
+				rsv[d] += term.idf * ((tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLengths[d])/averageDocumentLength))))
+				coveredQueryWeight[d] += term.idf
+			}
+		}
+
+		if totalQueryWeight > 0 {
+			for _, d := range touchedDocs {
+				coverage := coveredQueryWeight[d] / totalQueryWeight
+				rsv[d] *= 0.65 + 0.35*math.Sqrt(coverage)
 			}
 		}
 		/*
@@ -215,6 +249,7 @@ func main() {
 		}
 		for _, d := range touchedDocs {
 			rsv[d] = 0
+			coveredQueryWeight[d] = 0
 		}
 	}
 	if err := stdin.Err(); err != nil {
