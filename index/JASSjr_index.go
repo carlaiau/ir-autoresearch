@@ -152,6 +152,7 @@ func main() {
 	scanner := bufio.NewScanner(fh)
 	pushNext := false
 	ignoredUntil := ""
+	inHeadline := false
 	for scanner.Scan() {
 		lex := lexer{scanner.Bytes(), 0}
 		for token := lex.getNext(); token != nil; token = lex.getNext() {
@@ -170,10 +171,19 @@ func main() {
 				docId++
 				documentLength = 0
 				ignoredUntil = ""
+				inHeadline = false
 
 				if docId%1000 == 0 {
 					fmt.Println(docId, "documents indexed")
 				}
+			}
+			if token == "<HL>" {
+				inHeadline = true
+				continue
+			}
+			if token == "</HL>" {
+				inHeadline = false
+				continue
 			}
 
 			/*
@@ -215,22 +225,27 @@ func main() {
 
 			token = normalizeToken(token)
 
+			weight := int32(1)
+			if inHeadline {
+				weight = 2
+			}
+
 			/*
 				add the posting to the in-memory index
 			*/
 			list, ok := vocab[token]
 			if !ok { // term isn't in the vocab yet
-				vocab[token] = []posting{{docId, 1}}
+				vocab[token] = []posting{{docId, weight}}
 			} else if list[len(list)-1].d != docId {
-				vocab[token] = append(list, posting{docId, 1}) // if the docno for this occurence has changed then create a new <d,tf> pair
+				vocab[token] = append(list, posting{docId, weight}) // if the docno for this occurence has changed then create a new <d,tf> pair
 			} else {
-				list[len(list)-1].tf++ // else increase the tf
+				list[len(list)-1].tf += weight // else increase the tf
 			}
 
 			/*
 				compute the document length
 			*/
-			documentLength++
+			documentLength += weight
 		}
 	}
 	check(scanner.Err())
