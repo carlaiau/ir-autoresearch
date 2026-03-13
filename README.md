@@ -26,6 +26,8 @@ This repo is intentionally small so an automated agent can understand the full w
 Use these commands in order:
 
 ```bash
+git checkout main
+git pull --ff-only
 ./tests/smoke.sh
 ./tools/eval_wsj.sh /absolute/path/to/your/wsj.xml
 ./tools/benchmark_wsj.sh /absolute/path/to/your/wsj.xml
@@ -41,13 +43,13 @@ What they do:
 - `./tools/benchmark_wsj.sh`
   Runs a few indexing and search benchmarks and records timestamped timings.
 - `./tools/update_metrics_dashboard.sh`
-  Exports the non-master branch comparisons and refreshes the graphs embedded in this README.
-- `./tools/compare_branch_to_master.sh <branch>`
-  Compares the latest evaluation and benchmark artifacts for a branch against the original baseline on `master`.
+  Exports the non-main branch comparisons and refreshes the graphs embedded in this README.
+- `./tools/compare_branch_to_main.sh <branch>`
+  Compares the latest evaluation and benchmark artifacts for a branch against the active baseline on `main`.
 - `./tools/export_metrics_history.sh [branch]`
   Exports a TSV time series from saved artifacts so MAP and benchmark medians can be graphed over time.
 - `./tools/export_branch_comparisons.sh`
-  Exports the latest compatible artifact from every non-master branch as a branch-vs-original comparison TSV.
+  Exports the latest compatible artifact from every non-main branch as a branch-vs-main comparison TSV.
 
 ## Artifact Layout
 
@@ -61,18 +63,30 @@ Benchmark summaries are written to:
 
 - `experiment_benchmarks/<branch>/`
 
-This makes it easy to compare experiments branch by branch while keeping raw outputs out of git history.
+This makes it easy to compare experiments branch by branch while keeping raw outputs out of git history. The `experiment_evaluations/original/` and `experiment_benchmarks/original/` folders are immutable initialization archives and must never be refreshed or overwritten.
+
+Each new research loop should begin by refreshing the active baseline on `main`:
+
+```bash
+git checkout main
+git pull --ff-only
+./tests/smoke.sh
+./tools/eval_wsj.sh /absolute/path/to/your/wsj.xml
+./tools/benchmark_wsj.sh /absolute/path/to/your/wsj.xml
+```
+
+After that, create or update an experiment branch from the refreshed `main` baseline and require the branch to beat the newest `main` evaluation and benchmark artifacts before approving a PR.
 
 To compare a branch against the current production baseline:
 
 ```bash
-./tools/compare_branch_to_master.sh codex/search-my-idea
+./tools/compare_branch_to_main.sh codex/search-my-idea
 ```
 
 To export a graph-friendly TSV for the production branch:
 
 ```bash
-./tools/export_metrics_history.sh master > master-metrics.tsv
+./tools/export_metrics_history.sh > main-metrics.tsv
 ```
 
 To refresh the committed dashboard assets:
@@ -100,22 +114,22 @@ The README graphs are generated assets. As part of a PR, refresh them after the 
 Generated files:
 
 - `docs/metrics/branch-comparisons.tsv`
-- `docs/graphs/map-vs-original.svg`
-- `docs/graphs/benchmark-vs-original.svg`
+- `docs/graphs/map-vs-main.svg`
+- `docs/graphs/benchmark-vs-main.svg`
 
-The dashboard treats `master` as the `original` baseline and plots one point for each non-master branch with a compatible evaluation and benchmark artifact set. If ten accepted experiment branches exist, the dashboard will show ten points.
+The dashboard treats `main` as the active baseline and plots one point for each non-main branch with a compatible evaluation and benchmark artifact set. The `original` folders are excluded from this flow and remain read-only initialization references. If ten accepted experiment branches exist, the dashboard will show ten points.
 
-![MAP vs original](docs/graphs/map-vs-original.svg)
+![MAP vs main](docs/graphs/map-vs-main.svg)
 
-![Benchmark vs original](docs/graphs/benchmark-vs-original.svg)
+![Benchmark vs main](docs/graphs/benchmark-vs-main.svg)
 
 ## Success Criteria
 
 A change is worth keeping only if:
 
 - the smoke test still passes
-- `trec_eval` improves overall retrieval effectiveness
-- indexing and search benchmarks do not show a serious regression
+- `trec_eval` improves overall retrieval effectiveness relative to the latest compatible evaluation on `main`
+- indexing and search benchmarks do not show a serious regression relative to the latest compatible benchmark on `main`
 
 In practice, `map` is the main headline metric, but `Rprec`, `P_10`, `bpref`, and `recip_rank` should also be watched.
 
@@ -137,12 +151,14 @@ In practice, `map` is the main headline metric, but `Rprec`, `P_10`, `bpref`, an
   Branch-aware indexing and search benchmark runner.
 - `tools/update_metrics_dashboard.sh`
   Refreshes the committed TSV and README graph assets.
+- `tools/compare_branch_to_main.sh`
+  Branch-vs-main artifact comparison helper.
 - `tools/compare_branch_to_master.sh`
-  Branch-vs-original artifact comparison helper.
+  Compatibility wrapper that forwards to the main-based comparison helper.
 - `tools/export_metrics_history.sh`
   TSV exporter for long-run metric history and graphing.
 - `tools/export_branch_comparisons.sh`
-  TSV exporter for the branch-vs-original dashboard.
+  TSV exporter for the branch-vs-main dashboard.
 - `tools/render_metrics_graphs.py`
   SVG graph renderer for the committed dashboard assets.
 - `program.md`

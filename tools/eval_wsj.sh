@@ -6,6 +6,11 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 branch_name="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
 branch_name="${branch_name:-detached-head}"
 
+if [[ "$branch_name" == "original" ]]; then
+  printf "Refusing to write evaluation artifacts for branch 'original'. The original artifact folders are read-only initialization archives.\n" >&2
+  exit 1
+fi
+
 topics_file="$repo_root/51-100.titles.txt"
 qrels_file="$repo_root/51-100.qrels.txt"
 workdir="$repo_root/wsj-eval/$branch_name"

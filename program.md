@@ -21,7 +21,7 @@ Every accepted change must improve overall retrieval effectiveness, and must not
 Before experimentation begins, do this once per run:
 
 1. Choose a run tag based on the date and idea family.
-2. Create a dedicated branch from the current default branch:
+2. Use `main` as the starting point for the next dedicated experiment branch:
    - Branch name format: `codex/search-<tag>`
 3. Read the in-scope files:
    - `README.md`
@@ -34,15 +34,19 @@ Before experimentation begins, do this once per run:
    - `tools/benchmark_wsj.sh`
    - `tools/update_metrics_dashboard.sh`
 4. Confirm the WSJ collection file exists on disk.
-5. Run a baseline smoke check:
+5. Refresh the active baseline on `main` before starting a new research loop:
+   - `git checkout main`
+   - `git pull --ff-only`
+6. Run a baseline smoke check:
    - `./tests/smoke.sh`
-6. Run a baseline evaluation:
+7. Run a baseline evaluation:
    - `./tools/eval_wsj.sh /absolute/path/to/wsj.xml`
-7. Run a baseline benchmark pass:
+8. Run a baseline benchmark pass:
    - `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml`
-8. Note the latest evaluation report and benchmark report for the current branch.
-9. If `master` artifacts exist, know how to compare against them:
-   - `./tools/compare_branch_to_master.sh <branch>`
+9. Note the latest evaluation report and benchmark report for `main`.
+10. Create or refresh the experiment branch from the updated `main`.
+11. Know how to compare an experiment branch against the active baseline on `main`:
+   - `./tools/compare_branch_to_main.sh <branch>`
 
 ## Optimization Objective
 
@@ -62,8 +66,8 @@ A change is acceptable only if all of the following are true:
 
 1. `./tests/smoke.sh` passes.
 2. `./tools/eval_wsj.sh /absolute/path/to/wsj.xml` completes successfully.
-3. Overall retrieval effectiveness improves relative to the current branch baseline.
-4. `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml` shows no serious regression.
+3. Overall retrieval effectiveness improves relative to the latest compatible evaluation on `main`.
+4. `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml` shows no serious regression relative to the latest compatible benchmark on `main`.
 
 Use this benchmark policy:
 
@@ -77,19 +81,19 @@ When in doubt, reject performance-neutral complexity and reject quality gains th
 
 Loop continuously until stopped:
 
-1. Inspect current branch and latest accepted evaluation/benchmark artifacts.
+1. Check out `main`, pull the latest remote changes, and refresh the `main` smoke/evaluation/benchmark artifacts.
 2. Pick one retrieval idea.
-3. Edit the indexer and/or searcher.
-4. Run the lightweight smoke test:
+3. Create or update the experiment branch from refreshed `main`.
+4. Edit the indexer and/or searcher.
+5. Run the lightweight smoke test:
    - `./tests/smoke.sh`
-5. If smoke fails, fix or discard immediately.
-6. Run full evaluation:
+6. If smoke fails, fix or discard immediately.
+7. Run full evaluation:
    - `./tools/eval_wsj.sh /absolute/path/to/wsj.xml`
-7. Run benchmark guardrail:
+8. Run benchmark guardrail:
    - `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml`
-8. Compare the newest reports to the current branch baseline.
-9. Compare the branch against the latest `master` artifacts:
-   - `./tools/compare_branch_to_master.sh <branch>`
+9. Compare the branch against the latest `main` artifacts:
+   - `./tools/compare_branch_to_main.sh <branch>`
 10. Refresh the committed dashboard assets:
    - `./tools/update_metrics_dashboard.sh`
 11. If the change improves retrieval and respects benchmark guardrails:
@@ -128,21 +132,23 @@ Benchmark reports go to:
 
 - `experiment_benchmarks/<branch>/`
 
+The `experiment_evaluations/original/` and `experiment_benchmarks/original/` folders are immutable initialization archives. Do not write new artifacts into them and do not use them for active approval comparisons.
+
 Do not commit generated evaluation or benchmark artifacts.
 
 Do commit the PR dashboard assets after each accepted experiment:
 
 - `docs/metrics/branch-comparisons.tsv`
-- `docs/graphs/map-vs-original.svg`
-- `docs/graphs/benchmark-vs-original.svg`
+- `docs/graphs/map-vs-main.svg`
+- `docs/graphs/benchmark-vs-main.svg`
 
-For long-run production graphing, export the `master` history with:
+For long-run production graphing, export the `main` history with:
 
-- `./tools/export_metrics_history.sh master`
+- `./tools/export_metrics_history.sh`
 
 When graphing, use only rows from the real WSJ/TREC evaluation setup. Do not mix smoke or toy verification runs into production metric charts.
 
-For the README dashboard, treat `master` as the `original` baseline and plot one point per non-master branch using:
+For the README dashboard, treat `main` as the active baseline and plot one point per non-main branch using:
 
 - `./tools/export_branch_comparisons.sh`
 
@@ -158,8 +164,8 @@ Use the same high-level interaction model as the original autonomous research lo
    - the code changes
    - the latest `trec_eval` headline metrics
    - the latest benchmark medians
-   - the branch-vs-master comparison from `./tools/compare_branch_to_master.sh <branch>`
-   - the updated README dashboard that shows the branch against the original baseline set
+   - the branch-vs-main comparison from `./tools/compare_branch_to_main.sh <branch>`
+   - the updated README dashboard that shows the branch against the latest `main` baseline
    - any tradeoffs
 5. Before opening or updating the PR, refresh:
    - `./tools/update_metrics_dashboard.sh`

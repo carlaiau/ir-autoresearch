@@ -1,0 +1,36 @@
+branch: search-bm25-rsj
+timestamp: 20260313-151751
+collection: /Users/caiau/school/autoresearch/../wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	46761
+num_rel               	all	6228
+num_rel_ret           	all	3728
+map                   	all	0.2349
+gm_map                	all	0.1106
+Rprec                 	all	0.2741
+bpref                 	all	0.3036
+recip_rank            	all	0.6256
+iprec_at_recall_0.00  	all	0.6824
+iprec_at_recall_0.10  	all	0.4688
+iprec_at_recall_0.20  	all	0.3909
+iprec_at_recall_0.30  	all	0.3423
+iprec_at_recall_0.40  	all	0.2902
+iprec_at_recall_0.50  	all	0.2387
+iprec_at_recall_0.60  	all	0.1844
+iprec_at_recall_0.70  	all	0.1280
+iprec_at_recall_0.80  	all	0.0771
+iprec_at_recall_0.90  	all	0.0431
+iprec_at_recall_1.00  	all	0.0079
+P_5                   	all	0.4440
+P_10                  	all	0.4160
+P_15                  	all	0.4000
+P_20                  	all	0.3910
+P_30                  	all	0.3693
+P_100                 	all	0.2712
+P_200                 	all	0.2004
+P_500                 	all	0.1223
+P_1000                	all	0.0746

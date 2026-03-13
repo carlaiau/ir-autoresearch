@@ -28,7 +28,11 @@ def parse_float(value: str) -> Optional[float]:
 
 
 def branch_rows(rows: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    kept = [row for row in rows if row["branch"] != "master" and row["branch"] != ""]
+    kept = [
+        row
+        for row in rows
+        if row["branch"] not in {"", "main", "original"}
+    ]
     return sorted(kept, key=lambda row: parse_timestamp(row["timestamp"]))
 
 
@@ -94,11 +98,11 @@ def draw_branch_labels(parts: List[str], rows: List[Dict[str, str]], left: float
 def draw_map_graph(rows: List[Dict[str, str]], output_path: str) -> None:
     parts = svg_header(WIDTH, MAP_HEIGHT)
     parts.append(f'<rect x="8" y="8" width="{WIDTH - 16}" height="{MAP_HEIGHT - 16}" class="frame"/>')
-    parts.append('<text x="32" y="46" class="title">Branch MAP vs original</text>')
-    parts.append('<text x="32" y="72" class="subtitle">Each point is the latest non-master branch artifact compared against the original baseline on master.</text>')
+    parts.append('<text x="32" y="46" class="title">Branch MAP vs main</text>')
+    parts.append('<text x="32" y="72" class="subtitle">Each point is the latest non-main branch artifact compared against the active baseline on main.</text>')
 
     if not rows:
-        parts.append('<text x="32" y="170" class="subtitle">No non-original branch comparisons are available yet.</text>')
+        parts.append('<text x="32" y="170" class="subtitle">No non-main branch comparisons are available yet.</text>')
         parts.extend(svg_footer())
         with open(output_path, "w", encoding="utf-8") as handle:
             handle.write("\n".join(parts) + "\n")
@@ -109,10 +113,11 @@ def draw_map_graph(rows: List[Dict[str, str]], output_path: str) -> None:
     top = 112
     bottom = MAP_HEIGHT - 110
 
-    original_map = parse_float(rows[0]["original_map"])
+    baseline_branch = rows[0]["baseline_branch"] or "main"
+    baseline_map = parse_float(rows[0]["baseline_map"])
     values = [parse_float(row["branch_map"]) for row in rows if parse_float(row["branch_map"]) is not None]
-    if original_map is not None:
-        values.append(original_map)
+    if baseline_map is not None:
+        values.append(baseline_map)
     low, high = nice_bounds(values)
 
     for tick in range(5):
@@ -121,10 +126,10 @@ def draw_map_graph(rows: List[Dict[str, str]], output_path: str) -> None:
         parts.append(f'<line x1="{left}" y1="{y:.2f}" x2="{right}" y2="{y:.2f}" class="grid"/>')
         parts.append(f'<text x="{left - 14}" y="{y + 4:.2f}" text-anchor="end" class="axis">{y_value:.4f}</text>')
 
-    if original_map is not None:
-        baseline_y = point_y(original_map, low, high, top, bottom)
+    if baseline_map is not None:
+        baseline_y = point_y(baseline_map, low, high, top, bottom)
         parts.append(f'<line x1="{left}" y1="{baseline_y:.2f}" x2="{right}" y2="{baseline_y:.2f}" class="baseline"/>')
-        parts.append(f'<text x="{right - 4}" y="{baseline_y - 8:.2f}" text-anchor="end" class="axis">original {original_map:.4f}</text>')
+        parts.append(f'<text x="{right - 4}" y="{baseline_y - 8:.2f}" text-anchor="end" class="axis">{escape(baseline_branch)} {baseline_map:.4f}</text>')
 
     coords = []
     for index, row in enumerate(rows):
@@ -160,8 +165,8 @@ def draw_map_graph(rows: List[Dict[str, str]], output_path: str) -> None:
 def draw_benchmark_graph(rows: List[Dict[str, str]], output_path: str) -> None:
     parts = svg_header(WIDTH, BENCH_HEIGHT)
     parts.append(f'<rect x="8" y="8" width="{WIDTH - 16}" height="{BENCH_HEIGHT - 16}" class="frame"/>')
-    parts.append('<text x="32" y="46" class="title">Branch benchmark change vs original</text>')
-    parts.append('<text x="32" y="72" class="subtitle">Index and search timings are shown as percent change relative to the original baseline on master.</text>')
+    parts.append('<text x="32" y="46" class="title">Branch benchmark change vs main</text>')
+    parts.append('<text x="32" y="72" class="subtitle">Index and search timings are shown as percent change relative to the active baseline on main.</text>')
 
     legend_y = 98
     legends = [
@@ -174,7 +179,7 @@ def draw_benchmark_graph(rows: List[Dict[str, str]], output_path: str) -> None:
         parts.append(f'<text x="{x + 24}" y="{legend_y + 4}" class="axis">{escape(label)}</text>')
 
     if not rows:
-        parts.append('<text x="32" y="180" class="subtitle">No non-original branch comparisons are available yet.</text>')
+        parts.append('<text x="32" y="180" class="subtitle">No non-main branch comparisons are available yet.</text>')
         parts.extend(svg_footer())
         with open(output_path, "w", encoding="utf-8") as handle:
             handle.write("\n".join(parts) + "\n")
@@ -201,7 +206,8 @@ def draw_benchmark_graph(rows: List[Dict[str, str]], output_path: str) -> None:
 
     zero_y = point_y(0.0, low, high, top, bottom)
     parts.append(f'<line x1="{left}" y1="{zero_y:.2f}" x2="{right}" y2="{zero_y:.2f}" class="baseline"/>')
-    parts.append(f'<text x="{right - 4}" y="{zero_y - 8:.2f}" text-anchor="end" class="axis">original 0.0%</text>')
+    baseline_branch = rows[0]["baseline_branch"] or "main"
+    parts.append(f'<text x="{right - 4}" y="{zero_y - 8:.2f}" text-anchor="end" class="axis">{escape(baseline_branch)} 0.0%</text>')
 
     series = [
         ("index_change_pct", "#0f766e"),

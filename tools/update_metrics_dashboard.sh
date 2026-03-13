@@ -12,12 +12,12 @@ fi
 metrics_dir="$repo_root/docs/metrics"
 graphs_dir="$repo_root/docs/graphs"
 tsv_file="$metrics_dir/branch-comparisons.tsv"
-map_graph="$graphs_dir/map-vs-original.svg"
-bench_graph="$graphs_dir/benchmark-vs-original.svg"
+map_graph="$graphs_dir/map-vs-main.svg"
+bench_graph="$graphs_dir/benchmark-vs-main.svg"
 
 mkdir -p "$metrics_dir" "$graphs_dir"
 
-printf "Exporting branch comparisons against the original baseline\n"
+printf "Exporting branch comparisons against the active main baseline\n"
 "$repo_root/tools/export_branch_comparisons.sh" > "$tsv_file"
 
 printf "Rendering graphs\n"
