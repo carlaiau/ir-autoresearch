@@ -1,0 +1,36 @@
+branch: codex/search-headline-boost
+timestamp: 20260313-170600
+collection: /Users/caiau/school/autoresearch/../wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	46761
+num_rel               	all	6228
+num_rel_ret           	all	3741
+map                   	all	0.2355
+gm_map                	all	0.1120
+Rprec                 	all	0.2768
+bpref                 	all	0.3046
+recip_rank            	all	0.6558
+iprec_at_recall_0.00  	all	0.7088
+iprec_at_recall_0.10  	all	0.4697
+iprec_at_recall_0.20  	all	0.3906
+iprec_at_recall_0.30  	all	0.3438
+iprec_at_recall_0.40  	all	0.2919
+iprec_at_recall_0.50  	all	0.2404
+iprec_at_recall_0.60  	all	0.1841
+iprec_at_recall_0.70  	all	0.1257
+iprec_at_recall_0.80  	all	0.0757
+iprec_at_recall_0.90  	all	0.0429
+iprec_at_recall_1.00  	all	0.0078
+P_5                   	all	0.4520
+P_10                  	all	0.4260
+P_15                  	all	0.4040
+P_20                  	all	0.3910
+P_30                  	all	0.3713
+P_100                 	all	0.2724
+P_200                 	all	0.2001
+P_500                 	all	0.1221
+P_1000                	all	0.0748
