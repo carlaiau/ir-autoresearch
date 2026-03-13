@@ -65,7 +65,7 @@ def display_metric(value: str) -> str:
 
 def render_table(rows: List[Dict[str, str]]) -> str:
     lines = [
-        "| Branch | Issue | MAP | MAP Δ vs previous | P_5 | P_20 | Rprec | bpref | num_rel_ret / num_rel | Index (s) | Search (s) |",
+        "| Branch | Issue | MAP | MAP Δ vs previous | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |",
         "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in sort_rows(rows):
@@ -93,10 +93,10 @@ def render_legend() -> str:
         [
             "**Legend**",
             "- `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.",
-            "- `P_5` and `P_20`: How many of the top 5 or top 20 results are relevant. Higher means better early precision.",
-            "- `Rprec`: Precision after retrieving `R` results, where `R` is the number of relevant documents for that query. Higher is better.",
+            "- `P@5` and `P@20`: How many of the top 5 or top 20 results are relevant. Higher means better early precision.",
+            "- `R-prec`: Precision after retrieving `R` results, where `R` is the number of relevant documents for that query. Higher is better.",
             "- `bpref`: A relevance metric that is more tolerant of incomplete judgment sets. Higher is better.",
-            "- `num_rel_ret / num_rel`: Fraction of all judged-relevant documents that were retrieved anywhere in the run. Roughly, a recall-style coverage signal; higher is better.",
+            "- `recall` (`num_rel_ret / num_rel`): Fraction of all judged-relevant documents that were retrieved anywhere in the run. higher is better.",
             "- `Index (s)`: Median wall-clock indexing time in seconds across benchmark runs; lower is better.",
             "- `Search (s)`: Median wall-clock search time in seconds for the full topics file across benchmark runs; lower is better.",
         ]
