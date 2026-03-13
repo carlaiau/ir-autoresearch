@@ -27,6 +27,9 @@ Constants
 */
 const k1 = 0.9 // BM25 k1 parameter
 const b = 0.3  // BM25 b parameter
+const feedbackDocs = 2
+const expansionTerms = 1
+const expansionWeight = 0.10
 
 /*
 Struct vocabEntry
@@ -36,10 +39,208 @@ type vocabEntry struct {
 	where, size int32 // where on the disk and how large (in bytes) is the postings list?
 }
 
+type loadedIndex struct {
+	docLengths            []int32
+	averageDocumentLength float64
+	documentsInCollection int
+	postingsFile          *os.File
+	dictionary            map[string]vocabEntry
+}
+
+type weightedQueryTerm struct {
+	token  string
+	weight float64
+}
+
+type feedbackCandidate struct {
+	token  string
+	weight float64
+}
+
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+func loadIndex(lengthsPath string, postingsPath string, vocabPath string) loadedIndex {
+	lengthsAsBytes, err := os.ReadFile(lengthsPath)
+	check(err)
+	docLengths := make([]int32, len(lengthsAsBytes)/4)
+	err = binary.Read(bytes.NewReader(lengthsAsBytes), binary.NativeEndian, docLengths)
+	check(err)
+
+	documentsInCollection := len(docLengths)
+	averageDocumentLength := 0.0
+	for _, which := range docLengths {
+		averageDocumentLength += float64(which)
+	}
+	if documentsInCollection > 0 {
+		averageDocumentLength /= float64(documentsInCollection)
+	}
+
+	postingsFile, err := os.Open(postingsPath)
+	check(err)
+
+	dictionary := make(map[string]vocabEntry)
+	vocabAsBytes, err := os.ReadFile(vocabPath)
+	check(err)
+	for offset := 0; offset < len(vocabAsBytes); {
+		strLength := int(vocabAsBytes[offset])
+		offset += 1
+
+		term := string(vocabAsBytes[offset : offset+strLength])
+		offset += strLength + 1 // read the '\0' string terminator
+
+		where := binary.NativeEndian.Uint32(vocabAsBytes[offset:])
+		offset += 4
+		size := binary.NativeEndian.Uint32(vocabAsBytes[offset:])
+		offset += 4
+
+		dictionary[term] = vocabEntry{int32(where), int32(size)}
+	}
+
+	return loadedIndex{
+		docLengths:            docLengths,
+		averageDocumentLength: averageDocumentLength,
+		documentsInCollection: documentsInCollection,
+		postingsFile:          postingsFile,
+		dictionary:            dictionary,
+	}
+}
+
+func bm25Score(tf float64, docLength int32, averageDocumentLength float64) float64 {
+	if averageDocumentLength == 0 {
+		return (tf * (k1 + 1)) / (tf + k1)
+	}
+	return (tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLength)/averageDocumentLength)))
+}
+
+func accumulateScores(index loadedIndex, token string, queryWeight float64, rsv []float64, touchedDocs *[]int) {
+	termDetails, ok := index.dictionary[token]
+	if !ok {
+		return
+	}
+
+	currentListAsBytes := make([]byte, termDetails.size)
+	_, err := index.postingsFile.ReadAt(currentListAsBytes, int64(termDetails.where))
+	check(err)
+	currentList := make([]int32, len(currentListAsBytes)/4)
+	err = binary.Read(bytes.NewReader(currentListAsBytes), binary.NativeEndian, currentList)
+	check(err)
+	postings := len(currentListAsBytes) / 8
+
+	if index.documentsInCollection == postings {
+		return
+	}
+
+	idf := math.Log(float64(index.documentsInCollection) / float64(postings))
+
+	for i := 0; i < len(currentList); i += 2 {
+		d := int(currentList[i])
+		tf := float64(currentList[i+1])
+		if rsv[d] == 0 {
+			*touchedDocs = append(*touchedDocs, d)
+		}
+		rsv[d] += queryWeight * idf * bm25Score(tf, index.docLengths[d], index.averageDocumentLength)
+	}
+}
+
+func scoreQuery(index loadedIndex, queryTerms []weightedQueryTerm, rsv []float64, touchedDocs []int) []int {
+	touchedDocs = touchedDocs[:0]
+	for _, term := range queryTerms {
+		accumulateScores(index, term.token, term.weight, rsv, &touchedDocs)
+	}
+
+	return sortResults(rsv, touchedDocs)
+}
+
+func sortResults(rsv []float64, touchedDocs []int) []int {
+	slices.SortFunc(touchedDocs, func(a, b int) int {
+		if diff := cmp.Compare(rsv[b], rsv[a]); diff != 0 {
+			return diff
+		}
+		return cmp.Compare(b, a)
+	})
+
+	return touchedDocs
+}
+
+func readForwardDocTerms(forwardFile *os.File, forwardOffsets []int64, docID int) map[string]int32 {
+	offset := forwardOffsets[docID*2]
+	size := forwardOffsets[docID*2+1]
+	if size == 0 {
+		return nil
+	}
+
+	buffer := make([]byte, int(size))
+	_, err := forwardFile.ReadAt(buffer, offset)
+	check(err)
+
+	docTerms := make(map[string]int32)
+	for current := 0; current < len(buffer); {
+		strLength := int(buffer[current])
+		current++
+		term := string(buffer[current : current+strLength])
+		current += strLength
+		docTerms[term]++
+	}
+	return docTerms
+}
+
+func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, rankedDocs []int, originalTerms map[string]struct{}) []weightedQueryTerm {
+	limit := feedbackDocs
+	if len(rankedDocs) < limit {
+		limit = len(rankedDocs)
+	}
+
+	candidates := make(map[string]feedbackCandidate)
+	for rank := 0; rank < limit; rank++ {
+		docID := rankedDocs[rank]
+		docWeight := 1.0 / float64(rank+1)
+		for term, tf := range readForwardDocTerms(forwardFile, forwardOffsets, docID) {
+			if _, exists := originalTerms[term]; exists {
+				continue
+			}
+
+			termDetails, ok := index.dictionary[term]
+			if !ok {
+				continue
+			}
+			postings := int(termDetails.size / 8)
+			if postings == 0 || postings == index.documentsInCollection {
+				continue
+			}
+
+			idf := math.Log(float64(index.documentsInCollection) / float64(postings))
+			candidate := candidates[term]
+			candidate.token = term
+			candidate.weight += docWeight * idf * bm25Score(float64(tf), index.docLengths[docID], index.averageDocumentLength)
+			candidates[term] = candidate
+		}
+	}
+
+	selected := make([]feedbackCandidate, 0, len(candidates))
+	for _, candidate := range candidates {
+		selected = append(selected, candidate)
+	}
+
+	slices.SortFunc(selected, func(a, b feedbackCandidate) int {
+		if diff := cmp.Compare(b.weight, a.weight); diff != 0 {
+			return diff
+		}
+		return cmp.Compare(a.token, b.token)
+	})
+
+	if len(selected) > expansionTerms {
+		selected = selected[:expansionTerms]
+	}
+
+	expansions := make([]weightedQueryTerm, 0, len(selected))
+	for _, candidate := range selected {
+		expansions = append(expansions, weightedQueryTerm{token: candidate.token, weight: expansionWeight})
+	}
+	return expansions
 }
 
 func normalizeToken(token string) string {
@@ -69,24 +270,8 @@ main()
 Simple search engine ranking on BM25.
 */
 func main() {
-	/*
-	  Read the document lengths
-	*/
-	lengthsAsBytes, err := os.ReadFile("lengths.bin")
-	check(err)
-	docLengths := make([]int32, len(lengthsAsBytes)/4)
-	err = binary.Read(bytes.NewReader(lengthsAsBytes), binary.NativeEndian, docLengths)
-	check(err)
-
-	/*
-	  Compute the average document length for BM25
-	*/
-	documentsInCollection := len(docLengths)
-	var averageDocumentLength float64 = 0
-	for _, which := range docLengths {
-		averageDocumentLength += float64(which)
-	}
-	averageDocumentLength /= float64(documentsInCollection)
+	index := loadIndex("lengths.bin", "postings.bin", "vocab.bin")
+	defer index.postingsFile.Close()
 
 	/*
 	  Read the primary keys
@@ -98,38 +283,26 @@ func main() {
 	primaryKeys := strings.Split(string(primaryKeysAsBytes), "\n")
 
 	/*
-	  Open the postings list file
+	  Read the per-document forward vectors used for pseudo-relevance feedback.
 	*/
-	postingsFile, err := os.Open("postings.bin")
+	forwardOffsetsAsBytes, err := os.ReadFile("forward_offsets.bin")
 	check(err)
-
-	/*
-	  Build the vocabulary in memory
-	*/
-	dictionary := make(map[string]vocabEntry) // the vocab
-	vocabAsBytes, err := os.ReadFile("vocab.bin")
+	forwardOffsets := make([]int64, len(forwardOffsetsAsBytes)/8)
+	err = binary.Read(bytes.NewReader(forwardOffsetsAsBytes), binary.NativeEndian, forwardOffsets)
 	check(err)
-	for offset := 0; offset < len(vocabAsBytes); {
-		strLength := int(vocabAsBytes[offset])
-		offset += 1
-
-		term := string(vocabAsBytes[offset : offset+strLength])
-		offset += strLength + 1 // read the '\0' string terminator
-
-		where := binary.NativeEndian.Uint32(vocabAsBytes[offset:])
-		offset += 4
-		size := binary.NativeEndian.Uint32(vocabAsBytes[offset:])
-		offset += 4
-
-		dictionary[term] = vocabEntry{int32(where), int32(size)}
+	if len(forwardOffsets) != index.documentsInCollection*2 {
+		panic("forward_offsets.bin must contain offset/size pairs for every document")
 	}
+	forwardFile, err := os.Open("forward.bin")
+	check(err)
+	defer forwardFile.Close()
 
 	/*
 	  Allocate buffers for score accumulation. We only track
 	  the documents touched by the current query to avoid
 	  sorting the whole collection when most scores are zero.
 	*/
-	rsv := make([]float64, documentsInCollection)
+	rsv := make([]float64, index.documentsInCollection)
 	touchedDocs := make([]int, 0, 1024)
 
 	/*
@@ -137,8 +310,9 @@ func main() {
 	*/
 	stdin := bufio.NewScanner(os.Stdin)
 	for stdin.Scan() {
-		touchedDocs = touchedDocs[:0]
 		queryId := 0
+		queryTerms := make([]weightedQueryTerm, 0, 16)
+		originalTerms := make(map[string]struct{}, 16)
 		for i, token := range strings.Fields(stdin.Text()) {
 			/*
 			  If the first token is a number then assume a TREC query number, and skip it
@@ -151,57 +325,20 @@ func main() {
 			}
 
 			token = normalizeToken(token)
+			queryTerms = append(queryTerms, weightedQueryTerm{token: token, weight: 1.0})
+			originalTerms[token] = struct{}{}
+		}
 
-			/*
-			  Does the term exist in the collection?
-			*/
-			termDetails, ok := dictionary[token]
-			if !ok {
-				continue
-			}
-
-			/*
-			  Seek and read the postings list
-			*/
-			currentListAsBytes := make([]byte, termDetails.size)
-			_, err := postingsFile.ReadAt(currentListAsBytes, int64(termDetails.where))
-			check(err)
-			currentList := make([]int32, len(currentListAsBytes)/4)
-			err = binary.Read(bytes.NewReader(currentListAsBytes), binary.NativeEndian, currentList)
-			check(err)
-			postings := len(currentListAsBytes) / 8
-
-			/*
-			  Compute the IDF component of BM25 as log(N/n).
-			  if IDF == 0 then don't process this postings list as the BM25 contribution of this term will be zero.
-			*/
-			if documentsInCollection == postings {
-				continue
-			}
-
-			idf := math.Log(float64(documentsInCollection) / float64(postings))
-
-			/*
-			  Process the postings list by simply adding the BM25 component for this document into the accumulators array
-			*/
-			for i := 0; i < len(currentList); i += 2 {
-				d := int(currentList[i])
-				tf := float64(currentList[i+1])
-				if rsv[d] == 0 {
-					touchedDocs = append(touchedDocs, d)
+		touchedDocs = scoreQuery(index, queryTerms, rsv, touchedDocs)
+		if len(queryTerms) <= 3 {
+			expansions := selectExpansionTerms(index, forwardFile, forwardOffsets, touchedDocs, originalTerms)
+			if len(expansions) > 0 {
+				for _, expansion := range expansions {
+					accumulateScores(index, expansion.token, expansion.weight, rsv, &touchedDocs)
 				}
-				rsv[d] += idf * ((tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLengths[d])/averageDocumentLength))))
+				touchedDocs = sortResults(rsv, touchedDocs)
 			}
 		}
-		/*
-		  Sort the results list
-		*/
-		slices.SortFunc(touchedDocs, func(a, b int) int {
-			if diff := cmp.Compare(rsv[b], rsv[a]); diff != 0 {
-				return diff
-			}
-			return cmp.Compare(b, a)
-		})
 
 		/*
 		  Print the (at most) top 1000 documents in the results list in TREC eval format which is:

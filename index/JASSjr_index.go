@@ -80,6 +80,18 @@ type posting struct {
 	d, tf int32
 }
 
+func writeForwardDocument(writer *bufio.Writer, docTerms []string) int64 {
+	var docSize int64 = 0
+	for _, term := range docTerms {
+		err := writer.WriteByte(byte(len(term)))
+		check(err)
+		_, err = writer.WriteString(term)
+		check(err)
+		docSize += int64(1 + len(term))
+	}
+	return docSize
+}
+
 /*
 Struct lexer
 ------------
@@ -138,16 +150,25 @@ func main() {
 	}
 
 	var (
-		vocab                = make(map[string][]posting)
-		docIds               = make([]string, 0, 128)
-		docLengths           = make([]int32, 0, 128)
-		docId          int32 = -1
-		documentLength int32 = 0
+		vocab                  = make(map[string][]posting)
+		docIds                 = make([]string, 0, 128)
+		docLengths             = make([]int32, 0, 128)
+		forwardOffsets         = make([]int64, 0, 256)
+		currentDocTokens       = make([]string, 0, 256)
+		docId            int32 = -1
+		documentLength   int32 = 0
 	)
 
 	fh, err := os.Open(os.Args[1])
 	check(err)
 	defer fh.Close()
+
+	forwardFile, err := os.Create("forward.bin")
+	check(err)
+	defer forwardFile.Close()
+	forwardWriter := bufio.NewWriter(forwardFile)
+	defer forwardWriter.Flush()
+	var forwardWhere int64 = 0
 
 	scanner := bufio.NewScanner(fh)
 	pushNext := false
@@ -159,10 +180,14 @@ func main() {
 			token := string(token)
 			if token == "<DOC>" {
 				/*
-					Save the previous document length
+					Save the previous document length and forward vector.
 				*/
 				if docId != -1 {
 					docLengths = append(docLengths, documentLength)
+					docSize := writeForwardDocument(forwardWriter, currentDocTokens)
+					forwardOffsets = append(forwardOffsets, forwardWhere, docSize)
+					forwardWhere += docSize
+					currentDocTokens = currentDocTokens[:0]
 				}
 
 				/*
@@ -230,6 +255,8 @@ func main() {
 				weight = 2
 			}
 
+			currentDocTokens = append(currentDocTokens, token)
+
 			/*
 				add the posting to the in-memory index
 			*/
@@ -251,9 +278,11 @@ func main() {
 	check(scanner.Err())
 
 	/*
-		Save the final document length
+		Save the final document length and forward vector.
 	*/
 	docLengths = append(docLengths, documentLength)
+	docSize := writeForwardDocument(forwardWriter, currentDocTokens)
+	forwardOffsets = append(forwardOffsets, forwardWhere, docSize)
 
 	/*
 		tell the user we've got to the end of parsing
@@ -323,5 +352,13 @@ func main() {
 	docLengthsWriter := bufio.NewWriter(docLengthsFile)
 	defer docLengthsWriter.Flush()
 	err = binary.Write(docLengthsWriter, binary.NativeEndian, docLengths)
+	check(err)
+
+	forwardOffsetsFile, err := os.Create("forward_offsets.bin")
+	check(err)
+	defer forwardOffsetsFile.Close()
+	forwardOffsetsWriter := bufio.NewWriter(forwardOffsetsFile)
+	defer forwardOffsetsWriter.Flush()
+	err = binary.Write(forwardOffsetsWriter, binary.NativeEndian, forwardOffsets)
 	check(err)
 }
