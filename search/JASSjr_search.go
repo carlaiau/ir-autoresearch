@@ -42,6 +42,27 @@ func check(e error) {
 	}
 }
 
+func normalizeToken(token string) string {
+	token = strings.ToLower(token)
+
+	switch {
+	case len(token) > 4 && strings.HasSuffix(token, "ies"):
+		return token[:len(token)-3] + "y"
+	case len(token) > 4 && strings.HasSuffix(token, "sses"):
+		return token[:len(token)-2]
+	case len(token) > 4 && (strings.HasSuffix(token, "ches") || strings.HasSuffix(token, "shes") || strings.HasSuffix(token, "xes") || strings.HasSuffix(token, "zes")):
+		return token[:len(token)-2]
+	case len(token) > 3 && strings.HasSuffix(token, "s") &&
+		!strings.HasSuffix(token, "ss") &&
+		!strings.HasSuffix(token, "us") &&
+		!strings.HasSuffix(token, "is") &&
+		token != "news":
+		return token[:len(token)-1]
+	default:
+		return token
+	}
+}
+
 /*
 main()
 ------
@@ -104,25 +125,19 @@ func main() {
 	}
 
 	/*
-	  Allocate buffers and set up the rsv pointers
+	  Allocate buffers for score accumulation. We only track
+	  the documents touched by the current query to avoid
+	  sorting the whole collection when most scores are zero.
 	*/
-	rsv := make([]float64, documentsInCollection)     // array of rsv values
-	rsvPointers := make([]int, documentsInCollection) // pointers to each member of rsv[] so that we can sort
+	rsv := make([]float64, documentsInCollection)
+	touchedDocs := make([]int, 0, 1024)
 
 	/*
 	  Search (one query per line)
 	*/
 	stdin := bufio.NewScanner(os.Stdin)
 	for stdin.Scan() {
-		/*
-		  Zero the accumulator array.
-		  Re-initialise the rsv pointers. Saving us
-		  from using a slow comparator during sort
-		*/
-		for i := range rsv {
-			rsv[i] = 0
-			rsvPointers[i] = len(rsvPointers) - 1 - i
-		}
+		touchedDocs = touchedDocs[:0]
 		queryId := 0
 		for i, token := range strings.Fields(stdin.Text()) {
 			/*
@@ -134,6 +149,8 @@ func main() {
 					continue
 				}
 			}
+
+			token = normalizeToken(token)
 
 			/*
 			  Does the term exist in the collection?
@@ -168,27 +185,36 @@ func main() {
 			  Process the postings list by simply adding the BM25 component for this document into the accumulators array
 			*/
 			for i := 0; i < len(currentList); i += 2 {
-				d := currentList[i]
+				d := int(currentList[i])
 				tf := float64(currentList[i+1])
+				if rsv[d] == 0 {
+					touchedDocs = append(touchedDocs, d)
+				}
 				rsv[d] += idf * ((tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLengths[d])/averageDocumentLength))))
 			}
 		}
 		/*
 		  Sort the results list
 		*/
-		slices.SortStableFunc(rsvPointers, func(a, b int) int {
-			return cmp.Compare(rsv[b], rsv[a])
+		slices.SortFunc(touchedDocs, func(a, b int) int {
+			if diff := cmp.Compare(rsv[b], rsv[a]); diff != 0 {
+				return diff
+			}
+			return cmp.Compare(b, a)
 		})
 
 		/*
 		  Print the (at most) top 1000 documents in the results list in TREC eval format which is:
 		  query-id Q0 document-id rank score run-name
 		*/
-		for i, r := range rsvPointers {
-			if rsv[r] == 0 || i == 1000 {
+		for i, r := range touchedDocs {
+			if i == 1000 {
 				break
 			}
 			fmt.Printf("%d Q0 %s %d %.4f JASSjr\n", queryId, primaryKeys[r], i+1, rsv[r])
+		}
+		for _, d := range touchedDocs {
+			rsv[d] = 0
 		}
 	}
 	if err := stdin.Err(); err != nil {

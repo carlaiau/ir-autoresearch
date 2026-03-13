@@ -13,5 +13,21 @@ text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; f
 <rect x="8" y="8" width="1064" height="404" class="frame"/>
 <text x="32" y="46" class="title">Branch MAP vs original</text>
 <text x="32" y="72" class="subtitle">Each point is the latest non-master branch artifact compared against the original baseline on master.</text>
-<text x="32" y="170" class="subtitle">No non-original branch comparisons are available yet.</text>
+<line x1="96" y1="310.00" x2="1016" y2="310.00" class="grid"/>
+<text x="82" y="314.00" text-anchor="end" class="axis">0.2040</text>
+<line x1="96" y1="260.50" x2="1016" y2="260.50" class="grid"/>
+<text x="82" y="264.50" text-anchor="end" class="axis">0.2127</text>
+<line x1="96" y1="211.00" x2="1016" y2="211.00" class="grid"/>
+<text x="82" y="215.00" text-anchor="end" class="axis">0.2214</text>
+<line x1="96" y1="161.50" x2="1016" y2="161.50" class="grid"/>
+<text x="82" y="165.50" text-anchor="end" class="axis">0.2302</text>
+<line x1="96" y1="112.00" x2="1016" y2="112.00" class="grid"/>
+<text x="82" y="116.00" text-anchor="end" class="axis">0.2389</text>
+<line x1="96" y1="287.15" x2="1016" y2="287.15" class="baseline"/>
+<text x="1012" y="279.15" text-anchor="end" class="axis">original 0.2080</text>
+<polyline fill="none" stroke="#1d4ed8" stroke-width="3" points="556.00,134.85"/>
+<circle cx="556.00" cy="134.85" r="5" fill="#15803d"/>
+<text x="566.00" y="126.85" class="value">0.2349 (+0.0269)</text>
+<text x="566.00" y="146.85" class="axis">search-bm25-rsj</text>
+<text x="556.00" y="338.00" transform="rotate(35 556.00 338.00)" text-anchor="start" class="label">search-bm25-rsj</text>
 </svg>
