@@ -59,14 +59,32 @@ func ignoredFieldEnd(tag string) string {
 	switch tag {
 	case "<DOCNO>":
 		return "</DOCNO>"
+	case "<DOCID>":
+		return "</DOCID>"
 	case "<DD>":
 		return "</DD>"
+	case "<DATE>":
+		return "</DATE>"
 	case "<SO>":
 		return "</SO>"
+	case "<CO>":
+		return "</CO>"
 	case "<IN>":
 		return "</IN>"
+	case "<AN>":
+		return "</AN>"
 	case "<DATELINE>":
 		return "</DATELINE>"
+	case "<RE>":
+		return "</RE>"
+	case "<MS>":
+		return "</MS>"
+	case "<NS>":
+		return "</NS>"
+	case "<GV>":
+		return "</GV>"
+	case "<G>":
+		return "</G>"
 	default:
 		return ""
 	}
