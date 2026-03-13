@@ -80,6 +80,53 @@ type posting struct {
 	d, tf int32
 }
 
+func addPosting(vocab map[string][]posting, docId int32, token string) {
+	list, ok := vocab[token]
+	if !ok {
+		vocab[token] = []posting{{docId, 1}}
+	} else if list[len(list)-1].d != docId {
+		vocab[token] = append(list, posting{docId, 1})
+	} else {
+		list[len(list)-1].tf++
+	}
+}
+
+func writeIndex(postingsPath string, vocabPath string, vocab map[string][]posting) {
+	postingsFile, err := os.Create(postingsPath)
+	check(err)
+	defer postingsFile.Close()
+	postingsWriter := bufio.NewWriter(postingsFile)
+	defer postingsWriter.Flush()
+
+	vocabFile, err := os.Create(vocabPath)
+	check(err)
+	defer vocabFile.Close()
+	vocabWriter := bufio.NewWriter(vocabFile)
+	defer vocabWriter.Flush()
+
+	var where uint32 = 0
+	byteBuffer := make([]byte, 4)
+	for term, postings := range vocab {
+		err = binary.Write(postingsWriter, binary.NativeEndian, postings)
+		check(err)
+
+		err = vocabWriter.WriteByte(byte(len(term)))
+		check(err)
+		_, err = vocabWriter.WriteString(term)
+		check(err)
+		err = vocabWriter.WriteByte(0)
+		check(err)
+		binary.NativeEndian.PutUint32(byteBuffer, where)
+		_, err = vocabWriter.Write(byteBuffer)
+		check(err)
+		binary.NativeEndian.PutUint32(byteBuffer, uint32(len(postings)*8))
+		_, err = vocabWriter.Write(byteBuffer)
+		check(err)
+
+		where += uint32(len(postings) * 8)
+	}
+}
+
 /*
 Struct lexer
 ------------
@@ -138,11 +185,14 @@ func main() {
 	}
 
 	var (
-		vocab                = make(map[string][]posting)
-		docIds               = make([]string, 0, 128)
-		docLengths           = make([]int32, 0, 128)
-		docId          int32 = -1
-		documentLength int32 = 0
+		fullVocab             = make(map[string][]posting)
+		headlineVocab         = make(map[string][]posting)
+		docIds                = make([]string, 0, 128)
+		docLengths            = make([]int32, 0, 128)
+		headlineLengths       = make([]int32, 0, 128)
+		docId           int32 = -1
+		documentLength  int32 = 0
+		headlineLength  int32 = 0
 	)
 
 	fh, err := os.Open(os.Args[1])
@@ -159,10 +209,11 @@ func main() {
 			token := string(token)
 			if token == "<DOC>" {
 				/*
-					Save the previous document length
+					Save the previous document lengths
 				*/
 				if docId != -1 {
 					docLengths = append(docLengths, documentLength)
+					headlineLengths = append(headlineLengths, headlineLength)
 				}
 
 				/*
@@ -170,6 +221,7 @@ func main() {
 				*/
 				docId++
 				documentLength = 0
+				headlineLength = 0
 				ignoredUntil = ""
 				inHeadline = false
 
@@ -225,35 +277,31 @@ func main() {
 
 			token = normalizeToken(token)
 
-			weight := int32(1)
+			/*
+				Index the full document representation and, when available,
+				a separate headline-only representation.
+			*/
+			addPosting(fullVocab, docId, token)
 			if inHeadline {
-				weight = 2
+				addPosting(headlineVocab, docId, token)
 			}
 
 			/*
-				add the posting to the in-memory index
+				Track the full-document and headline-only pseudo-document lengths.
 			*/
-			list, ok := vocab[token]
-			if !ok { // term isn't in the vocab yet
-				vocab[token] = []posting{{docId, weight}}
-			} else if list[len(list)-1].d != docId {
-				vocab[token] = append(list, posting{docId, weight}) // if the docno for this occurence has changed then create a new <d,tf> pair
-			} else {
-				list[len(list)-1].tf += weight // else increase the tf
+			documentLength++
+			if inHeadline {
+				headlineLength++
 			}
-
-			/*
-				compute the document length
-			*/
-			documentLength += weight
 		}
 	}
 	check(scanner.Err())
 
 	/*
-		Save the final document length
+		Save the final document lengths
 	*/
 	docLengths = append(docLengths, documentLength)
+	headlineLengths = append(headlineLengths, headlineLength)
 
 	/*
 		tell the user we've got to the end of parsing
@@ -273,46 +321,10 @@ func main() {
 	}
 
 	/*
-		serialise the in-memory index to disk
+		serialise the in-memory full-document and headline-only indexes to disk
 	*/
-	postingsFile, err := os.Create("postings.bin")
-	check(err)
-	defer postingsFile.Close()
-	postingsWriter := bufio.NewWriter(postingsFile)
-	defer postingsWriter.Flush()
-	vocabFile, err := os.Create("vocab.bin")
-	check(err)
-	defer vocabFile.Close()
-	vocabWriter := bufio.NewWriter(vocabFile)
-	defer vocabWriter.Flush()
-
-	var where uint32 = 0
-	byteBuffer := make([]byte, 4)
-	for term, postings := range vocab {
-		/*
-			write the postings list to one file
-		*/
-		err = binary.Write(postingsWriter, binary.NativeEndian, postings)
-		check(err)
-
-		/*
-			write the vocabulary to a second file (one byte length, string, '\0', 4 byte where, 4 byte size)
-		*/
-		err = vocabWriter.WriteByte(byte(len(term)))
-		check(err)
-		_, err = vocabWriter.WriteString(term)
-		check(err)
-		err = vocabWriter.WriteByte(0)
-		check(err)
-		binary.NativeEndian.PutUint32(byteBuffer, where)
-		_, err = vocabWriter.Write(byteBuffer)
-		check(err)
-		binary.NativeEndian.PutUint32(byteBuffer, uint32(len(postings)*8))
-		_, err = vocabWriter.Write(byteBuffer)
-		check(err)
-
-		where += uint32(len(postings) * 8)
-	}
+	writeIndex("postings.bin", "vocab.bin", fullVocab)
+	writeIndex("headline_postings.bin", "headline_vocab.bin", headlineVocab)
 
 	/*
 		store the document lengths
@@ -323,5 +335,13 @@ func main() {
 	docLengthsWriter := bufio.NewWriter(docLengthsFile)
 	defer docLengthsWriter.Flush()
 	err = binary.Write(docLengthsWriter, binary.NativeEndian, docLengths)
+	check(err)
+
+	headlineLengthsFile, err := os.Create("headline_lengths.bin")
+	check(err)
+	defer headlineLengthsFile.Close()
+	headlineLengthsWriter := bufio.NewWriter(headlineLengthsFile)
+	defer headlineLengthsWriter.Flush()
+	err = binary.Write(headlineLengthsWriter, binary.NativeEndian, headlineLengths)
 	check(err)
 }
