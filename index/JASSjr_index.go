@@ -225,9 +225,9 @@ func main() {
 
 			token = normalizeToken(token)
 
-			weight := int32(1)
+			termWeight := int32(1)
 			if inHeadline {
-				weight = 2
+				termWeight = 2
 			}
 
 			/*
@@ -235,17 +235,18 @@ func main() {
 			*/
 			list, ok := vocab[token]
 			if !ok { // term isn't in the vocab yet
-				vocab[token] = []posting{{docId, weight}}
+				vocab[token] = []posting{{docId, termWeight}}
 			} else if list[len(list)-1].d != docId {
-				vocab[token] = append(list, posting{docId, weight}) // if the docno for this occurence has changed then create a new <d,tf> pair
+				vocab[token] = append(list, posting{docId, termWeight}) // if the docno for this occurence has changed then create a new <d,tf> pair
 			} else {
-				list[len(list)-1].tf += weight // else increase the tf
+				list[len(list)-1].tf += termWeight // else increase the tf
 			}
 
 			/*
-				compute the document length
+				Keep document length aligned with the original token count so
+				the headline TF boost is not partially cancelled by BM25 length normalization.
 			*/
-			documentLength += weight
+			documentLength++
 		}
 	}
 	check(scanner.Err())
