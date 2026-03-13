@@ -55,6 +55,23 @@ func normalizeToken(token string) string {
 	}
 }
 
+func ignoredFieldEnd(tag string) string {
+	switch tag {
+	case "<DOCNO>":
+		return "</DOCNO>"
+	case "<DD>":
+		return "</DD>"
+	case "<SO>":
+		return "</SO>"
+	case "<IN>":
+		return "</IN>"
+	case "<DATELINE>":
+		return "</DATELINE>"
+	default:
+		return ""
+	}
+}
+
 /*
 Struct posting
 --------------
@@ -134,6 +151,7 @@ func main() {
 
 	scanner := bufio.NewScanner(fh)
 	pushNext := false
+	ignoredUntil := ""
 	for scanner.Scan() {
 		lex := lexer{scanner.Bytes(), 0}
 		for token := lex.getNext(); token != nil; token = lex.getNext() {
@@ -151,6 +169,7 @@ func main() {
 				*/
 				docId++
 				documentLength = 0
+				ignoredUntil = ""
 
 				if docId%1000 == 0 {
 					fmt.Println(docId, "documents indexed")
@@ -163,9 +182,21 @@ func main() {
 			if pushNext {
 				docIds = append(docIds, token)
 				pushNext = false
+				continue
 			}
-			if token == "<DOCNO>" {
-				pushNext = true
+			if fieldEnd := ignoredFieldEnd(token); fieldEnd != "" {
+				ignoredUntil = fieldEnd
+				if token == "<DOCNO>" {
+					pushNext = true
+				}
+				continue
+			}
+			if token == ignoredUntil {
+				ignoredUntil = ""
+				continue
+			}
+			if ignoredUntil != "" {
+				continue
 			}
 
 			/*
