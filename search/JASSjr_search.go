@@ -139,6 +139,9 @@ func main() {
 	for stdin.Scan() {
 		touchedDocs = touchedDocs[:0]
 		queryId := 0
+		queryTerms := make([]string, 0, 16)
+		seenTerms := make(map[string]struct{}, 16)
+		previousToken := ""
 		for i, token := range strings.Fields(stdin.Text()) {
 			/*
 			  If the first token is a number then assume a TREC query number, and skip it
@@ -151,7 +154,25 @@ func main() {
 			}
 
 			token = normalizeToken(token)
+			if _, seen := seenTerms[token]; !seen {
+				if _, ok := dictionary[token]; ok {
+					queryTerms = append(queryTerms, token)
+					seenTerms[token] = struct{}{}
+				}
+			}
+			if previousToken != "" {
+				bigram := previousToken + "_" + token
+				if _, seen := seenTerms[bigram]; !seen {
+					if _, ok := dictionary[bigram]; ok {
+						queryTerms = append(queryTerms, bigram)
+						seenTerms[bigram] = struct{}{}
+					}
+				}
+			}
+			previousToken = token
+		}
 
+		for _, token := range queryTerms {
 			/*
 			  Does the term exist in the collection?
 			*/

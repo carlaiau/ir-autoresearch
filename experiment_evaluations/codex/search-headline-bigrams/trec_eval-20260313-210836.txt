@@ -1,0 +1,36 @@
+branch: codex/search-headline-bigrams
+timestamp: 20260313-210836
+collection: /Users/caiau/school/autoresearch/../wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	46761
+num_rel               	all	6228
+num_rel_ret           	all	3750
+map                   	all	0.2246
+gm_map                	all	0.1064
+Rprec                 	all	0.2736
+bpref                 	all	0.3016
+recip_rank            	all	0.6179
+iprec_at_recall_0.00  	all	0.6634
+iprec_at_recall_0.10  	all	0.4545
+iprec_at_recall_0.20  	all	0.3769
+iprec_at_recall_0.30  	all	0.3283
+iprec_at_recall_0.40  	all	0.2765
+iprec_at_recall_0.50  	all	0.2285
+iprec_at_recall_0.60  	all	0.1774
+iprec_at_recall_0.70  	all	0.1224
+iprec_at_recall_0.80  	all	0.0775
+iprec_at_recall_0.90  	all	0.0444
+iprec_at_recall_1.00  	all	0.0081
+P_5                   	all	0.4280
+P_10                  	all	0.4000
+P_15                  	all	0.3800
+P_20                  	all	0.3770
+P_30                  	all	0.3467
+P_100                 	all	0.2582
+P_200                 	all	0.1916
+P_500                 	all	0.1224
+P_1000                	all	0.0750

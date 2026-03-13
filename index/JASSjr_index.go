@@ -80,6 +80,17 @@ type posting struct {
 	d, tf int32
 }
 
+func addPosting(vocab map[string][]posting, docId int32, token string, weight int32) {
+	list, ok := vocab[token]
+	if !ok {
+		vocab[token] = []posting{{docId, weight}}
+	} else if list[len(list)-1].d != docId {
+		vocab[token] = append(list, posting{docId, weight})
+	} else {
+		list[len(list)-1].tf += weight
+	}
+}
+
 /*
 Struct lexer
 ------------
@@ -153,6 +164,7 @@ func main() {
 	pushNext := false
 	ignoredUntil := ""
 	inHeadline := false
+	previousHeadlineTerm := ""
 	for scanner.Scan() {
 		lex := lexer{scanner.Bytes(), 0}
 		for token := lex.getNext(); token != nil; token = lex.getNext() {
@@ -172,6 +184,7 @@ func main() {
 				documentLength = 0
 				ignoredUntil = ""
 				inHeadline = false
+				previousHeadlineTerm = ""
 
 				if docId%1000 == 0 {
 					fmt.Println(docId, "documents indexed")
@@ -179,10 +192,12 @@ func main() {
 			}
 			if token == "<HL>" {
 				inHeadline = true
+				previousHeadlineTerm = ""
 				continue
 			}
 			if token == "</HL>" {
 				inHeadline = false
+				previousHeadlineTerm = ""
 				continue
 			}
 
@@ -213,6 +228,9 @@ func main() {
 				Don't index XML tags
 			*/
 			if strings.HasPrefix(token, "<") {
+				if inHeadline {
+					previousHeadlineTerm = ""
+				}
 				continue
 			}
 
@@ -233,19 +251,18 @@ func main() {
 			/*
 				add the posting to the in-memory index
 			*/
-			list, ok := vocab[token]
-			if !ok { // term isn't in the vocab yet
-				vocab[token] = []posting{{docId, weight}}
-			} else if list[len(list)-1].d != docId {
-				vocab[token] = append(list, posting{docId, weight}) // if the docno for this occurence has changed then create a new <d,tf> pair
-			} else {
-				list[len(list)-1].tf += weight // else increase the tf
+			addPosting(vocab, docId, token, weight)
+			if inHeadline && previousHeadlineTerm != "" {
+				addPosting(vocab, docId, previousHeadlineTerm+"_"+token, 1)
 			}
 
 			/*
 				compute the document length
 			*/
 			documentLength += weight
+			if inHeadline {
+				previousHeadlineTerm = token
+			}
 		}
 	}
 	check(scanner.Err())
