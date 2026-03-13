@@ -9,6 +9,11 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v gh >/dev/null 2>&1; then
+  printf "gh is required but was not found on PATH\n" >&2
+  exit 1
+fi
+
 metrics_dir="$repo_root/docs/metrics"
 tsv_file="$metrics_dir/branch-comparisons.tsv"
 table_file="$metrics_dir/branch-comparisons.md"

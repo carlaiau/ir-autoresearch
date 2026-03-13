@@ -104,6 +104,7 @@ Benchmark policy:
 ## Git And Branching
 
 Use a dedicated experiment branch for each accepted line of work.
+Use a dedicated experiment branch for rejected experiments as well if you need to preserve their history.
 
 Branch naming format:
 
@@ -112,6 +113,7 @@ Branch naming format:
 Do not use destructive git commands.
 Do not overwrite unrelated user changes.
 Do not merge to `main` unless the user explicitly asks for it.
+Do not reuse a rejected experiment branch for unrelated follow-up work; keep it as a historical record.
 
 ## Experiment Loop
 
@@ -138,12 +140,13 @@ Unless the user says otherwise, use this loop:
    - `./tools/update_metrics_dashboard.sh`
 9. Evaluate the result against the latest compatible `main` artifacts.
 10. If the change is rejected:
-   - do not keep it
-   - return the branch to the last accepted state without disturbing unrelated work
+   - commit the attempted code change plus the branch's evaluation and benchmark artifacts before abandoning the experiment
+   - keep the rejected branch as a historical record; do not reset it to the last accepted state
    - comment on the GitHub issue with the attempted idea, metrics, and rejection reason
+   - include the rejection commit hash in the issue comment when possible
    - close the issue or mark it rejected
 11. If the change is accepted:
-   - commit the code change plus dashboard assets
+   - commit the code change plus dashboard assets and the branch's evaluation and benchmark artifacts
    - open or update a PR
    - link the PR to the issue
 
@@ -196,6 +199,7 @@ Every PR should include:
 - the latest `map`, `Rprec`, `P_10`, `bpref`, and `recip_rank`
 - the latest benchmark medians
 - the summary from `./tools/compare_branch_to_main.sh <branch>`
+- the experiment's committed evaluation and benchmark artifacts for that branch
 - note that `main` is the approval baseline and `original` is a read-only initialization archive
 - note that the README dashboard was refreshed
 - a link to the GitHub issue
@@ -212,7 +216,10 @@ Generated benchmark artifacts are written under:
 
 - `experiment_benchmarks/<branch>/`
 
-Do not commit generated evaluation or benchmark artifacts.
+Commit the branch-local evaluation and benchmark artifacts that correspond to the final validation run for each experiment branch.
+This applies to accepted experiments and rejected experiments that are being abandoned but preserved historically.
+Do not commit refreshed `main` baseline artifacts unless the user explicitly asks.
+Never modify or recommit anything under the read-only `original` artifact folders.
 
 Do commit these dashboard assets after each accepted experiment:
 

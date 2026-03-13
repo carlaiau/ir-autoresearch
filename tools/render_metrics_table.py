@@ -41,18 +41,40 @@ def display_delta(value: str, is_original: bool) -> str:
     return rendered
 
 
+def display_decision(value: str) -> str:
+    if value == "baseline":
+        return "baseline"
+    if value == "accepted":
+        return "accepted"
+    if value == "rejected":
+        return "**rejected**"
+    if value == "pending":
+        return "pending"
+    return "unknown"
+
+
+def display_issue(row: Dict[str, str]) -> str:
+    issue_number = row.get("issue_number", "")
+    issue_url = row.get("issue_url", "")
+    if not issue_number or not issue_url:
+        return "-"
+    return f"[#{issue_number}]({issue_url})"
+
+
 def render_table(rows: List[Dict[str, str]]) -> str:
     lines = [
-        "| Branch | MAP | MAP Δ vs original | Index median | Search topics median | Updated |",
-        "| --- | ---: | ---: | ---: | ---: | --- |",
+        "| Branch | Status | Issue | MAP | MAP Δ vs previous | Index median | Search topics median | Updated |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
     ]
     for row in sort_rows(rows):
         is_original = row["row_kind"] == "original"
         lines.append(
-            "| {branch} | {map_value} | {map_delta} | {index_median} | {search_topics_median} | {timestamp} |".format(
+            "| {branch} | {decision} | {issue} | {map_value} | {map_delta} | {index_median} | {search_topics_median} | {timestamp} |".format(
                 branch=f"`{row['branch']}`",
+                decision=display_decision(row.get("decision", "")),
+                issue=display_issue(row),
                 map_value=f"{float(row['map']):.4f}",
-                map_delta=display_delta(row["map_delta_vs_original"], is_original),
+                map_delta=display_delta(row["map_delta_vs_previous"], is_original),
                 index_median=row["index_median"],
                 search_topics_median=row["search_topics_median"],
                 timestamp=display_timestamp(row["timestamp"]),
