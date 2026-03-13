@@ -149,10 +149,14 @@ Unless the user says otherwise, use this loop:
    - commit the code change plus dashboard assets and the branch's evaluation and benchmark artifacts
    - open or update a PR
    - link the PR to the issue
+12. After completing either the rejected or accepted path, return to step 1 and begin the next experiment.
+   - for the next distinct hypothesis, create a new GitHub issue
+   - create a fresh branch from `main` using `codex/search-<tag>`
+   - continue until blocked or explicitly told to stop
 
 Default stopping rule:
 
-- stop after one strong PR is ready, or after 3 consecutive rejected hypotheses, or when blocked
+- continue looping until blocked, the WSJ path or required credentials are missing, no concrete next hypothesis is available, or the user asks to stop
 
 ## What To Change
 
