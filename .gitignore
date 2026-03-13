@@ -1,7 +1,5 @@
 .bin
 .stdout
-experiment_evaluations/
-experiment_benchmarks/
 smoke-eval/
 wsj-eval/
 wsj-benchmark/

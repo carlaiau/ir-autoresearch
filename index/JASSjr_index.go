@@ -34,6 +34,27 @@ func isAlnum(c byte) bool {
 	return isAlpha(c) || isDigit(c)
 }
 
+func normalizeToken(token string) string {
+	token = strings.ToLower(token)
+
+	switch {
+	case len(token) > 4 && strings.HasSuffix(token, "ies"):
+		return token[:len(token)-3] + "y"
+	case len(token) > 4 && strings.HasSuffix(token, "sses"):
+		return token[:len(token)-2]
+	case len(token) > 4 && (strings.HasSuffix(token, "ches") || strings.HasSuffix(token, "shes") || strings.HasSuffix(token, "xes") || strings.HasSuffix(token, "zes")):
+		return token[:len(token)-2]
+	case len(token) > 3 && strings.HasSuffix(token, "s") &&
+		!strings.HasSuffix(token, "ss") &&
+		!strings.HasSuffix(token, "us") &&
+		!strings.HasSuffix(token, "is") &&
+		token != "news":
+		return token[:len(token)-1]
+	default:
+		return token
+	}
+}
+
 /*
 Struct posting
 --------------
@@ -161,10 +182,7 @@ func main() {
 				token = token[:0xFF+1]
 			}
 
-			/*
-				lower case the string
-			*/
-			token = strings.ToLower(token)
+			token = normalizeToken(token)
 
 			/*
 				add the posting to the in-memory index

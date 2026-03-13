@@ -17,5 +17,23 @@ text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; f
 <text x="56" y="102" class="axis">Index median change (%)</text>
 <line x1="312" y1="98" x2="330" y2="98" stroke="#c2410c" stroke-width="3"/>
 <text x="336" y="102" class="axis">Search topics median change (%)</text>
-<text x="32" y="180" class="subtitle">No non-original branch comparisons are available yet.</text>
+<line x1="96" y1="370.00" x2="1016" y2="370.00" class="grid"/>
+<text x="82" y="374.00" text-anchor="end" class="axis">-51.3%</text>
+<line x1="96" y1="310.50" x2="1016" y2="310.50" class="grid"/>
+<text x="82" y="314.50" text-anchor="end" class="axis">-35.3%</text>
+<line x1="96" y1="251.00" x2="1016" y2="251.00" class="grid"/>
+<text x="82" y="255.00" text-anchor="end" class="axis">-19.4%</text>
+<line x1="96" y1="191.50" x2="1016" y2="191.50" class="grid"/>
+<text x="82" y="195.50" text-anchor="end" class="axis">-3.5%</text>
+<line x1="96" y1="132.00" x2="1016" y2="132.00" class="grid"/>
+<text x="82" y="136.00" text-anchor="end" class="axis">12.5%</text>
+<line x1="96" y1="178.55" x2="1016" y2="178.55" class="baseline"/>
+<text x="1012" y="170.55" text-anchor="end" class="axis">original 0.0%</text>
+<polyline fill="none" stroke="#0f766e" stroke-width="3" points="556.00,159.46"/>
+<circle cx="556.00" cy="159.46" r="5" fill="#0f766e"/>
+<polyline fill="none" stroke="#c2410c" stroke-width="3" points="556.00,342.54"/>
+<circle cx="556.00" cy="342.54" r="5" fill="#c2410c"/>
+<text x="566.00" y="151.46" class="value">index +5.1%</text>
+<text x="566.00" y="356.54" class="value">search -43.9%</text>
+<text x="556.00" y="398.00" transform="rotate(35 556.00 398.00)" text-anchor="start" class="label">search-bm25-rsj</text>
 </svg>
