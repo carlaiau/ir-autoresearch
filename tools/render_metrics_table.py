@@ -63,9 +63,28 @@ def display_metric(value: str) -> str:
     return f"{float(value):.4f}"
 
 
+def format_change(current: float, baseline: float) -> str:
+    delta = current - baseline
+    if baseline == 0:
+        return f"{delta:+.4f}"
+    percent = (delta / baseline) * 100
+    return f"{delta:+.4f} ({percent:+.1f}%)"
+
+
+def format_speed_change(current: float, baseline: float) -> str:
+    if baseline == 0:
+        return ""
+    percent = ((baseline - current) / baseline) * 100
+    if percent > 0:
+        return f"{percent:.1f}% faster"
+    if percent < 0:
+        return f"{abs(percent):.1f}% slower"
+    return "unchanged"
+
+
 def render_table(rows: List[Dict[str, str]]) -> str:
     lines = [
-        "| Branch | Issue | MAP | MAP Δ vs previous | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |",
+        "| Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |",
         "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in sort_rows(rows):
@@ -88,6 +107,35 @@ def render_table(rows: List[Dict[str, str]]) -> str:
     return "\n".join(lines)
 
 
+def render_summary(rows: List[Dict[str, str]]) -> str:
+    ordered = sort_rows(rows)
+    baseline = ordered[0]
+    if len(ordered) == 1:
+        return "No accepted experiment branches have been recorded yet beyond the `original` baseline."
+
+    latest = ordered[-1]
+    baseline_map = float(baseline["map"])
+    latest_map = float(latest["map"])
+    baseline_p5 = float(baseline["p_5"])
+    latest_p5 = float(latest["p_5"])
+    baseline_search = float(baseline["search_topics_median"])
+    latest_search = float(latest["search_topics_median"])
+    baseline_index = float(baseline["index_median"])
+    latest_index = float(latest["index_median"])
+
+    index_change = format_speed_change(latest_index, baseline_index)
+    index_clause = f"index median moved from `{baseline_index:.2f}s` to `{latest_index:.2f}s`"
+    if index_change:
+        index_clause += f" ({index_change})"
+
+    return (
+        f"Current accepted leader {display_branch(latest)} improves `MAP` from `{baseline_map:.4f}` on "
+        f"to `{latest_map:.4f}` "
+        f"(`{format_change(latest_map, baseline_map)}`). It also raises `P@5` from "
+        f"`{baseline_p5:.4f}` to `{latest_p5:.4f}`."
+    )
+
+
 def render_legend() -> str:
     return "\n".join(
         [
@@ -104,7 +152,7 @@ def render_legend() -> str:
 
 
 def render_dashboard(rows: List[Dict[str, str]]) -> str:
-    return f"{render_table(rows)}\n\n{render_legend()}"
+    return f"{render_summary(rows)}\n\n{render_table(rows)}\n\n{render_legend()}"
 
 
 def write_output(path: str, content: str) -> None:

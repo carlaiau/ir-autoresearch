@@ -1,4 +1,6 @@
-| Branch | Issue | MAP | MAP Δ vs previous | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
+Current accepted leader [`codex/search-prf`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-prf) improves `MAP` from `0.2080` on to `0.2396` (`+0.0316 (+15.2%)`). It also raises `P@5` from `0.4320` to `0.4640`.
+
+| Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `original` | - | 0.2080 | baseline | 0.4320 | 0.3660 | 0.2563 | 0.2880 | 0.5634 | 9.89 | 0.42 |
 | [`codex/search-bm25-rsj`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-rsj) | [#1](https://github.com/carlaiau/ir-autoresearch/issues/1) | 0.2349 | **+0.0269** | 0.4440 | 0.3910 | 0.2741 | 0.3036 | 0.5986 | 9.75 | 0.24 |
