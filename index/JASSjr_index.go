@@ -77,7 +77,7 @@ Struct posting
 --------------
 */
 type posting struct {
-	d, tf int32
+	d, bodyTF, headlineTF int32
 }
 
 /*
@@ -140,9 +140,10 @@ func main() {
 	var (
 		vocab                = make(map[string][]posting)
 		docIds               = make([]string, 0, 128)
-		docLengths           = make([]int32, 0, 128)
+		fieldLengths         = make([]int32, 0, 256)
 		docId          int32 = -1
-		documentLength int32 = 0
+		headlineLength int32 = 0
+		bodyLength     int32 = 0
 	)
 
 	fh, err := os.Open(os.Args[1])
@@ -159,17 +160,18 @@ func main() {
 			token := string(token)
 			if token == "<DOC>" {
 				/*
-					Save the previous document length
+					Save the previous document field lengths
 				*/
 				if docId != -1 {
-					docLengths = append(docLengths, documentLength)
+					fieldLengths = append(fieldLengths, headlineLength, bodyLength)
 				}
 
 				/*
 					Move on to the next document
 				*/
 				docId++
-				documentLength = 0
+				headlineLength = 0
+				bodyLength = 0
 				ignoredUntil = ""
 				inHeadline = false
 
@@ -225,35 +227,47 @@ func main() {
 
 			token = normalizeToken(token)
 
-			weight := int32(1)
-			if inHeadline {
-				weight = 2
-			}
-
 			/*
-				add the posting to the in-memory index
+				Store separate body/headline term frequencies so search can
+				combine them with field-specific normalization.
 			*/
 			list, ok := vocab[token]
-			if !ok { // term isn't in the vocab yet
-				vocab[token] = []posting{{docId, weight}}
+			if !ok {
+				if inHeadline {
+					vocab[token] = []posting{{d: docId, headlineTF: 1}}
+				} else {
+					vocab[token] = []posting{{d: docId, bodyTF: 1}}
+				}
 			} else if list[len(list)-1].d != docId {
-				vocab[token] = append(list, posting{docId, weight}) // if the docno for this occurence has changed then create a new <d,tf> pair
+				if inHeadline {
+					vocab[token] = append(list, posting{d: docId, headlineTF: 1})
+				} else {
+					vocab[token] = append(list, posting{d: docId, bodyTF: 1})
+				}
 			} else {
-				list[len(list)-1].tf += weight // else increase the tf
+				if inHeadline {
+					list[len(list)-1].headlineTF++
+				} else {
+					list[len(list)-1].bodyTF++
+				}
 			}
 
 			/*
-				compute the document length
+				Track field lengths separately for BM25F-style normalization.
 			*/
-			documentLength += weight
+			if inHeadline {
+				headlineLength++
+			} else {
+				bodyLength++
+			}
 		}
 	}
 	check(scanner.Err())
 
 	/*
-		Save the final document length
+		Save the final document field lengths
 	*/
-	docLengths = append(docLengths, documentLength)
+	fieldLengths = append(fieldLengths, headlineLength, bodyLength)
 
 	/*
 		tell the user we've got to the end of parsing
@@ -307,21 +321,21 @@ func main() {
 		binary.NativeEndian.PutUint32(byteBuffer, where)
 		_, err = vocabWriter.Write(byteBuffer)
 		check(err)
-		binary.NativeEndian.PutUint32(byteBuffer, uint32(len(postings)*8))
+		binary.NativeEndian.PutUint32(byteBuffer, uint32(len(postings)*12))
 		_, err = vocabWriter.Write(byteBuffer)
 		check(err)
 
-		where += uint32(len(postings) * 8)
+		where += uint32(len(postings) * 12)
 	}
 
 	/*
-		store the document lengths
+		store the interleaved field lengths as [headline, body] pairs
 	*/
 	docLengthsFile, err := os.Create("lengths.bin")
 	check(err)
 	defer docLengthsFile.Close()
 	docLengthsWriter := bufio.NewWriter(docLengthsFile)
 	defer docLengthsWriter.Flush()
-	err = binary.Write(docLengthsWriter, binary.NativeEndian, docLengths)
+	err = binary.Write(docLengthsWriter, binary.NativeEndian, fieldLengths)
 	check(err)
 }

@@ -26,7 +26,10 @@ Constants
 ---------
 */
 const k1 = 0.9 // BM25 k1 parameter
-const b = 0.3  // BM25 b parameter
+const bodyB = 0.3
+const bodyWeight = 1.0
+const headlineB = 0.1
+const headlineWeight = 2.2
 
 /*
 Struct vocabEntry
@@ -40,6 +43,13 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+func fieldNorm(length int32, averageLength float64, b float64) float64 {
+	if averageLength == 0 {
+		return 1
+	}
+	return 1 - b + b*(float64(length)/averageLength)
 }
 
 func normalizeToken(token string) string {
@@ -74,19 +84,25 @@ func main() {
 	*/
 	lengthsAsBytes, err := os.ReadFile("lengths.bin")
 	check(err)
-	docLengths := make([]int32, len(lengthsAsBytes)/4)
-	err = binary.Read(bytes.NewReader(lengthsAsBytes), binary.NativeEndian, docLengths)
+	fieldLengths := make([]int32, len(lengthsAsBytes)/4)
+	err = binary.Read(bytes.NewReader(lengthsAsBytes), binary.NativeEndian, fieldLengths)
 	check(err)
+	if len(fieldLengths)%2 != 0 {
+		panic("lengths.bin must contain interleaved headline/body lengths")
+	}
 
 	/*
-	  Compute the average document length for BM25
+	  Compute the average field lengths for BM25F-style normalization.
 	*/
-	documentsInCollection := len(docLengths)
-	var averageDocumentLength float64 = 0
-	for _, which := range docLengths {
-		averageDocumentLength += float64(which)
+	documentsInCollection := len(fieldLengths) / 2
+	var averageHeadlineLength float64 = 0
+	var averageBodyLength float64 = 0
+	for i := 0; i < len(fieldLengths); i += 2 {
+		averageHeadlineLength += float64(fieldLengths[i])
+		averageBodyLength += float64(fieldLengths[i+1])
 	}
-	averageDocumentLength /= float64(documentsInCollection)
+	averageHeadlineLength /= float64(documentsInCollection)
+	averageBodyLength /= float64(documentsInCollection)
 
 	/*
 	  Read the primary keys
@@ -169,7 +185,7 @@ func main() {
 			currentList := make([]int32, len(currentListAsBytes)/4)
 			err = binary.Read(bytes.NewReader(currentListAsBytes), binary.NativeEndian, currentList)
 			check(err)
-			postings := len(currentListAsBytes) / 8
+			postings := len(currentListAsBytes) / 12
 
 			/*
 			  Compute the IDF component of BM25 as log(N/n).
@@ -184,13 +200,24 @@ func main() {
 			/*
 			  Process the postings list by simply adding the BM25 component for this document into the accumulators array
 			*/
-			for i := 0; i < len(currentList); i += 2 {
+			for i := 0; i < len(currentList); i += 3 {
 				d := int(currentList[i])
-				tf := float64(currentList[i+1])
+				bodyTF := float64(currentList[i+1])
+				headlineTF := float64(currentList[i+2])
+				headlineLength := fieldLengths[d*2]
+				bodyLength := fieldLengths[d*2+1]
+
+				tf := 0.0
+				if bodyTF > 0 {
+					tf += bodyWeight * bodyTF / fieldNorm(bodyLength, averageBodyLength, bodyB)
+				}
+				if headlineTF > 0 {
+					tf += headlineWeight * headlineTF / fieldNorm(headlineLength, averageHeadlineLength, headlineB)
+				}
 				if rsv[d] == 0 {
 					touchedDocs = append(touchedDocs, d)
 				}
-				rsv[d] += idf * ((tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLengths[d])/averageDocumentLength))))
+				rsv[d] += idf * ((tf * (k1 + 1)) / (tf + k1))
 			}
 		}
 		/*
