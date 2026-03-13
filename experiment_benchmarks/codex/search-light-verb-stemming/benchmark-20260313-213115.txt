@@ -1,0 +1,49 @@
+branch: codex/search-light-verb-stemming
+timestamp: 20260313-213115
+collection: /Users/caiau/school/autoresearch/../wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+smoke_topics: /Users/caiau/school/autoresearch/tests/fixtures/smoke_topics.txt
+iterations: 5
+
+index_median: 9.24
+search_smoke_median: 0.04
+search_topics_median: 0.21
+
+[index]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-light-verb-stemming/jassjr-index /Users/caiau/school/autoresearch/../wsj.xml
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 9.21
+Slowest: 9.46
+Median:  9.24
+
+[search_smoke]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-light-verb-stemming/jassjr-search
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.04
+Slowest: 0.05
+Median:  0.04
+
+[search_topics]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-light-verb-stemming/jassjr-search
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.20
+Slowest: 0.21
+Median:  0.21

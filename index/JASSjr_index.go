@@ -34,25 +34,86 @@ func isAlnum(c byte) bool {
 	return isAlpha(c) || isDigit(c)
 }
 
+func hasVowel(token string) bool {
+	for i := 0; i < len(token); i++ {
+		switch token[i] {
+		case 'a', 'e', 'i', 'o', 'u':
+			return true
+		case 'y':
+			if i > 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isConsonant(c byte) bool {
+	return 'a' <= c && c <= 'z' && !strings.ContainsRune("aeiou", rune(c))
+}
+
+func trimDoubleConsonant(token string) string {
+	if len(token) < 2 {
+		return token
+	}
+	last := token[len(token)-1]
+	if last == token[len(token)-2] && isConsonant(last) && last != 'l' && last != 's' && last != 'z' {
+		return token[:len(token)-1]
+	}
+	return token
+}
+
+func normalizeVerbSuffix(token string) string {
+	switch {
+	case len(token) > 5 && strings.HasSuffix(token, "ied"):
+		return token[:len(token)-3] + "y"
+	case len(token) > 5 && strings.HasSuffix(token, "ing"):
+		stem := token[:len(token)-3]
+		if !hasVowel(stem) {
+			return token
+		}
+		switch {
+		case strings.HasSuffix(stem, "at"), strings.HasSuffix(stem, "bl"), strings.HasSuffix(stem, "iz"):
+			return stem + "e"
+		default:
+			return trimDoubleConsonant(stem)
+		}
+	case len(token) > 4 && strings.HasSuffix(token, "ed"):
+		stem := token[:len(token)-2]
+		if !hasVowel(stem) {
+			return token
+		}
+		switch {
+		case strings.HasSuffix(stem, "at"), strings.HasSuffix(stem, "bl"), strings.HasSuffix(stem, "iz"):
+			return stem + "e"
+		default:
+			return trimDoubleConsonant(stem)
+		}
+	default:
+		return token
+	}
+}
+
 func normalizeToken(token string) string {
 	token = strings.ToLower(token)
 
 	switch {
 	case len(token) > 4 && strings.HasSuffix(token, "ies"):
-		return token[:len(token)-3] + "y"
+		token = token[:len(token)-3] + "y"
 	case len(token) > 4 && strings.HasSuffix(token, "sses"):
-		return token[:len(token)-2]
+		token = token[:len(token)-2]
 	case len(token) > 4 && (strings.HasSuffix(token, "ches") || strings.HasSuffix(token, "shes") || strings.HasSuffix(token, "xes") || strings.HasSuffix(token, "zes")):
-		return token[:len(token)-2]
+		token = token[:len(token)-2]
 	case len(token) > 3 && strings.HasSuffix(token, "s") &&
 		!strings.HasSuffix(token, "ss") &&
 		!strings.HasSuffix(token, "us") &&
 		!strings.HasSuffix(token, "is") &&
 		token != "news":
-		return token[:len(token)-1]
+		token = token[:len(token)-1]
 	default:
-		return token
 	}
+
+	return normalizeVerbSuffix(token)
 }
 
 func ignoredFieldEnd(tag string) string {

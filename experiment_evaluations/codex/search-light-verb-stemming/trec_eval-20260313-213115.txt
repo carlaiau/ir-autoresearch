@@ -1,0 +1,36 @@
+branch: codex/search-light-verb-stemming
+timestamp: 20260313-213115
+collection: /Users/caiau/school/autoresearch/../wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	46790
+num_rel               	all	6228
+num_rel_ret           	all	3761
+map                   	all	0.2312
+gm_map                	all	0.1059
+Rprec                 	all	0.2699
+bpref                 	all	0.2959
+recip_rank            	all	0.5824
+iprec_at_recall_0.00  	all	0.6418
+iprec_at_recall_0.10  	all	0.4479
+iprec_at_recall_0.20  	all	0.3809
+iprec_at_recall_0.30  	all	0.3347
+iprec_at_recall_0.40  	all	0.2783
+iprec_at_recall_0.50  	all	0.2347
+iprec_at_recall_0.60  	all	0.1929
+iprec_at_recall_0.70  	all	0.1275
+iprec_at_recall_0.80  	all	0.0837
+iprec_at_recall_0.90  	all	0.0466
+iprec_at_recall_1.00  	all	0.0082
+P_5                   	all	0.4400
+P_10                  	all	0.4080
+P_15                  	all	0.3947
+P_20                  	all	0.3880
+P_30                  	all	0.3680
+P_100                 	all	0.2746
+P_200                 	all	0.2026
+P_500                 	all	0.1235
+P_1000                	all	0.0752
