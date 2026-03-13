@@ -9,6 +9,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import quote
 
 
 BRANCH_RE = re.compile(r"codex/[A-Za-z0-9._/-]+")
@@ -22,6 +23,11 @@ class BranchMetrics:
     timestamp: str
     row_kind: str
     map_value: float
+    p_5: float
+    p_20: float
+    rprec: float
+    bpref: float
+    num_rel_ret_over_num_rel: float
     index_median: str
     search_topics_median: str
     eval_file: str
@@ -73,6 +79,13 @@ def latest_timestamp(eval_file: Path, bench_file: Path) -> str:
     return max(timestamp_from_file(eval_file), timestamp_from_file(bench_file))
 
 
+def relevance_ratio(path: Path) -> float:
+    num_rel = eval_metric(path, "num_rel")
+    if num_rel == 0:
+        return 0.0
+    return eval_metric(path, "num_rel_ret") / num_rel
+
+
 def discover_branches(repo_root: Path) -> list[str]:
     branches: set[str] = set()
     for root_name in ("experiment_evaluations", "experiment_benchmarks"):
@@ -114,6 +127,11 @@ def collect_metrics(repo_root: Path) -> list[BranchMetrics]:
             timestamp=latest_timestamp(original_eval, original_bench),
             row_kind="original",
             map_value=eval_metric(original_eval, "map"),
+            p_5=eval_metric(original_eval, "P_5"),
+            p_20=eval_metric(original_eval, "P_20"),
+            rprec=eval_metric(original_eval, "Rprec"),
+            bpref=eval_metric(original_eval, "bpref"),
+            num_rel_ret_over_num_rel=relevance_ratio(original_eval),
             index_median=bench_metric(original_bench, "index_median"),
             search_topics_median=bench_metric(original_bench, "search_topics_median"),
             eval_file=str(original_eval),
@@ -162,6 +180,11 @@ def collect_metrics(repo_root: Path) -> list[BranchMetrics]:
                 timestamp=latest_timestamp(branch_eval, branch_bench),
                 row_kind="branch",
                 map_value=eval_metric(branch_eval, "map"),
+                p_5=eval_metric(branch_eval, "P_5"),
+                p_20=eval_metric(branch_eval, "P_20"),
+                rprec=eval_metric(branch_eval, "Rprec"),
+                bpref=eval_metric(branch_eval, "bpref"),
+                num_rel_ret_over_num_rel=relevance_ratio(branch_eval),
                 index_median=bench_metric(branch_bench, "index_median"),
                 search_topics_median=bench_metric(branch_bench, "search_topics_median"),
                 eval_file=str(branch_eval),
@@ -172,7 +195,7 @@ def collect_metrics(repo_root: Path) -> list[BranchMetrics]:
     return rows
 
 
-def run_gh(repo_root: Path, args: list[str]) -> list[dict]:
+def run_gh(repo_root: Path, args: list[str]):
     try:
         result = subprocess.run(
             ["gh", *args],
@@ -192,6 +215,14 @@ def run_gh(repo_root: Path, args: list[str]) -> list[dict]:
             f"Command: {' '.join(['gh', *args])}. {stderr}"
         ) from exc
     return json.loads(result.stdout)
+
+
+def repo_url(repo_root: Path) -> str:
+    repo = run_gh(repo_root, ["repo", "view", "--json", "url"])
+    url = repo.get("url", "").rstrip("/")
+    if not url:
+        raise SystemExit("Failed to determine the GitHub repository URL with gh repo view.")
+    return url
 
 
 def issue_decision(issue: dict) -> str:
@@ -279,12 +310,13 @@ def sort_rows(rows: list[BranchMetrics]) -> list[BranchMetrics]:
     )
 
 
-def write_rows(rows: list[BranchMetrics], metadata: dict[str, GitHubMetadata]) -> None:
+def write_rows(rows: list[BranchMetrics], metadata: dict[str, GitHubMetadata], github_repo_url: str) -> None:
     writer = csv.writer(sys.stdout, delimiter="\t", lineterminator="\n")
     writer.writerow(
         [
             "branch",
             "branch_label",
+            "branch_url",
             "timestamp",
             "row_kind",
             "decision",
@@ -293,6 +325,11 @@ def write_rows(rows: list[BranchMetrics], metadata: dict[str, GitHubMetadata]) -
             "pr_number",
             "pr_url",
             "map",
+            "p_5",
+            "p_20",
+            "rprec",
+            "bpref",
+            "num_rel_ret_over_num_rel",
             "map_delta_vs_previous",
             "index_median",
             "search_topics_median",
@@ -314,11 +351,15 @@ def write_rows(rows: list[BranchMetrics], metadata: dict[str, GitHubMetadata]) -
             else:
                 map_delta = row.map_value - previous_map
         previous_map = row.map_value
+        branch_url = ""
+        if row.row_kind != "original":
+            branch_url = f"{github_repo_url}/tree/{quote(row.branch, safe='/')}"
 
         writer.writerow(
             [
                 row.branch,
                 row.branch_label,
+                branch_url,
                 row.timestamp,
                 row.row_kind,
                 decision,
@@ -327,6 +368,11 @@ def write_rows(rows: list[BranchMetrics], metadata: dict[str, GitHubMetadata]) -
                 branch_metadata.pr_number,
                 branch_metadata.pr_url,
                 f"{row.map_value:.4f}",
+                f"{row.p_5:.4f}",
+                f"{row.p_20:.4f}",
+                f"{row.rprec:.4f}",
+                f"{row.bpref:.4f}",
+                f"{row.num_rel_ret_over_num_rel:.4f}",
                 f"{map_delta:.4f}",
                 row.index_median,
                 row.search_topics_median,
@@ -340,7 +386,7 @@ def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     rows = collect_metrics(repo_root)
     metadata = github_metadata(repo_root)
-    write_rows(rows, metadata)
+    write_rows(rows, metadata, repo_url(repo_root))
 
 
 if __name__ == "__main__":
