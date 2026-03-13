@@ -27,6 +27,7 @@ Constants
 */
 const k1 = 0.9 // BM25 k1 parameter
 const b = 0.3  // BM25 b parameter
+const delta = 0.3
 
 /*
 Struct vocabEntry
@@ -190,7 +191,7 @@ func main() {
 				if rsv[d] == 0 {
 					touchedDocs = append(touchedDocs, d)
 				}
-				rsv[d] += idf * ((tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLengths[d])/averageDocumentLength))))
+				rsv[d] += idf * (delta + ((tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLengths[d])/averageDocumentLength)))))
 			}
 		}
 		/*
