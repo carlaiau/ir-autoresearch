@@ -1,4 +1,4 @@
-Current accepted leader [`codex/search-prf`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-prf) improves `MAP` from `0.2080` on to `0.2396` (`+0.0316 (+15.2%)`). It also raises `P@5` from `0.4320` to `0.4640`.
+Current accepted leader [`codex/search-bm25-grid-search`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-grid-search) improves `MAP` from `0.2080` on to `0.2402` (`+0.0322 (+15.5%)`). It also raises `P@5` from `0.4320` to `0.4680`.
 
 | Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -8,6 +8,7 @@ Current accepted leader [`codex/search-prf`](https://github.com/carlaiau/ir-auto
 | [`codex/search-headline-boost`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-headline-boost) | [#10](https://github.com/carlaiau/ir-autoresearch/issues/10) | 0.2355 | **+0.0005** | 0.4520 | 0.3910 | 0.2768 | 0.3046 | 0.6007 | 8.99 | 0.19 |
 | [`codex/search-bm25-b-030`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-b-030) | [#14](https://github.com/carlaiau/ir-autoresearch/issues/14) | 0.2365 | **+0.0010** | 0.4600 | 0.3980 | 0.2801 | 0.3048 | 0.6016 | 8.83 | 0.20 |
 | [`codex/search-prf`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-prf) | [#23](https://github.com/carlaiau/ir-autoresearch/issues/23) | 0.2396 | **+0.0031** | 0.4640 | 0.3960 | 0.2840 | 0.3071 | 0.6031 | 10.42 | 0.21 |
+| [`codex/search-bm25-grid-search`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-grid-search) | [#25](https://github.com/carlaiau/ir-autoresearch/issues/25) | 0.2402 | **+0.0006** | 0.4680 | 0.3950 | 0.2826 | 0.3062 | 0.6029 | 10.61 | 0.22 |
 
 **Legend**
 - `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.

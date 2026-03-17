@@ -25,11 +25,14 @@ import (
 Constants
 ---------
 */
-const k1 = 0.9 // BM25 k1 parameter
-const b = 0.3  // BM25 b parameter
+const defaultK1 = 0.7 // BM25 k1 parameter
+const defaultB = 0.3  // BM25 b parameter
 const feedbackDocs = 2
 const expansionTerms = 1
 const expansionWeight = 0.10
+
+var bm25K1 = defaultK1
+var bm25B = defaultB
 
 /*
 Struct vocabEntry
@@ -60,6 +63,31 @@ type feedbackCandidate struct {
 func check(e error) {
 	if e != nil {
 		panic(e)
+	}
+}
+
+func floatFromEnv(name string, fallback float64) float64 {
+	raw := os.Getenv(name)
+	if raw == "" {
+		return fallback
+	}
+
+	value, err := strconv.ParseFloat(raw, 64)
+	if err != nil {
+		panic(fmt.Sprintf("%s must be a floating-point number: %v", name, err))
+	}
+	return value
+}
+
+func configureBM25Parameters() {
+	bm25K1 = floatFromEnv("JASSJR_BM25_K1", defaultK1)
+	bm25B = floatFromEnv("JASSJR_BM25_B", defaultB)
+
+	if bm25K1 < 0 {
+		panic("JASSJR_BM25_K1 must be non-negative")
+	}
+	if bm25B < 0 || bm25B > 1 {
+		panic("JASSJR_BM25_B must be between 0 and 1")
 	}
 }
 
@@ -111,9 +139,9 @@ func loadIndex(lengthsPath string, postingsPath string, vocabPath string) loaded
 
 func bm25Score(tf float64, docLength int32, averageDocumentLength float64) float64 {
 	if averageDocumentLength == 0 {
-		return (tf * (k1 + 1)) / (tf + k1)
+		return (tf * (bm25K1 + 1)) / (tf + bm25K1)
 	}
-	return (tf * (k1 + 1)) / (tf + k1*(1-b+b*(float64(docLength)/averageDocumentLength)))
+	return (tf * (bm25K1 + 1)) / (tf + bm25K1*(1-bm25B+bm25B*(float64(docLength)/averageDocumentLength)))
 }
 
 func accumulateScores(index loadedIndex, token string, queryWeight float64, rsv []float64, touchedDocs *[]int) {
@@ -270,6 +298,8 @@ main()
 Simple search engine ranking on BM25.
 */
 func main() {
+	configureBM25Parameters()
+
 	index := loadIndex("lengths.bin", "postings.bin", "vocab.bin")
 	defer index.postingsFile.Close()
 
