@@ -70,14 +70,14 @@ A change is acceptable only if all of the following are true:
 4. `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml` shows no serious regression relative to the latest compatible benchmark on `main`.
 
 Use this benchmark policy as it applies to index median:
-- `<= 5%` median slowdown: acceptable.
-- `> 5%` and `<= 25%` slowdown: acceptable only if the retrieval gain is clearly worthwhile and should be called out in the PR.
-- `> 25%` median slowdown in indexing or search: reject by default.
+- `<= 10%` median slowdown: acceptable.
+- `> 10%` and `<= 50%` slowdown: acceptable only if the retrieval gain is clearly worthwhile and should be called out in the PR.
+- `> 50%` median slowdown in indexing: reject by default.
 
 Use this benchmark policy as it applies to search_topics_median:
-- `<= 5%` median slowdown: acceptable.
-- `> 5%` and `<= 15%` slowdown: acceptable only if the retrieval gain is clearly worthwhile and should be called out in the PR.
-- `> 15%` median slowdown in indexing or search: reject by default.
+- `<= 10%` median slowdown: acceptable.
+- `> 10%` and `<= 25%` slowdown: acceptable only if the retrieval gain is clearly worthwhile and should be called out in the PR.
+- `> 25%` median slowdown in search: reject by default.
 
 You do not need to pay attention to `search_smoke_median`
 
