@@ -30,6 +30,9 @@ const defaultB = 0.3  // BM25 b parameter
 const feedbackDocs = 2
 const expansionTerms = 1
 const expansionWeight = 0.10
+const rerankDocs = 20
+const rerankPassageWindow = 32
+const rerankPassageWeight = 0.15
 
 var bm25K1 = defaultK1
 var bm25B = defaultB
@@ -58,6 +61,17 @@ type weightedQueryTerm struct {
 type feedbackCandidate struct {
 	token  string
 	weight float64
+}
+
+type querySignal struct {
+	token  string
+	weight float64
+	idf    float64
+}
+
+type matchedOccurrence struct {
+	position  int
+	termIndex int
 }
 
 func check(e error) {
@@ -194,6 +208,36 @@ func sortResults(rsv []float64, touchedDocs []int) []int {
 	return touchedDocs
 }
 
+func buildQuerySignals(index loadedIndex, queryTerms []weightedQueryTerm) ([]querySignal, map[string]int) {
+	querySignals := make([]querySignal, 0, len(queryTerms))
+	querySignalIndex := make(map[string]int, len(queryTerms))
+
+	for _, term := range queryTerms {
+		if signalIndex, exists := querySignalIndex[term.token]; exists {
+			querySignals[signalIndex].weight += term.weight
+			continue
+		}
+
+		termDetails, ok := index.dictionary[term.token]
+		if !ok {
+			continue
+		}
+		postings := int(termDetails.size / 8)
+		if postings == 0 || postings == index.documentsInCollection {
+			continue
+		}
+
+		querySignalIndex[term.token] = len(querySignals)
+		querySignals = append(querySignals, querySignal{
+			token:  term.token,
+			weight: term.weight,
+			idf:    math.Log(float64(index.documentsInCollection) / float64(postings)),
+		})
+	}
+
+	return querySignals, querySignalIndex
+}
+
 func readForwardDocTerms(forwardFile *os.File, forwardOffsets []int64, docID int) map[string]int32 {
 	offset := forwardOffsets[docID*2]
 	size := forwardOffsets[docID*2+1]
@@ -214,6 +258,114 @@ func readForwardDocTerms(forwardFile *os.File, forwardOffsets []int64, docID int
 		docTerms[term]++
 	}
 	return docTerms
+}
+
+func readForwardDocMatches(forwardFile *os.File, forwardOffsets []int64, docID int, querySignalIndex map[string]int) []matchedOccurrence {
+	offset := forwardOffsets[docID*2]
+	size := forwardOffsets[docID*2+1]
+	if size == 0 {
+		return nil
+	}
+
+	buffer := make([]byte, int(size))
+	_, err := forwardFile.ReadAt(buffer, offset)
+	check(err)
+
+	occurrences := make([]matchedOccurrence, 0, 16)
+	position := 0
+	for current := 0; current < len(buffer); {
+		strLength := int(buffer[current])
+		current++
+		token := string(buffer[current : current+strLength])
+		current += strLength
+
+		if termIndex, ok := querySignalIndex[token]; ok {
+			occurrences = append(occurrences, matchedOccurrence{
+				position:  position,
+				termIndex: termIndex,
+			})
+		}
+		position++
+	}
+
+	return occurrences
+}
+
+func bestPassageScore(querySignals []querySignal, occurrences []matchedOccurrence) float64 {
+	if len(querySignals) < 2 || len(occurrences) < 2 {
+		return 0
+	}
+
+	bestScore := 0.0
+	counts := make([]int32, len(querySignals))
+	touchedTerms := make([]int, 0, len(querySignals))
+
+	for end := 0; end < len(occurrences); end++ {
+		endPosition := occurrences[end].position
+		touchedTerms = touchedTerms[:0]
+		matchedTerms := 0
+
+		for start := end; start >= 0; start-- {
+			windowLength := endPosition - occurrences[start].position + 1
+			if windowLength > rerankPassageWindow {
+				break
+			}
+
+			termIndex := occurrences[start].termIndex
+			if counts[termIndex] == 0 {
+				matchedTerms++
+				touchedTerms = append(touchedTerms, termIndex)
+			}
+			counts[termIndex]++
+
+			if matchedTerms < 2 {
+				continue
+			}
+
+			passageScore := 0.0
+			for _, activeTerm := range touchedTerms {
+				signal := querySignals[activeTerm]
+				passageScore += signal.weight * signal.idf * bm25Score(float64(counts[activeTerm]), int32(windowLength), float64(rerankPassageWindow))
+			}
+
+			if passageScore > bestScore {
+				bestScore = passageScore
+			}
+		}
+
+		for _, activeTerm := range touchedTerms {
+			counts[activeTerm] = 0
+		}
+	}
+
+	return bestScore
+}
+
+func rerankTopPassages(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, queryTerms []weightedQueryTerm, rankedDocs []int, rsv []float64) []int {
+	querySignals, querySignalIndex := buildQuerySignals(index, queryTerms)
+	if len(querySignals) < 2 || len(rankedDocs) == 0 {
+		return rankedDocs
+	}
+
+	limit := rerankDocs
+	if len(rankedDocs) < limit {
+		limit = len(rankedDocs)
+	}
+
+	rerankedPrefix := append([]int(nil), rankedDocs[:limit]...)
+	for _, docID := range rerankedPrefix {
+		passageScore := bestPassageScore(querySignals, readForwardDocMatches(forwardFile, forwardOffsets, docID, querySignalIndex))
+		if passageScore == 0 {
+			continue
+		}
+		rsv[docID] += rerankPassageWeight * passageScore
+	}
+
+	rerankedPrefix = sortResults(rsv, rerankedPrefix)
+	rerankedDocs := make([]int, 0, len(rankedDocs))
+	rerankedDocs = append(rerankedDocs, rerankedPrefix...)
+	rerankedDocs = append(rerankedDocs, rankedDocs[limit:]...)
+	return rerankedDocs
 }
 
 func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, rankedDocs []int, originalTerms map[string]struct{}) []weightedQueryTerm {
@@ -369,6 +521,7 @@ func main() {
 				touchedDocs = sortResults(rsv, touchedDocs)
 			}
 		}
+		touchedDocs = rerankTopPassages(index, forwardFile, forwardOffsets, queryTerms, touchedDocs, rsv)
 
 		/*
 		  Print the (at most) top 1000 documents in the results list in TREC eval format which is:
