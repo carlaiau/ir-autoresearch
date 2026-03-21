@@ -1,6 +1,6 @@
 # Search Experiment Sandbox
 
-This repository provides a compact sandbox for experimenting with a simple, understandable IR system. The aim is to enable an agent to iteratively optimize indexing and ranking strategies, evaluate each iteration with `trec_eval`, and preserve only the changes that improve overall retrieval effectiveness while avoiding significant performance regressions.
+This repository provides a compact sandbox for experimenting with a simple, understandable IR system. The aim is to enable an agent to iteratively optimize indexing and ranking strategies, evaluate each iteration with `trec_eval`, and preserve only the changes that improve overall retrieval effectiveness. Computational efficiency work is deferred for now; benchmark data is optional context when available, not part of the current approval gate.
 
 ## Current Results
 
@@ -28,6 +28,8 @@ Current accepted leader [`codex/search-openai-mono`](https://github.com/carlaiau
 - `recall` (`num_rel_ret / num_rel`): Fraction of all judged-relevant documents that were retrieved anywhere in the run. higher is better.
 - `Index (s)`: Median wall-clock indexing time in seconds across benchmark runs; lower is better.
 - `Search (s)`: Median wall-clock search time in seconds for the full topics file across benchmark runs; lower is better.
+
+The `Index (s)` and `Search (s)` columns are currently informational only. New experiments do not need fresh benchmark runs to be accepted right now.
 <!-- README_METRICS_TABLE_END -->
 
 Generated files:
@@ -52,7 +54,7 @@ This project is licensed under the MIT License, except for JassJr related code w
 - experimenting with ranking and query processing in `search/JASSjr_search.go`
 - validating end-to-end behavior with a tiny smoke fixture
 - evaluating real retrieval quality on the WSJ/TREC setup
-- benchmarking indexing and search time so quality gains do not come with unacceptable slowdowns
+- optionally benchmarking indexing and search time for future efficiency work
 
 This repo is intentionally small so an automated agent can understand the full workflow and iterate quickly.
 
@@ -65,7 +67,6 @@ git checkout main
 git pull --ff-only
 ./tests/smoke.sh
 ./tools/eval_wsj.sh /absolute/path/to/your/wsj.xml
-./tools/benchmark_wsj.sh /absolute/path/to/your/wsj.xml
 ./tools/update_metrics_dashboard.sh
 ```
 
@@ -76,7 +77,7 @@ What they do:
 - `./tools/eval_wsj.sh`
   Builds the search engine, runs the TREC topics, and records a timestamped `trec_eval` summary.
 - `./tools/benchmark_wsj.sh`
-  Runs a few indexing and search benchmarks and records timestamped timings.
+  Optional: runs a few indexing and search benchmarks and records timestamped timings for later efficiency work.
 - `./tools/update_metrics_dashboard.sh`
   Exports the README branch metrics and refreshes the metrics table embedded in this README.
 - `./tools/compare_branch_to_main.sh <branch>`
@@ -107,10 +108,9 @@ git checkout main
 git pull --ff-only
 ./tests/smoke.sh
 ./tools/eval_wsj.sh /absolute/path/to/your/wsj.xml
-./tools/benchmark_wsj.sh /absolute/path/to/your/wsj.xml
 ```
 
-After that, create or update an experiment branch from the refreshed `main` baseline and require the branch to beat the newest `main` evaluation and benchmark artifacts before approving a PR.
+After that, create or update an experiment branch from the refreshed `main` baseline and require the branch to beat the newest `main` evaluation artifact before approving a PR. Benchmark artifacts can still be collected when desired, but they are not part of the current approval gate.
 
 To compare a branch against the current production baseline:
 
@@ -133,14 +133,14 @@ To refresh the committed dashboard assets:
 The raw history export from `tools/export_metrics_history.sh` is designed for simple analysis of:
 
 - retrieval effectiveness over time, especially `map`
-- benchmark medians over time for indexing and search
+- benchmark medians over time for indexing and search, when benchmark artifacts exist
 
 That TSV also includes enough metadata to filter or separate runs:
 
 - `collection`, `topics`, and `qrels` for evaluation rows
 - `collection`, `topics`, `smoke_topics`, and `iterations` for benchmark rows
 
-That matters because you may occasionally record toy or verification runs alongside full WSJ/TREC runs. For production reporting, filter to the real WSJ collection and the standard `51-100` topics/qrels before comparing `map` or the benchmark medians.
+That matters because you may occasionally record toy or verification runs alongside full WSJ/TREC runs. For production reporting, filter to the real WSJ collection and the standard `51-100` topics/qrels before comparing `map`, and only compare benchmark medians when benchmark artifacts are available.
 
 ## Success Criteria
 
@@ -148,9 +148,8 @@ A change is worth keeping only if:
 
 - the smoke test still passes
 - `trec_eval` improves overall retrieval effectiveness relative to the latest compatible evaluation on `main`
-- indexing and search benchmarks do not show a serious regression relative to the latest compatible benchmark on `main`
 
-In practice, `map` is the main headline metric, but `Rprec`, `P_10`, `bpref`, and `recip_rank` should also be watched.
+In practice, `map` is the main headline metric, but `Rprec`, `P_10`, `bpref`, and `recip_rank` should also be watched. Benchmark runs remain available for future efficiency work, but they are optional right now.
 
 ## Repository Structure
 

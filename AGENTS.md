@@ -6,7 +6,7 @@ If explicit user instructions conflict with this file, follow the user. Otherwis
 
 This repository is an autonomous experimentation sandbox for a compact JASSjr-derived search engine.
 
-The goal is to improve end-to-end retrieval effectiveness on the WSJ/TREC setup while avoiding serious regressions in indexing and query latency.
+The current goal is to improve end-to-end retrieval effectiveness on the WSJ/TREC setup. Computational efficiency work is deferred for now; benchmark results are informational when present, but they are not part of the current approval gate.
 
 This is not a binary-compatibility project. Internal index structure may evolve if end-to-end behavior improves.
 
@@ -74,7 +74,6 @@ git checkout main
 git pull --ff-only
 ./tests/smoke.sh
 ./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>
-./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>
 ```
 
 Headline retrieval metric:
@@ -93,13 +92,8 @@ A change is acceptable only if all of the following are true:
 1. `./tests/smoke.sh` passes.
 2. `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>` completes successfully.
 3. Overall retrieval effectiveness improves relative to the current accepted branch baseline, with `map` as the main headline metric.
-4. `./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>` shows no serious regression.
 
-Benchmark policy:
-
-- `<= 5%` median slowdown: acceptable.
-- `> 5%` and `<= 15%` slowdown: acceptable only if the retrieval gain is clearly worthwhile.
-- `> 15%` median slowdown in indexing or search: reject by default.
+Benchmark runs are optional for now. If they are run, treat the results as informational and not approval-gating.
 
 ## Git And Branching
 
@@ -126,7 +120,6 @@ Unless the user says otherwise, use this loop:
    - `git pull --ff-only`
    - `./tests/smoke.sh`
    - `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>`
-   - `./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>`
 4. Pick one concrete retrieval hypothesis.
 5. Create or update a GitHub issue for that hypothesis.
 6. Create a new branch from `main`:
@@ -135,18 +128,18 @@ Unless the user says otherwise, use this loop:
 8. Run the full validation sequence:
    - `./tests/smoke.sh`
    - `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>`
-   - `./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>`
-   - `./tools/compare_branch_to_main.sh <branch>`
-   - `./tools/update_metrics_dashboard.sh`
+   - optionally run `./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>` if the user explicitly wants fresh efficiency numbers
+   - optionally run `./tools/compare_branch_to_main.sh <branch>` when compatible benchmark artifacts exist
+   - optionally run `./tools/update_metrics_dashboard.sh` when you want to refresh the historical dashboard assets
 9. Evaluate the result against the latest compatible `main` artifacts.
 10. If the change is rejected:
-   - commit and push the attempted code change plus the branch's evaluation and benchmark artifacts before abandoning the experiment
+   - commit and push the attempted code change plus the branch's evaluation artifacts, and any benchmark artifacts that were produced, before abandoning the experiment
    - keep the rejected branch as a historical record; do not reset it to the last accepted state
    - comment on the GitHub issue with the attempted idea, metrics, and rejection reason
    - include the rejection commit hash in the issue comment when possible
    - close the issue or mark it rejected
 11. If the change is accepted:
-   - commit the code change plus dashboard assets and the branch's evaluation and benchmark artifacts
+   - commit the code change plus dashboard assets, the branch's evaluation artifacts, and any benchmark artifacts that were produced
    - open or update a PR
    - link the PR to the issue
 12. After completing either the rejected or accepted path, return to step 1 and begin the next experiment.
@@ -172,7 +165,7 @@ Good experiment targets:
 - candidate ordering and tie-breaking
 - internal vocabulary or postings structure
 
-Avoid changes with no clear retrieval or performance hypothesis.
+Avoid changes with no clear retrieval hypothesis.
 
 ## GitHub Issue Rules
 
@@ -188,7 +181,7 @@ Each issue should include:
 - the likely files to change
 - acceptance criteria
 - the retrieval metric to watch
-- the benchmark risk to watch
+- any important implementation or evaluation risks to watch
 
 When an experiment is rejected, record the reason and the key metrics in the issue before closing or marking it not pursued.
 
@@ -201,14 +194,14 @@ Every PR should include:
 - the hypothesis
 - a concise summary of the code change
 - the latest `map`, `Rprec`, `P_10`, `bpref`, and `recip_rank`
-- the latest benchmark medians
-- the summary from `./tools/compare_branch_to_main.sh <branch>`
-- the experiment's committed evaluation and benchmark artifacts for that branch
+- the summary from `./tools/compare_branch_to_main.sh <branch>` when compatible benchmark artifacts exist
+- the experiment's committed evaluation artifacts for that branch
+- any benchmark artifacts for that branch, if benchmark runs were produced
 - note that `main` is the approval baseline and `original` is a read-only initialization archive
-- note that the README dashboard was refreshed
+- note that the README dashboard was refreshed if it was updated
 - a link to the GitHub issue
 
-If a PR does not clearly improve retrieval effectiveness or violates the benchmark guardrails, do not keep pushing it forward.
+If a PR does not clearly improve retrieval effectiveness, do not keep pushing it forward. Benchmark data may still be included for context when available, but it is not approval-gating right now.
 
 ## Artifacts And Dashboard
 
@@ -221,7 +214,7 @@ Generated benchmark artifacts are written under:
 - `experiment_benchmarks/<branch>/`
 
 Commit the branch-local evaluation and benchmark artifacts that correspond to the final validation run for each experiment branch.
-This applies to accepted experiments and rejected experiments that are being abandoned but preserved historically.
+This applies to accepted experiments and rejected experiments that are being abandoned but preserved historically. Benchmark artifacts are optional when no benchmark run was performed.
 Do not commit refreshed `main` baseline artifacts unless the user explicitly asks.
 Never modify or recommit anything under the read-only `original` artifact folders.
 
@@ -242,6 +235,11 @@ Core commands:
 ```bash
 ./tests/smoke.sh
 ./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>
+```
+
+Optional commands:
+
+```bash
 ./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>
 ./tools/compare_branch_to_main.sh <branch>
 ./tools/update_metrics_dashboard.sh

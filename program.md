@@ -1,6 +1,6 @@
 # Search Agent Program
 
-This repository is for autonomous retrieval experiments on a compact search engine implementation. The agent's job is to improve end-to-end retrieval effectiveness on the WSJ/TREC setup while avoiding serious indexing and search-time regressions.
+This repository is for autonomous retrieval experiments on a compact search engine implementation. The agent's job is to improve end-to-end retrieval effectiveness on the WSJ/TREC setup. Computational efficiency work is deferred for now, so benchmark results are informational when present rather than approval-gating.
 
 ## Mission
 
@@ -14,7 +14,7 @@ The system is judged primarily by `trec_eval` results on the shipped WSJ topics/
 - `51-100.titles.txt`
 - `51-100.qrels.txt`
 
-Every accepted change must improve overall retrieval effectiveness, and must not introduce a serious regression in indexing or search latency.
+Every accepted change must improve overall retrieval effectiveness.
 
 ## Setup
 
@@ -41,11 +41,9 @@ Before experimentation begins, do this once per run:
    - `./tests/smoke.sh`
 7. Run a baseline evaluation:
    - `./tools/eval_wsj.sh /absolute/path/to/wsj.xml`
-8. Run a baseline benchmark pass:
-   - `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml`
-9. Note the latest evaluation report and benchmark report for `main`.
-10. Create or refresh the experiment branch from the updated `main`.
-11. Know how to compare an experiment branch against the active baseline on `main`:
+8. Note the latest evaluation report for `main`.
+9. Create or refresh the experiment branch from the updated `main`.
+10. Know how to compare an experiment branch against the active baseline on `main` when compatible benchmark artifacts exist:
    - `./tools/compare_branch_to_main.sh <branch>`
 
 ## Optimization Objective
@@ -57,7 +55,6 @@ Primary objective:
 Secondary objectives:
 
 - Improve or preserve `Rprec`, `P_10`, `bpref`, and `recip_rank`.
-- Avoid serious regressions in indexing time and search time.
 - Prefer simpler changes when retrieval gains are similar.
 
 ## Acceptance Rules
@@ -67,27 +64,14 @@ A change is acceptable only if all of the following are true:
 1. `./tests/smoke.sh` passes.
 2. `./tools/eval_wsj.sh /absolute/path/to/wsj.xml` completes successfully.
 3. Overall retrieval effectiveness improves relative to the latest compatible evaluation on `main`.
-4. `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml` shows no serious regression relative to the latest compatible benchmark on `main`.
 
-Use this benchmark policy as it applies to index median:
-- `<= 10%` median slowdown: acceptable.
-- `> 10%` and `<= 50%` slowdown: acceptable only if the retrieval gain is clearly worthwhile and should be called out in the PR.
-- `> 50%` median slowdown in indexing: reject by default.
-
-Use this benchmark policy as it applies to search_topics_median:
-- `<= 10%` median slowdown: acceptable.
-- `> 10%` and `<= 25%` slowdown: acceptable only if the retrieval gain is clearly worthwhile and should be called out in the PR.
-- `> 25%` median slowdown in search: reject by default.
-
-You do not need to pay attention to `search_smoke_median`
-
-When in doubt, reject performance-neutral complexity and reject quality gains that come with large latency regressions.
+Benchmark runs are optional for now. If benchmark artifacts exist, treat them as supplementary context rather than approval criteria.
 
 ## Experiment Loop
 
 Loop continuously until stopped:
 
-1. Check out `main`, pull the latest remote changes, and refresh the `main` smoke/evaluation/benchmark artifacts.
+1. Check out `main`, pull the latest remote changes, and refresh the `main` smoke/evaluation artifacts.
 2. Pick one retrieval idea.
 3. Create or update the experiment branch from refreshed `main`.
 4. Edit the indexer and/or searcher.
@@ -96,17 +80,17 @@ Loop continuously until stopped:
 6. If smoke fails, fix or discard immediately.
 7. Run full evaluation:
    - `./tools/eval_wsj.sh /absolute/path/to/wsj.xml`
-8. Run benchmark guardrail:
+8. Optionally run a benchmark pass:
    - `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml`
-9. Compare the branch against the latest `main` artifacts:
+9. Optionally compare the branch against the latest `main` artifacts:
    - `./tools/compare_branch_to_main.sh <branch>`
-10. Refresh the committed dashboard assets:
+10. Optionally refresh the committed dashboard assets:
    - `./tools/update_metrics_dashboard.sh`
-11. If the change improves retrieval and respects benchmark guardrails:
+11. If the change improves retrieval:
    - commit it
    - keep the branch moving forward
    - update or open a PR
-12. If the change does not improve retrieval or causes a serious regression:
+12. If the change does not improve retrieval:
    - discard it
    - return the branch to the last accepted commit
 
@@ -124,7 +108,7 @@ Safe areas to explore:
 - candidate ordering and tie-breaking
 - vocabulary or postings layout changes that preserve end-to-end behavior
 
-Avoid changes that only reshuffle code without a plausible retrieval or performance hypothesis.
+Avoid changes that only reshuffle code without a plausible retrieval hypothesis.
 
 ## Artifact Policy
 
@@ -140,7 +124,7 @@ Benchmark reports go to:
 
 The `experiment_evaluations/original/` and `experiment_benchmarks/original/` folders are immutable initialization archives. Do not write new artifacts into them and do not use them for active approval comparisons.
 
-Do not commit generated evaluation or benchmark artifacts.
+Do not commit generated evaluation artifacts unless the active repository policy explicitly says to preserve them for the branch. Benchmark artifacts are optional when no benchmark run was performed.
 
 Do commit the PR dashboard assets after each accepted experiment:
 
@@ -169,15 +153,15 @@ Use the same high-level interaction model as the original autonomous research lo
    - the hypothesis
    - the code changes
    - the latest `trec_eval` headline metrics
-   - the latest benchmark medians
-   - the branch-vs-main comparison from `./tools/compare_branch_to_main.sh <branch>`
+   - the latest benchmark medians, if benchmark runs were performed
+   - the branch-vs-main comparison from `./tools/compare_branch_to_main.sh <branch>`, when compatible benchmark artifacts exist
    - the updated README metrics table that shows `original` plus the current PR branch row
    - any tradeoffs
 5. Before opening or updating the PR, refresh:
    - `./tools/update_metrics_dashboard.sh`
-6. Only merge PRs that improve overall search effectiveness and do not introduce a serious time regression.
+6. Only merge PRs that improve overall search effectiveness.
 
-If a PR does not clear both quality and performance guardrails, close or supersede it instead of merging.
+Benchmark information may still be included for context when available, but it is not part of the current merge gate.
 
 ## Reporting Format
 
@@ -186,13 +170,13 @@ For every accepted experiment, record:
 - commit hash
 - branch name
 - evaluation report path
-- benchmark report path
+- benchmark report path, if a benchmark run was produced
 - key metric deltas:
   - `map`
   - `Rprec`
   - `P_10`
-  - index median
-  - search median
+  - index median, if benchmark data exists
+  - search median, if benchmark data exists
 - one short description of the idea
 
 ## Operating Principle
@@ -202,4 +186,3 @@ This is not a binary-compatibility project. Internal index structure may evolve.
 - the system still works end to end
 - smoke checks stay green
 - retrieval quality improves
-- latency does not regress badly
