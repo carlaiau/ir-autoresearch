@@ -1,0 +1,58 @@
+branch: codex/search-openai-duo-top10
+timestamp: 20260322-112656
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+JASSJR_OPENAI_RERANK_MODE: mono_duo
+
+JASSJR_OPENAI_RERANK_MODE: mono_duo
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+JASSJR_OPENAI_MONO_MODEL: gpt-5-mini
+JASSJR_OPENAI_DUO_MODEL: gpt-5-mini
+JASSJR_OPENAI_PROMPT_VERSION: openai-rerank-v2
+JASSJR_OPENAI_MONO_DOCS: 25
+JASSJR_OPENAI_DUO_DOCS: 10
+JASSJR_OPENAI_DOC_WORDS: 220
+JASSJR_OPENAI_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-rerank
+JASSJR_OPENAI_CACHE_HITS: 1250
+JASSJR_OPENAI_CACHE_MISSES: 2250
+JASSJR_OPENAI_MONO_CALLS: 0
+JASSJR_OPENAI_DUO_CALLS: 2250
+JASSJR_OPENAI_EST_INPUT_TOKENS: 1308483
+JASSJR_OPENAI_EST_OUTPUT_TOKENS: 28000
+JASSJR_OPENAI_ACTUAL_INPUT_TOKENS: 1639464
+JASSJR_OPENAI_ACTUAL_OUTPUT_TOKENS: 96750
+JASSJR_OPENAI_EST_COST_USD: 0.383121
+JASSJR_OPENAI_ACTUAL_COST_USD: 0.603366
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	46913
+num_rel               	all	6228
+num_rel_ret           	all	3755
+map                   	all	0.2475
+gm_map                	all	0.1231
+Rprec                 	all	0.2836
+bpref                 	all	0.3096
+recip_rank            	all	0.7183
+iprec_at_recall_0.00  	all	0.7476
+iprec_at_recall_0.10  	all	0.4989
+iprec_at_recall_0.20  	all	0.3969
+iprec_at_recall_0.30  	all	0.3378
+iprec_at_recall_0.40  	all	0.2954
+iprec_at_recall_0.50  	all	0.2484
+iprec_at_recall_0.60  	all	0.2016
+iprec_at_recall_0.70  	all	0.1370
+iprec_at_recall_0.80  	all	0.0923
+iprec_at_recall_0.90  	all	0.0462
+iprec_at_recall_1.00  	all	0.0083
+P_5                   	all	0.5320
+P_10                  	all	0.4780
+P_15                  	all	0.4413
+P_20                  	all	0.4080
+P_30                  	all	0.3700
+P_100                 	all	0.2740
+P_200                 	all	0.2032
+P_500                 	all	0.1235
+P_1000                	all	0.0751
