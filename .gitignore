@@ -1,7 +1,11 @@
 .bin
 .stdout
+.cache/
+.env
+.env.local
 smoke-eval/
 wsj-eval/
 wsj-benchmark/
 wsj-eval
 smoke-eval
+.env

@@ -1,0 +1,71 @@
+branch: codex/search-openai-mono
+timestamp: 20260322-105942
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+smoke_topics: /Users/caiau/school/autoresearch/tests/fixtures/smoke_topics.txt
+iterations: 5
+
+JASSJR_OPENAI_RERANK_MODE: mono
+
+JASSJR_OPENAI_RERANK_MODE: mono
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+JASSJR_OPENAI_MONO_MODEL: gpt-5-mini
+JASSJR_OPENAI_DUO_MODEL: gpt-5-mini
+JASSJR_OPENAI_PROMPT_VERSION: openai-rerank-v2
+JASSJR_OPENAI_MONO_DOCS: 25
+JASSJR_OPENAI_DUO_DOCS: 10
+JASSJR_OPENAI_DOC_WORDS: 220
+JASSJR_OPENAI_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-rerank
+JASSJR_OPENAI_CACHE_HITS: 1250
+JASSJR_OPENAI_CACHE_MISSES: 0
+JASSJR_OPENAI_MONO_CALLS: 0
+JASSJR_OPENAI_DUO_CALLS: 0
+JASSJR_OPENAI_EST_INPUT_TOKENS: 304758
+JASSJR_OPENAI_EST_OUTPUT_TOKENS: 10000
+JASSJR_OPENAI_ACTUAL_INPUT_TOKENS: 395016
+JASSJR_OPENAI_ACTUAL_OUTPUT_TOKENS: 33750
+JASSJR_OPENAI_EST_COST_USD: 0.096189
+JASSJR_OPENAI_ACTUAL_COST_USD: 0.166254
+
+index_median: 12.04
+search_smoke_median: 0.27
+search_topics_median: 0.71
+
+[index]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-openai-mono/jassjr-index /Users/caiau/school/wsj.xml
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 11.89
+Slowest: 13.51
+Median:  12.04
+
+[search_smoke]
+Benchmarking: /Users/caiau/school/autoresearch/tools/run_search_pipeline.sh --workdir /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-openai-mono
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.26
+Slowest: 0.28
+Median:  0.27
+
+[search_topics]
+Benchmarking: /Users/caiau/school/autoresearch/tools/run_search_pipeline.sh --workdir /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-openai-mono
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.70
+Slowest: 0.74
+Median:  0.71
