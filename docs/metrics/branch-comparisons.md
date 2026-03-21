@@ -1,4 +1,4 @@
-Current accepted leader [`codex/search-openai-mono`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-openai-mono) improves `MAP` from `0.2080` on to `0.2485` (`+0.0405 (+19.5%)`). It also raises `P@5` from `0.4320` to `0.5240`.
+Current accepted leader [`codex/search-rm3-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rm3-recall) improves `MAP` from `0.2080` on to `0.2530` (`+0.0450 (+21.6%)`). It also raises `P@5` from `0.4320` to `0.4840`.
 
 | Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -12,6 +12,7 @@ Current accepted leader [`codex/search-openai-mono`](https://github.com/carlaiau
 | [`codex/search-rerank-span`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rerank-span) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2410 | **+0.0008** | 0.4720 | 0.3950 | 0.2826 | 0.3065 | 0.6029 | 10.03 | 0.24 |
 | [`codex/search-duobert-grid`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-duobert-grid) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2418 | **+0.0008** | 0.4600 | 0.4010 | 0.2836 | 0.3074 | 0.6029 | 11.95 | 0.26 |
 | [`codex/search-openai-mono`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-openai-mono) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2485 | **+0.0067** | 0.5240 | 0.4080 | 0.2781 | 0.3086 | 0.6029 | 12.04 | 0.71 |
+| [`codex/search-rm3-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rm3-recall) | [#33](https://github.com/carlaiau/ir-autoresearch/issues/33) | 0.2530 | **+0.0045** | 0.4840 | 0.4060 | 0.2989 | 0.3182 | 0.6268 | 12.59 | 0.48 |
 
 **Legend**
 - `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.

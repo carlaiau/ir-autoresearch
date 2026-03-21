@@ -59,7 +59,11 @@ fi
 
 (
   cd "$workdir" || exit 1
-  env "${search_env[@]}" ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
+  if [[ ${#search_env[@]} -gt 0 ]]; then
+    env "${search_env[@]}" ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
+  else
+    ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
+  fi
 )
 
 if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" ]]; then

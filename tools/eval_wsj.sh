@@ -149,6 +149,7 @@ search_bin="$workdir/jassjr-search"
 timestamp="$(date '+%Y%m%d-%H%M%S')"
 eval_output_file="$eval_output_dir/trec_eval-$timestamp.txt"
 rerank_metadata_file="$workdir/rerank-metadata-$timestamp.txt"
+index_log_file="$workdir/index-progress-$timestamp.log"
 
 if [[ -d "$input_path" ]]; then
   printf "Merging WSJ files from %s\n" "$input_path"
@@ -170,6 +171,7 @@ rm -f \
   "$workdir/docids.bin" \
   "$workdir/forward.bin" \
   "$workdir/forward_offsets.bin" \
+  "$index_log_file" \
   "$workdir/lengths.bin" \
   "$workdir/postings.bin" \
   "$workdir/results.bin" \
@@ -180,10 +182,25 @@ rm -f \
 
 (
   cd "$workdir" || exit 1
-  "$index_bin" "$collection_file"
+  "$index_bin" "$collection_file" > "$index_log_file"
+)
+tail -n 5 "$index_log_file"
 
-  printf "Running topics from %s\n" "$topics_file"
-  "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$rerank_metadata_file" < "$topics_file" > "$results_file"
+# Give the OS a brief moment to release indexing pressure before loading the search index.
+sleep 2
+
+printf "Running topics from %s\n" "$topics_file"
+(
+  cd "$workdir" || exit 1
+  if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" ]]; then
+    "$search_bin" < "$topics_file" > "$results_file"
+    cat > "$rerank_metadata_file" <<EOF
+JASSJR_OPENAI_RERANK_MODE: off
+JASSJR_OPENAI_KEY_SOURCE: $key_source
+EOF
+  else
+    "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$rerank_metadata_file" < "$topics_file" > "$results_file"
+  fi
 )
 
 printf "Run file written to %s\n" "$results_file"
@@ -200,6 +217,10 @@ printf "%s\n" "$summary"
   printf "qrels: %s\n\n" "$qrels_file"
   emit_env_setting JASSJR_BM25_K1
   emit_env_setting JASSJR_BM25_B
+  emit_env_setting JASSJR_FEEDBACK_DOCS
+  emit_env_setting JASSJR_EXPANSION_TERMS
+  emit_env_setting JASSJR_EXPANSION_WEIGHT
+  emit_env_setting JASSJR_EXPANSION_MAX_QUERY_TERMS
   emit_env_setting JASSJR_RERANK_DOCS
   emit_env_setting JASSJR_RERANK_PASSAGE_WINDOW
   emit_env_setting JASSJR_RERANK_PASSAGE_WEIGHT
@@ -211,7 +232,7 @@ printf "%s\n" "$summary"
   emit_env_setting JASSJR_OPENAI_DOC_WORDS
   emit_env_setting JASSJR_OPENAI_PROMPT_VERSION
   emit_env_setting JASSJR_OPENAI_CACHE_DIR
-  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" || -n "${JASSJR_OPENAI_RERANK_MODE:-}" || -n "${JASSJR_OPENAI_MONO_MODEL:-}" || -n "${JASSJR_OPENAI_DUO_MODEL:-}" || -n "${JASSJR_OPENAI_MONO_DOCS:-}" || -n "${JASSJR_OPENAI_DUO_DOCS:-}" || -n "${JASSJR_OPENAI_DOC_WORDS:-}" || -n "${JASSJR_OPENAI_PROMPT_VERSION:-}" || -n "${JASSJR_OPENAI_CACHE_DIR:-}" ]]; then
+  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_FEEDBACK_DOCS:-}" || -n "${JASSJR_EXPANSION_TERMS:-}" || -n "${JASSJR_EXPANSION_WEIGHT:-}" || -n "${JASSJR_EXPANSION_MAX_QUERY_TERMS:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" || -n "${JASSJR_OPENAI_RERANK_MODE:-}" || -n "${JASSJR_OPENAI_MONO_MODEL:-}" || -n "${JASSJR_OPENAI_DUO_MODEL:-}" || -n "${JASSJR_OPENAI_MONO_DOCS:-}" || -n "${JASSJR_OPENAI_DUO_DOCS:-}" || -n "${JASSJR_OPENAI_DOC_WORDS:-}" || -n "${JASSJR_OPENAI_PROMPT_VERSION:-}" || -n "${JASSJR_OPENAI_CACHE_DIR:-}" ]]; then
     printf "\n"
   fi
   emit_metadata_file "$rerank_metadata_file"
