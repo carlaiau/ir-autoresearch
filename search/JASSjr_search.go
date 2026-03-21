@@ -27,15 +27,20 @@ Constants
 */
 const defaultK1 = 0.7 // BM25 k1 parameter
 const defaultB = 0.3  // BM25 b parameter
-const feedbackDocs = 2
-const expansionTerms = 1
-const expansionWeight = 0.10
+const defaultFeedbackDocs = 5
+const defaultExpansionTerms = 6
+const defaultExpansionWeight = 0.45
+const defaultExpansionMaxQueryTerms = 6
 const defaultRerankDocs = 25
 const defaultRerankPassageWindow = 16
 const defaultRerankPassageWeight = 0.20
 
 var bm25K1 = defaultK1
 var bm25B = defaultB
+var feedbackDocs = defaultFeedbackDocs
+var expansionTerms = defaultExpansionTerms
+var expansionWeight = defaultExpansionWeight
+var expansionMaxQueryTerms = defaultExpansionMaxQueryTerms
 var rerankDocs = defaultRerankDocs
 var rerankPassageWindow = defaultRerankPassageWindow
 var rerankPassageWeight = defaultRerankPassageWeight
@@ -112,6 +117,10 @@ func intFromEnv(name string, fallback int) int {
 func configureRankingParameters() {
 	bm25K1 = floatFromEnv("JASSJR_BM25_K1", defaultK1)
 	bm25B = floatFromEnv("JASSJR_BM25_B", defaultB)
+	feedbackDocs = intFromEnv("JASSJR_FEEDBACK_DOCS", defaultFeedbackDocs)
+	expansionTerms = intFromEnv("JASSJR_EXPANSION_TERMS", defaultExpansionTerms)
+	expansionWeight = floatFromEnv("JASSJR_EXPANSION_WEIGHT", defaultExpansionWeight)
+	expansionMaxQueryTerms = intFromEnv("JASSJR_EXPANSION_MAX_QUERY_TERMS", defaultExpansionMaxQueryTerms)
 	rerankDocs = intFromEnv("JASSJR_RERANK_DOCS", defaultRerankDocs)
 	rerankPassageWindow = intFromEnv("JASSJR_RERANK_PASSAGE_WINDOW", defaultRerankPassageWindow)
 	rerankPassageWeight = floatFromEnv("JASSJR_RERANK_PASSAGE_WEIGHT", defaultRerankPassageWeight)
@@ -121,6 +130,18 @@ func configureRankingParameters() {
 	}
 	if bm25B < 0 || bm25B > 1 {
 		panic("JASSJR_BM25_B must be between 0 and 1")
+	}
+	if feedbackDocs < 0 {
+		panic("JASSJR_FEEDBACK_DOCS must be non-negative")
+	}
+	if expansionTerms < 0 {
+		panic("JASSJR_EXPANSION_TERMS must be non-negative")
+	}
+	if expansionWeight < 0 {
+		panic("JASSJR_EXPANSION_WEIGHT must be non-negative")
+	}
+	if expansionMaxQueryTerms < 0 {
+		panic("JASSJR_EXPANSION_MAX_QUERY_TERMS must be non-negative")
 	}
 	if rerankDocs < 0 {
 		panic("JASSJR_RERANK_DOCS must be non-negative")
@@ -400,16 +421,37 @@ func rerankTopPassages(index loadedIndex, forwardFile *os.File, forwardOffsets [
 	return rerankedDocs
 }
 
-func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, rankedDocs []int, originalTerms map[string]struct{}) []weightedQueryTerm {
+func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, rankedDocs []int, rsv []float64, originalTerms map[string]struct{}) []weightedQueryTerm {
+	if feedbackDocs == 0 || expansionTerms == 0 || expansionWeight == 0 {
+		return nil
+	}
+
 	limit := feedbackDocs
 	if len(rankedDocs) < limit {
 		limit = len(rankedDocs)
+	}
+	if limit == 0 {
+		return nil
+	}
+
+	docMassTotal := 0.0
+	for rank := 0; rank < limit; rank++ {
+		docMassTotal += math.Max(rsv[rankedDocs[rank]], 0)
 	}
 
 	candidates := make(map[string]feedbackCandidate)
 	for rank := 0; rank < limit; rank++ {
 		docID := rankedDocs[rank]
+		docLength := float64(index.docLengths[docID])
+		if docLength <= 0 {
+			continue
+		}
+
 		docWeight := 1.0 / float64(rank+1)
+		if docMassTotal > 0 {
+			docWeight = math.Max(rsv[docID], 0) / docMassTotal
+		}
+
 		for term, tf := range readForwardDocTerms(forwardFile, forwardOffsets, docID) {
 			if _, exists := originalTerms[term]; exists {
 				continue
@@ -427,7 +469,7 @@ func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffset
 			idf := math.Log(float64(index.documentsInCollection) / float64(postings))
 			candidate := candidates[term]
 			candidate.token = term
-			candidate.weight += docWeight * idf * bm25Score(float64(tf), index.docLengths[docID], index.averageDocumentLength)
+			candidate.weight += docWeight * (float64(tf) / docLength) * idf
 			candidates[term] = candidate
 		}
 	}
@@ -449,8 +491,16 @@ func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffset
 	}
 
 	expansions := make([]weightedQueryTerm, 0, len(selected))
+	totalWeight := 0.0
 	for _, candidate := range selected {
-		expansions = append(expansions, weightedQueryTerm{token: candidate.token, weight: expansionWeight})
+		totalWeight += candidate.weight
+	}
+	for _, candidate := range selected {
+		weight := expansionWeight / float64(len(selected))
+		if totalWeight > 0 {
+			weight = expansionWeight * candidate.weight / totalWeight
+		}
+		expansions = append(expansions, weightedQueryTerm{token: candidate.token, weight: weight})
 	}
 	return expansions
 }
@@ -544,8 +594,8 @@ func main() {
 		}
 
 		touchedDocs = scoreQuery(index, queryTerms, rsv, touchedDocs)
-		if len(queryTerms) <= 3 {
-			expansions := selectExpansionTerms(index, forwardFile, forwardOffsets, touchedDocs, originalTerms)
+		if expansionMaxQueryTerms == 0 || len(queryTerms) <= expansionMaxQueryTerms {
+			expansions := selectExpansionTerms(index, forwardFile, forwardOffsets, touchedDocs, rsv, originalTerms)
 			if len(expansions) > 0 {
 				for _, expansion := range expansions {
 					accumulateScores(index, expansion.token, expansion.weight, rsv, &touchedDocs)
