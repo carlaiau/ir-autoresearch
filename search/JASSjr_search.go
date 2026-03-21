@@ -30,12 +30,15 @@ const defaultB = 0.3  // BM25 b parameter
 const feedbackDocs = 2
 const expansionTerms = 1
 const expansionWeight = 0.10
-const rerankDocs = 20
-const rerankPassageWindow = 32
-const rerankPassageWeight = 0.15
+const defaultRerankDocs = 25
+const defaultRerankPassageWindow = 16
+const defaultRerankPassageWeight = 0.20
 
 var bm25K1 = defaultK1
 var bm25B = defaultB
+var rerankDocs = defaultRerankDocs
+var rerankPassageWindow = defaultRerankPassageWindow
+var rerankPassageWeight = defaultRerankPassageWeight
 
 /*
 Struct vocabEntry
@@ -93,15 +96,40 @@ func floatFromEnv(name string, fallback float64) float64 {
 	return value
 }
 
-func configureBM25Parameters() {
+func intFromEnv(name string, fallback int) int {
+	raw := os.Getenv(name)
+	if raw == "" {
+		return fallback
+	}
+
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		panic(fmt.Sprintf("%s must be an integer: %v", name, err))
+	}
+	return value
+}
+
+func configureRankingParameters() {
 	bm25K1 = floatFromEnv("JASSJR_BM25_K1", defaultK1)
 	bm25B = floatFromEnv("JASSJR_BM25_B", defaultB)
+	rerankDocs = intFromEnv("JASSJR_RERANK_DOCS", defaultRerankDocs)
+	rerankPassageWindow = intFromEnv("JASSJR_RERANK_PASSAGE_WINDOW", defaultRerankPassageWindow)
+	rerankPassageWeight = floatFromEnv("JASSJR_RERANK_PASSAGE_WEIGHT", defaultRerankPassageWeight)
 
 	if bm25K1 < 0 {
 		panic("JASSJR_BM25_K1 must be non-negative")
 	}
 	if bm25B < 0 || bm25B > 1 {
 		panic("JASSJR_BM25_B must be between 0 and 1")
+	}
+	if rerankDocs < 0 {
+		panic("JASSJR_RERANK_DOCS must be non-negative")
+	}
+	if rerankPassageWindow <= 0 {
+		panic("JASSJR_RERANK_PASSAGE_WINDOW must be positive")
+	}
+	if rerankPassageWeight < 0 {
+		panic("JASSJR_RERANK_PASSAGE_WEIGHT must be non-negative")
 	}
 }
 
@@ -342,6 +370,10 @@ func bestPassageScore(querySignals []querySignal, occurrences []matchedOccurrenc
 }
 
 func rerankTopPassages(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, queryTerms []weightedQueryTerm, rankedDocs []int, rsv []float64) []int {
+	if rerankDocs == 0 || rerankPassageWeight == 0 {
+		return rankedDocs
+	}
+
 	querySignals, querySignalIndex := buildQuerySignals(index, queryTerms)
 	if len(querySignals) < 2 || len(rankedDocs) == 0 {
 		return rankedDocs
@@ -450,7 +482,7 @@ main()
 Simple search engine ranking on BM25.
 */
 func main() {
-	configureBM25Parameters()
+	configureRankingParameters()
 
 	index := loadIndex("lengths.bin", "postings.bin", "vocab.bin")
 	defer index.postingsFile.Close()

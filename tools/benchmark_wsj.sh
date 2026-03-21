@@ -36,6 +36,13 @@ Options:
 EOF
 }
 
+emit_env_setting() {
+  local name="$1"
+  if [[ -n "${!name:-}" ]]; then
+    printf "%s: %s\n" "$name" "${!name}"
+  fi
+}
+
 while getopts ":n:t:w:h" opt; do
   case "$opt" in
     n)
@@ -158,6 +165,14 @@ search_topics_median="$(printf '%s\n' "$search_topics_output" | awk '/^Median:/ 
   printf "topics: %s\n" "$topics_file"
   printf "smoke_topics: %s\n" "$smoke_topics_file"
   printf "iterations: %s\n\n" "$iters"
+  emit_env_setting JASSJR_BM25_K1
+  emit_env_setting JASSJR_BM25_B
+  emit_env_setting JASSJR_RERANK_DOCS
+  emit_env_setting JASSJR_RERANK_PASSAGE_WINDOW
+  emit_env_setting JASSJR_RERANK_PASSAGE_WEIGHT
+  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" ]]; then
+    printf "\n"
+  fi
 
   printf "index_median: %s\n" "$index_median"
   printf "search_smoke_median: %s\n" "$search_smoke_median"

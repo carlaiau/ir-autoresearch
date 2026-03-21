@@ -45,6 +45,13 @@ Examples:
 EOF
 }
 
+emit_env_setting() {
+  local name="$1"
+  if [[ -n "${!name:-}" ]]; then
+    printf "%s: %s\n" "$name" "${!name}"
+  fi
+}
+
 while getopts ":t:q:w:o:h" opt; do
   case "$opt" in
     t)
@@ -178,6 +185,14 @@ printf "%s\n" "$summary"
   printf "collection: %s\n" "$collection_file"
   printf "topics: %s\n" "$topics_file"
   printf "qrels: %s\n\n" "$qrels_file"
+  emit_env_setting JASSJR_BM25_K1
+  emit_env_setting JASSJR_BM25_B
+  emit_env_setting JASSJR_RERANK_DOCS
+  emit_env_setting JASSJR_RERANK_PASSAGE_WINDOW
+  emit_env_setting JASSJR_RERANK_PASSAGE_WEIGHT
+  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" ]]; then
+    printf "\n"
+  fi
   printf "%s\n" "$summary"
 } > "$eval_output_file"
 printf "Summary written to %s\n" "$eval_output_file"
