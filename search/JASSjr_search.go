@@ -27,15 +27,24 @@ Constants
 */
 const defaultK1 = 0.7 // BM25 k1 parameter
 const defaultB = 0.3  // BM25 b parameter
-const feedbackDocs = 2
-const expansionTerms = 1
-const expansionWeight = 0.10
+const defaultFeedbackDocs = 5
+const defaultExpansionTerms = 6
+const defaultExpansionWeight = 0.45
+const defaultExpansionMaxQueryTerms = 6
+const defaultFusionDocs = 100
+const defaultFusionRankConstant = 60
 const defaultRerankDocs = 25
 const defaultRerankPassageWindow = 16
 const defaultRerankPassageWeight = 0.20
 
 var bm25K1 = defaultK1
 var bm25B = defaultB
+var feedbackDocs = defaultFeedbackDocs
+var expansionTerms = defaultExpansionTerms
+var expansionWeight = defaultExpansionWeight
+var expansionMaxQueryTerms = defaultExpansionMaxQueryTerms
+var fusionDocs = defaultFusionDocs
+var fusionRankConstant = defaultFusionRankConstant
 var rerankDocs = defaultRerankDocs
 var rerankPassageWindow = defaultRerankPassageWindow
 var rerankPassageWeight = defaultRerankPassageWeight
@@ -112,6 +121,12 @@ func intFromEnv(name string, fallback int) int {
 func configureRankingParameters() {
 	bm25K1 = floatFromEnv("JASSJR_BM25_K1", defaultK1)
 	bm25B = floatFromEnv("JASSJR_BM25_B", defaultB)
+	feedbackDocs = intFromEnv("JASSJR_FEEDBACK_DOCS", defaultFeedbackDocs)
+	expansionTerms = intFromEnv("JASSJR_EXPANSION_TERMS", defaultExpansionTerms)
+	expansionWeight = floatFromEnv("JASSJR_EXPANSION_WEIGHT", defaultExpansionWeight)
+	expansionMaxQueryTerms = intFromEnv("JASSJR_EXPANSION_MAX_QUERY_TERMS", defaultExpansionMaxQueryTerms)
+	fusionDocs = intFromEnv("JASSJR_FUSION_DOCS", defaultFusionDocs)
+	fusionRankConstant = intFromEnv("JASSJR_FUSION_RANK_CONSTANT", defaultFusionRankConstant)
 	rerankDocs = intFromEnv("JASSJR_RERANK_DOCS", defaultRerankDocs)
 	rerankPassageWindow = intFromEnv("JASSJR_RERANK_PASSAGE_WINDOW", defaultRerankPassageWindow)
 	rerankPassageWeight = floatFromEnv("JASSJR_RERANK_PASSAGE_WEIGHT", defaultRerankPassageWeight)
@@ -121,6 +136,24 @@ func configureRankingParameters() {
 	}
 	if bm25B < 0 || bm25B > 1 {
 		panic("JASSJR_BM25_B must be between 0 and 1")
+	}
+	if feedbackDocs < 0 {
+		panic("JASSJR_FEEDBACK_DOCS must be non-negative")
+	}
+	if expansionTerms < 0 {
+		panic("JASSJR_EXPANSION_TERMS must be non-negative")
+	}
+	if expansionWeight < 0 {
+		panic("JASSJR_EXPANSION_WEIGHT must be non-negative")
+	}
+	if expansionMaxQueryTerms < 0 {
+		panic("JASSJR_EXPANSION_MAX_QUERY_TERMS must be non-negative")
+	}
+	if fusionDocs < 0 {
+		panic("JASSJR_FUSION_DOCS must be non-negative")
+	}
+	if fusionRankConstant < 0 {
+		panic("JASSJR_FUSION_RANK_CONSTANT must be non-negative")
 	}
 	if rerankDocs < 0 {
 		panic("JASSJR_RERANK_DOCS must be non-negative")
@@ -234,6 +267,54 @@ func sortResults(rsv []float64, touchedDocs []int) []int {
 	})
 
 	return touchedDocs
+}
+
+func reciprocalRankFuse(rankings [][]int, rsv []float64, touchedDocs []int) []int {
+	if fusionDocs == 0 || len(rankings) == 0 {
+		return touchedDocs[:0]
+	}
+
+	touchedDocs = touchedDocs[:0]
+	for _, ranking := range rankings {
+		limit := fusionDocs
+		if len(ranking) < limit {
+			limit = len(ranking)
+		}
+		for rank := 0; rank < limit; rank++ {
+			docID := ranking[rank]
+			if rsv[docID] == 0 {
+				touchedDocs = append(touchedDocs, docID)
+			}
+			rsv[docID] += 1.0 / float64(fusionRankConstant+rank+1)
+		}
+	}
+
+	fusedPrefix := sortResults(rsv, touchedDocs)
+	if len(fusedPrefix) == 0 {
+		return fusedPrefix
+	}
+
+	seen := make(map[int]struct{}, len(fusedPrefix))
+	ranking := make([]int, 0, len(rankings[0])+len(fusedPrefix))
+	ranking = append(ranking, fusedPrefix...)
+	for _, docID := range fusedPrefix {
+		seen[docID] = struct{}{}
+	}
+	for _, docID := range rankings[0] {
+		if _, exists := seen[docID]; exists {
+			continue
+		}
+		seen[docID] = struct{}{}
+		ranking = append(ranking, docID)
+	}
+
+	lastPrefixScore := rsv[fusedPrefix[len(fusedPrefix)-1]]
+	for rank := len(fusedPrefix); rank < len(ranking); rank++ {
+		lastPrefixScore -= 1e-9
+		rsv[ranking[rank]] = lastPrefixScore
+	}
+
+	return ranking
 }
 
 func buildQuerySignals(index loadedIndex, queryTerms []weightedQueryTerm) ([]querySignal, map[string]int) {
@@ -400,16 +481,37 @@ func rerankTopPassages(index loadedIndex, forwardFile *os.File, forwardOffsets [
 	return rerankedDocs
 }
 
-func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, rankedDocs []int, originalTerms map[string]struct{}) []weightedQueryTerm {
+func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffsets []int64, rankedDocs []int, rsv []float64, originalTerms map[string]struct{}) []weightedQueryTerm {
+	if feedbackDocs == 0 || expansionTerms == 0 || expansionWeight == 0 {
+		return nil
+	}
+
 	limit := feedbackDocs
 	if len(rankedDocs) < limit {
 		limit = len(rankedDocs)
+	}
+	if limit == 0 {
+		return nil
+	}
+
+	docMassTotal := 0.0
+	for rank := 0; rank < limit; rank++ {
+		docMassTotal += math.Max(rsv[rankedDocs[rank]], 0)
 	}
 
 	candidates := make(map[string]feedbackCandidate)
 	for rank := 0; rank < limit; rank++ {
 		docID := rankedDocs[rank]
+		docLength := float64(index.docLengths[docID])
+		if docLength <= 0 {
+			continue
+		}
+
 		docWeight := 1.0 / float64(rank+1)
+		if docMassTotal > 0 {
+			docWeight = math.Max(rsv[docID], 0) / docMassTotal
+		}
+
 		for term, tf := range readForwardDocTerms(forwardFile, forwardOffsets, docID) {
 			if _, exists := originalTerms[term]; exists {
 				continue
@@ -427,7 +529,7 @@ func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffset
 			idf := math.Log(float64(index.documentsInCollection) / float64(postings))
 			candidate := candidates[term]
 			candidate.token = term
-			candidate.weight += docWeight * idf * bm25Score(float64(tf), index.docLengths[docID], index.averageDocumentLength)
+			candidate.weight += docWeight * (float64(tf) / docLength) * idf
 			candidates[term] = candidate
 		}
 	}
@@ -449,8 +551,16 @@ func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffset
 	}
 
 	expansions := make([]weightedQueryTerm, 0, len(selected))
+	totalWeight := 0.0
 	for _, candidate := range selected {
-		expansions = append(expansions, weightedQueryTerm{token: candidate.token, weight: expansionWeight})
+		totalWeight += candidate.weight
+	}
+	for _, candidate := range selected {
+		weight := expansionWeight / float64(len(selected))
+		if totalWeight > 0 {
+			weight = expansionWeight * candidate.weight / totalWeight
+		}
+		expansions = append(expansions, weightedQueryTerm{token: candidate.token, weight: weight})
 	}
 	return expansions
 }
@@ -512,12 +622,17 @@ func main() {
 	defer forwardFile.Close()
 
 	/*
-	  Allocate buffers for score accumulation. We only track
-	  the documents touched by the current query to avoid
-	  sorting the whole collection when most scores are zero.
+	  Allocate buffers for the separate first-stage runs plus the
+	  fused result. We only track the documents touched by the
+	  current query to avoid sorting the whole collection when
+	  most scores are zero.
 	*/
-	rsv := make([]float64, index.documentsInCollection)
-	touchedDocs := make([]int, 0, 1024)
+	baseRsv := make([]float64, index.documentsInCollection)
+	expandedRsv := make([]float64, index.documentsInCollection)
+	fusedRsv := make([]float64, index.documentsInCollection)
+	baseTouchedDocs := make([]int, 0, 1024)
+	expandedTouchedDocs := make([]int, 0, 1024)
+	fusedTouchedDocs := make([]int, 0, 2048)
 
 	/*
 	  Search (one query per line)
@@ -543,30 +658,45 @@ func main() {
 			originalTerms[token] = struct{}{}
 		}
 
-		touchedDocs = scoreQuery(index, queryTerms, rsv, touchedDocs)
-		if len(queryTerms) <= 3 {
-			expansions := selectExpansionTerms(index, forwardFile, forwardOffsets, touchedDocs, originalTerms)
+		baseTouchedDocs = scoreQuery(index, queryTerms, baseRsv, baseTouchedDocs)
+		rankedDocs := baseTouchedDocs
+		finalRsv := baseRsv
+
+		if expansionMaxQueryTerms == 0 || len(queryTerms) <= expansionMaxQueryTerms {
+			expansions := selectExpansionTerms(index, forwardFile, forwardOffsets, baseTouchedDocs, baseRsv, originalTerms)
 			if len(expansions) > 0 {
-				for _, expansion := range expansions {
-					accumulateScores(index, expansion.token, expansion.weight, rsv, &touchedDocs)
+				expandedQueryTerms := make([]weightedQueryTerm, 0, len(queryTerms)+len(expansions))
+				expandedQueryTerms = append(expandedQueryTerms, queryTerms...)
+				expandedQueryTerms = append(expandedQueryTerms, expansions...)
+				expandedTouchedDocs = scoreQuery(index, expandedQueryTerms, expandedRsv, expandedTouchedDocs)
+
+				if len(expandedTouchedDocs) > 0 && fusionDocs > 0 {
+					fusedTouchedDocs = reciprocalRankFuse([][]int{baseTouchedDocs, expandedTouchedDocs}, fusedRsv, fusedTouchedDocs)
+					rankedDocs = fusedTouchedDocs
+					finalRsv = fusedRsv
 				}
-				touchedDocs = sortResults(rsv, touchedDocs)
 			}
 		}
-		touchedDocs = rerankTopPassages(index, forwardFile, forwardOffsets, queryTerms, touchedDocs, rsv)
+		rankedDocs = rerankTopPassages(index, forwardFile, forwardOffsets, queryTerms, rankedDocs, finalRsv)
 
 		/*
 		  Print the (at most) top 1000 documents in the results list in TREC eval format which is:
 		  query-id Q0 document-id rank score run-name
 		*/
-		for i, r := range touchedDocs {
+		for i, r := range rankedDocs {
 			if i == 1000 {
 				break
 			}
-			fmt.Printf("%d Q0 %s %d %.4f JASSjr\n", queryId, primaryKeys[r], i+1, rsv[r])
+			fmt.Printf("%d Q0 %s %d %.4f JASSjr\n", queryId, primaryKeys[r], i+1, finalRsv[r])
 		}
-		for _, d := range touchedDocs {
-			rsv[d] = 0
+		for _, d := range baseTouchedDocs {
+			baseRsv[d] = 0
+		}
+		for _, d := range expandedTouchedDocs {
+			expandedRsv[d] = 0
+		}
+		for _, d := range fusedTouchedDocs {
+			fusedRsv[d] = 0
 		}
 	}
 	if err := stdin.Err(); err != nil {

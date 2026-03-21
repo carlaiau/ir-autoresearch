@@ -1,0 +1,39 @@
+branch: codex/search-rrf-recall
+timestamp: 20260322-124401
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+JASSJR_OPENAI_RERANK_MODE: off
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	46849
+num_rel               	all	6228
+num_rel_ret           	all	3747
+map                   	all	0.2154
+gm_map                	all	0.1011
+Rprec                 	all	0.2578
+bpref                 	all	0.2949
+recip_rank            	all	0.6027
+iprec_at_recall_0.00  	all	0.6459
+iprec_at_recall_0.10  	all	0.4705
+iprec_at_recall_0.20  	all	0.3887
+iprec_at_recall_0.30  	all	0.3086
+iprec_at_recall_0.40  	all	0.2523
+iprec_at_recall_0.50  	all	0.2002
+iprec_at_recall_0.60  	all	0.1531
+iprec_at_recall_0.70  	all	0.1100
+iprec_at_recall_0.80  	all	0.0607
+iprec_at_recall_0.90  	all	0.0388
+iprec_at_recall_1.00  	all	0.0053
+P_5                   	all	0.4600
+P_10                  	all	0.4400
+P_15                  	all	0.4187
+P_20                  	all	0.4080
+P_30                  	all	0.3780
+P_100                 	all	0.2798
+P_200                 	all	0.1670
+P_500                 	all	0.0920
+P_1000                	all	0.0749
