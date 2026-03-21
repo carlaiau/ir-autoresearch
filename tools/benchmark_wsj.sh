@@ -3,6 +3,9 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
+source "$repo_root/tools/load_env.sh"
+key_source="$(load_repo_env_with_key_source "$repo_root")"
+export JASSJR_OPENAI_KEY_SOURCE="$key_source"
 branch_name="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
 branch_name="${branch_name:-detached-head}"
 
@@ -41,6 +44,12 @@ emit_env_setting() {
   if [[ -n "${!name:-}" ]]; then
     printf "%s: %s\n" "$name" "${!name}"
   fi
+}
+
+emit_metadata_file() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  cat "$file"
 }
 
 while getopts ":n:t:w:h" opt; do
@@ -116,6 +125,8 @@ index_bin="$workdir/jassjr-index"
 search_bin="$workdir/jassjr-search"
 timestamp="$(date '+%Y%m%d-%H%M%S')"
 output_file="$output_dir/benchmark-$timestamp.txt"
+smoke_metadata_file="$workdir/rerank-smoke-$timestamp.txt"
+topics_metadata_file="$workdir/rerank-topics-$timestamp.txt"
 
 if [[ -d "$input_path" ]]; then
   printf "Merging WSJ files from %s\n" "$input_path"
@@ -134,9 +145,13 @@ go build -o "$search_bin" "$repo_root/search/JASSjr_search.go"
 
 rm -f \
   "$workdir/docids.bin" \
+  "$workdir/forward.bin" \
+  "$workdir/forward_offsets.bin" \
   "$workdir/lengths.bin" \
   "$workdir/postings.bin" \
   "$workdir/results.trec" \
+  "$smoke_metadata_file" \
+  "$topics_metadata_file" \
   "$workdir/vocab.bin"
 
 index_output="$(
@@ -144,14 +159,21 @@ index_output="$(
     "$repo_root/tools/benchmark.sh" "$iters" "$index_bin" "$collection_file"
 )"
 
+search_cmd=("$search_bin")
+if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" != "off" ]]; then
+  "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$smoke_metadata_file" < "$smoke_topics_file" >/dev/null
+  "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$topics_metadata_file" < "$topics_file" >/dev/null
+  search_cmd=("$repo_root/tools/run_search_pipeline.sh" "--workdir" "$workdir")
+fi
+
 search_smoke_output="$(
   cd "$workdir" &&
-    "$repo_root/tools/benchmark.sh" "$iters" "$search_bin" < "$smoke_topics_file"
+    "$repo_root/tools/benchmark.sh" "$iters" "${search_cmd[@]}" < "$smoke_topics_file"
 )"
 
 search_topics_output="$(
   cd "$workdir" &&
-    "$repo_root/tools/benchmark.sh" "$iters" "$search_bin" < "$topics_file"
+    "$repo_root/tools/benchmark.sh" "$iters" "${search_cmd[@]}" < "$topics_file"
 )"
 
 index_median="$(printf '%s\n' "$index_output" | awk '/^Median:/ {print $2}')"
@@ -170,9 +192,19 @@ search_topics_median="$(printf '%s\n' "$search_topics_output" | awk '/^Median:/ 
   emit_env_setting JASSJR_RERANK_DOCS
   emit_env_setting JASSJR_RERANK_PASSAGE_WINDOW
   emit_env_setting JASSJR_RERANK_PASSAGE_WEIGHT
-  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" ]]; then
+  emit_env_setting JASSJR_OPENAI_RERANK_MODE
+  emit_env_setting JASSJR_OPENAI_MONO_MODEL
+  emit_env_setting JASSJR_OPENAI_DUO_MODEL
+  emit_env_setting JASSJR_OPENAI_MONO_DOCS
+  emit_env_setting JASSJR_OPENAI_DUO_DOCS
+  emit_env_setting JASSJR_OPENAI_DOC_WORDS
+  emit_env_setting JASSJR_OPENAI_PROMPT_VERSION
+  emit_env_setting JASSJR_OPENAI_CACHE_DIR
+  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" || -n "${JASSJR_OPENAI_RERANK_MODE:-}" || -n "${JASSJR_OPENAI_MONO_MODEL:-}" || -n "${JASSJR_OPENAI_DUO_MODEL:-}" || -n "${JASSJR_OPENAI_MONO_DOCS:-}" || -n "${JASSJR_OPENAI_DUO_DOCS:-}" || -n "${JASSJR_OPENAI_DOC_WORDS:-}" || -n "${JASSJR_OPENAI_PROMPT_VERSION:-}" || -n "${JASSJR_OPENAI_CACHE_DIR:-}" ]]; then
     printf "\n"
   fi
+  emit_metadata_file "$topics_metadata_file"
+  [[ -f "$topics_metadata_file" ]] && printf "\n"
 
   printf "index_median: %s\n" "$index_median"
   printf "search_smoke_median: %s\n" "$search_smoke_median"

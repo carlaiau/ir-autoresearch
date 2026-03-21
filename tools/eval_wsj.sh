@@ -3,6 +3,9 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
+source "$repo_root/tools/load_env.sh"
+key_source="$(load_repo_env_with_key_source "$repo_root")"
+export JASSJR_OPENAI_KEY_SOURCE="$key_source"
 branch_name="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
 branch_name="${branch_name:-detached-head}"
 
@@ -50,6 +53,12 @@ emit_env_setting() {
   if [[ -n "${!name:-}" ]]; then
     printf "%s: %s\n" "$name" "${!name}"
   fi
+}
+
+emit_metadata_file() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  cat "$file"
 }
 
 while getopts ":t:q:w:o:h" opt; do
@@ -139,6 +148,7 @@ index_bin="$workdir/jassjr-index"
 search_bin="$workdir/jassjr-search"
 timestamp="$(date '+%Y%m%d-%H%M%S')"
 eval_output_file="$eval_output_dir/trec_eval-$timestamp.txt"
+rerank_metadata_file="$workdir/rerank-metadata-$timestamp.txt"
 
 if [[ -d "$input_path" ]]; then
   printf "Merging WSJ files from %s\n" "$input_path"
@@ -158,11 +168,14 @@ go build -o "$search_bin" "$repo_root/search/JASSjr_search.go"
 printf "Indexing %s\n" "$collection_file"
 rm -f \
   "$workdir/docids.bin" \
+  "$workdir/forward.bin" \
+  "$workdir/forward_offsets.bin" \
   "$workdir/lengths.bin" \
   "$workdir/postings.bin" \
   "$workdir/results.bin" \
   "$workdir/stdout.bin" \
   "$workdir/vocab.bin" \
+  "$rerank_metadata_file" \
   "$results_file"
 
 (
@@ -170,7 +183,7 @@ rm -f \
   "$index_bin" "$collection_file"
 
   printf "Running topics from %s\n" "$topics_file"
-  "$search_bin" < "$topics_file" > "$results_file"
+  "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$rerank_metadata_file" < "$topics_file" > "$results_file"
 )
 
 printf "Run file written to %s\n" "$results_file"
@@ -190,9 +203,19 @@ printf "%s\n" "$summary"
   emit_env_setting JASSJR_RERANK_DOCS
   emit_env_setting JASSJR_RERANK_PASSAGE_WINDOW
   emit_env_setting JASSJR_RERANK_PASSAGE_WEIGHT
-  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" ]]; then
+  emit_env_setting JASSJR_OPENAI_RERANK_MODE
+  emit_env_setting JASSJR_OPENAI_MONO_MODEL
+  emit_env_setting JASSJR_OPENAI_DUO_MODEL
+  emit_env_setting JASSJR_OPENAI_MONO_DOCS
+  emit_env_setting JASSJR_OPENAI_DUO_DOCS
+  emit_env_setting JASSJR_OPENAI_DOC_WORDS
+  emit_env_setting JASSJR_OPENAI_PROMPT_VERSION
+  emit_env_setting JASSJR_OPENAI_CACHE_DIR
+  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" || -n "${JASSJR_OPENAI_RERANK_MODE:-}" || -n "${JASSJR_OPENAI_MONO_MODEL:-}" || -n "${JASSJR_OPENAI_DUO_MODEL:-}" || -n "${JASSJR_OPENAI_MONO_DOCS:-}" || -n "${JASSJR_OPENAI_DUO_DOCS:-}" || -n "${JASSJR_OPENAI_DOC_WORDS:-}" || -n "${JASSJR_OPENAI_PROMPT_VERSION:-}" || -n "${JASSJR_OPENAI_CACHE_DIR:-}" ]]; then
     printf "\n"
   fi
+  emit_metadata_file "$rerank_metadata_file"
+  [[ -f "$rerank_metadata_file" ]] && printf "\n"
   printf "%s\n" "$summary"
 } > "$eval_output_file"
 printf "Summary written to %s\n" "$eval_output_file"
