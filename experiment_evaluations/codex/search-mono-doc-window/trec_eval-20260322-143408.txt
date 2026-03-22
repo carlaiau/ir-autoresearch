@@ -1,0 +1,59 @@
+branch: codex/search-mono-doc-window
+timestamp: 20260322-143408
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+JASSJR_OPENAI_RERANK_MODE: mono
+JASSJR_OPENAI_DOC_WORDS: 320
+
+JASSJR_OPENAI_RERANK_MODE: mono
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+JASSJR_OPENAI_MONO_MODEL: gpt-5-mini
+JASSJR_OPENAI_DUO_MODEL: gpt-5-mini
+JASSJR_OPENAI_PROMPT_VERSION: openai-rerank-v2
+JASSJR_OPENAI_MONO_DOCS: 85
+JASSJR_OPENAI_DUO_DOCS: 10
+JASSJR_OPENAI_DOC_WORDS: 320
+JASSJR_OPENAI_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-rerank
+JASSJR_OPENAI_CACHE_HITS: 483
+JASSJR_OPENAI_CACHE_MISSES: 3767
+JASSJR_OPENAI_MONO_CALLS: 3767
+JASSJR_OPENAI_DUO_CALLS: 0
+JASSJR_OPENAI_EST_INPUT_TOKENS: 1397880
+JASSJR_OPENAI_EST_OUTPUT_TOKENS: 34000
+JASSJR_OPENAI_ACTUAL_INPUT_TOKENS: 1751080
+JASSJR_OPENAI_ACTUAL_OUTPUT_TOKENS: 114750
+JASSJR_OPENAI_EST_COST_USD: 0.417470
+JASSJR_OPENAI_ACTUAL_COST_USD: 0.667270
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	50000
+num_rel               	all	6228
+num_rel_ret           	all	3904
+map                   	all	0.2638
+gm_map                	all	0.1441
+Rprec                 	all	0.3011
+bpref                 	all	0.3285
+recip_rank            	all	0.6999
+iprec_at_recall_0.00  	all	0.7542
+iprec_at_recall_0.10  	all	0.5484
+iprec_at_recall_0.20  	all	0.4183
+iprec_at_recall_0.30  	all	0.3579
+iprec_at_recall_0.40  	all	0.3223
+iprec_at_recall_0.50  	all	0.2585
+iprec_at_recall_0.60  	all	0.2131
+iprec_at_recall_0.70  	all	0.1542
+iprec_at_recall_0.80  	all	0.0905
+iprec_at_recall_0.90  	all	0.0517
+iprec_at_recall_1.00  	all	0.0109
+P_5                   	all	0.5960
+P_10                  	all	0.5300
+P_15                  	all	0.5000
+P_20                  	all	0.4780
+P_30                  	all	0.4367
+P_100                 	all	0.2838
+P_200                 	all	0.2138
+P_500                 	all	0.1293
+P_1000                	all	0.0781
