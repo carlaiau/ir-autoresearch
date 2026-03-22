@@ -5,7 +5,7 @@ This repository provides a compact sandbox for experimenting with a simple, unde
 ## Current Results
 
 <!-- README_METRICS_TABLE_START -->
-Current accepted leader [`codex/search-tri-source-scaffold`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-tri-source-scaffold) improves `MAP` from `0.2080` on to `0.2739` (`+0.0659 (+31.7%)`). It also raises `P@5` from `0.4320` to `0.5720`.
+Current accepted leader [`codex/search-fusion-weight-grid`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-fusion-weight-grid) improves `MAP` from `0.2080` on to `0.2800` (`+0.0720 (+34.6%)`). It also raises `P@5` from `0.4320` to `0.5960`.
 
 | Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -22,6 +22,7 @@ Current accepted leader [`codex/search-tri-source-scaffold`](https://github.com/
 | [`codex/search-rm3-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rm3-recall) | [#33](https://github.com/carlaiau/ir-autoresearch/issues/33) | 0.2530 | **+0.0045** | 0.4840 | 0.4060 | 0.2989 | 0.3182 | 0.6268 | 12.59 | 0.48 |
 | [`codex/search-openai-mono-rm3`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-openai-mono-rm3) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2691 | **+0.0161** | 0.5640 | 0.4830 | 0.3053 | 0.3275 | 0.6268 | 11.53 | 1.19 |
 | [`codex/search-tri-source-scaffold`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-tri-source-scaffold) | [#38](https://github.com/carlaiau/ir-autoresearch/issues/38) | 0.2739 | **+0.0048** | 0.5720 | 0.4790 | 0.3113 | 0.3426 | 0.6538 | 11.08 | 8.00 |
+| [`codex/search-fusion-weight-grid`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-fusion-weight-grid) | [#39](https://github.com/carlaiau/ir-autoresearch/issues/39) | 0.2800 | **+0.0061** | 0.5960 | 0.4930 | 0.3217 | 0.3528 | 0.6538 | 12.64 | 8.77 |
 
 **Legend**
 - `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.
