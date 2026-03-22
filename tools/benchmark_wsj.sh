@@ -52,6 +52,46 @@ emit_metadata_file() {
   cat "$file"
 }
 
+workdir_lock_dir=""
+
+release_workdir_lock() {
+  if [[ -n "$workdir_lock_dir" && -d "$workdir_lock_dir" ]]; then
+    rm -rf "$workdir_lock_dir"
+  fi
+}
+
+acquire_workdir_lock() {
+  local target_workdir="$1"
+  local lock_dir="$target_workdir/.active-run.lock"
+  local holder_pid=""
+  if [[ -f "$lock_dir/pid" ]]; then
+    holder_pid="$(cat "$lock_dir/pid" 2>/dev/null || true)"
+  fi
+
+  if [[ -n "$holder_pid" ]] && ! kill -0 "$holder_pid" 2>/dev/null; then
+    rm -rf "$lock_dir"
+  fi
+
+  if ! mkdir "$lock_dir" 2>/dev/null; then
+    printf "Another WSJ benchmark or evaluation is already using workdir %s\n" "$target_workdir" >&2
+    if [[ -f "$lock_dir/info" ]]; then
+      printf "Current lock holder:\n" >&2
+      cat "$lock_dir/info" >&2
+    fi
+    exit 1
+  fi
+
+  printf "%s\n" "$$" > "$lock_dir/pid"
+  {
+    printf "pid: %s\n" "$$"
+    printf "script: %s\n" "$0"
+    printf "started_at: %s\n" "$(date '+%Y-%m-%d %H:%M:%S %z')"
+  } > "$lock_dir/info"
+  workdir_lock_dir="$lock_dir"
+}
+
+trap release_workdir_lock EXIT
+
 while getopts ":n:t:w:h" opt; do
   case "$opt" in
     n)
@@ -115,6 +155,7 @@ workdir="$(cd "$workdir" >/dev/null 2>&1 && pwd)"
 output_dir="$(cd "$output_dir" >/dev/null 2>&1 && pwd)"
 topics_file="$(cd "$(dirname "$topics_file")" >/dev/null 2>&1 && pwd)/$(basename "$topics_file")"
 smoke_topics_file="$(cd "$(dirname "$smoke_topics_file")" >/dev/null 2>&1 && pwd)/$(basename "$smoke_topics_file")"
+acquire_workdir_lock "$workdir"
 
 if [[ "$input_path" != /* ]]; then
   input_path="$PWD/$input_path"
