@@ -41,6 +41,7 @@ var feedbackDocs = defaultFeedbackDocs
 var expansionTerms = defaultExpansionTerms
 var expansionWeight = defaultExpansionWeight
 var expansionMaxQueryTerms = defaultExpansionMaxQueryTerms
+var expansionOnlyMode = false
 var rerankDocs = defaultRerankDocs
 var rerankPassageWindow = defaultRerankPassageWindow
 var rerankPassageWeight = defaultRerankPassageWeight
@@ -121,6 +122,7 @@ func configureRankingParameters() {
 	expansionTerms = intFromEnv("JASSJR_EXPANSION_TERMS", defaultExpansionTerms)
 	expansionWeight = floatFromEnv("JASSJR_EXPANSION_WEIGHT", defaultExpansionWeight)
 	expansionMaxQueryTerms = intFromEnv("JASSJR_EXPANSION_MAX_QUERY_TERMS", defaultExpansionMaxQueryTerms)
+	expansionOnlyMode = os.Getenv("JASSJR_EXPANSION_ONLY") == "1"
 	rerankDocs = intFromEnv("JASSJR_RERANK_DOCS", defaultRerankDocs)
 	rerankPassageWindow = intFromEnv("JASSJR_RERANK_PASSAGE_WINDOW", defaultRerankPassageWindow)
 	rerankPassageWeight = floatFromEnv("JASSJR_RERANK_PASSAGE_WEIGHT", defaultRerankPassageWeight)
@@ -597,6 +599,12 @@ func main() {
 		if expansionMaxQueryTerms == 0 || len(queryTerms) <= expansionMaxQueryTerms {
 			expansions := selectExpansionTerms(index, forwardFile, forwardOffsets, touchedDocs, rsv, originalTerms)
 			if len(expansions) > 0 {
+				if expansionOnlyMode {
+					for _, d := range touchedDocs {
+						rsv[d] = 0
+					}
+					touchedDocs = touchedDocs[:0]
+				}
 				for _, expansion := range expansions {
 					accumulateScores(index, expansion.token, expansion.weight, rsv, &touchedDocs)
 				}

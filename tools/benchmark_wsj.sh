@@ -52,6 +52,84 @@ emit_metadata_file() {
   cat "$file"
 }
 
+seed_dense_vectors_from_existing_artifact() {
+  local repo_root="$1"
+  local target_workdir="$2"
+
+  [[ "${JASSJR_SEMANTIC_MODE:-off}" == "off" ]] && return 0
+  [[ -f "$target_workdir/dense-docs.f32" && -f "$target_workdir/dense-docs.meta.json" ]] && return 0
+  [[ -f "$target_workdir/docids.bin" ]] || return 0
+
+  local doc_count
+  doc_count="$(wc -l < "$target_workdir/docids.bin" | tr -d '[:space:]')"
+  local semantic_model="${JASSJR_SEMANTIC_MODEL:-text-embedding-3-small}"
+  local semantic_dimensions="${JASSJR_SEMANTIC_DIMENSIONS:-512}"
+  local semantic_doc_words="${JASSJR_SEMANTIC_DOC_WORDS:-220}"
+  local semantic_batch_size="${JASSJR_SEMANTIC_BATCH_SIZE:-64}"
+  local seed
+  seed="$(
+    python3 - "$repo_root" "$target_workdir" "$doc_count" "$semantic_model" "$semantic_dimensions" "$semantic_doc_words" "$semantic_batch_size" <<'PY'
+import json
+import os
+import pathlib
+import sys
+
+repo_root = pathlib.Path(sys.argv[1]).resolve()
+target_workdir = pathlib.Path(sys.argv[2]).resolve()
+doc_count = int(sys.argv[3])
+model = sys.argv[4]
+dimensions = int(sys.argv[5])
+doc_words = int(sys.argv[6])
+batch_size = int(sys.argv[7])
+
+matches = []
+for meta_path in repo_root.rglob("dense-docs.meta.json"):
+    try:
+        meta = json.loads(meta_path.read_text())
+    except Exception:
+        continue
+
+    vector_path = pathlib.Path(meta.get("vector_file", "")).expanduser()
+    if not vector_path.is_absolute():
+        vector_path = (meta_path.parent / vector_path).resolve()
+
+    if pathlib.Path(vector_path).resolve() == (target_workdir / "dense-docs.f32").resolve():
+        continue
+
+    if (
+        meta.get("status") != "complete"
+        or meta.get("mode") != "openai"
+        or meta.get("model") != model
+        or int(meta.get("dimensions", -1)) != dimensions
+        or int(meta.get("doc_words", -1)) != doc_words
+        or int(meta.get("batch_size", -1)) != batch_size
+        or int(meta.get("documents", -1)) != doc_count
+        or not vector_path.is_file()
+    ):
+        continue
+
+    matches.append((str(meta_path), str(vector_path)))
+
+matches.sort()
+if matches:
+    print(matches[0][0])
+    print(matches[0][1])
+PY
+  )"
+
+  [[ -n "$seed" ]] || return 0
+
+  local seed_meta
+  local seed_vector
+  seed_meta="$(printf '%s\n' "$seed" | sed -n '1p')"
+  seed_vector="$(printf '%s\n' "$seed" | sed -n '2p')"
+  [[ -n "$seed_meta" && -n "$seed_vector" ]] || return 0
+
+  ln -sfn "$seed_vector" "$target_workdir/dense-docs.f32"
+  ln -sfn "$seed_meta" "$target_workdir/dense-docs.meta.json"
+  printf "Reusing dense vectors from %s\n" "$seed_meta"
+}
+
 workdir_lock_dir=""
 
 release_workdir_lock() {
@@ -201,6 +279,8 @@ index_output="$(
   cd "$workdir" &&
     "$repo_root/tools/benchmark.sh" "$iters" "$index_bin" "$collection_file"
 )"
+
+seed_dense_vectors_from_existing_artifact "$repo_root" "$workdir"
 
 search_cmd=("$search_bin")
 if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" != "off" || "${JASSJR_SEMANTIC_MODE:-off}" != "off" ]]; then
