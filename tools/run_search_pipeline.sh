@@ -60,6 +60,7 @@ dense_query_metadata_file="$pipeline_tmpdir/semantic-query.txt"
 fusion_bm25_rm3_metadata_file="$pipeline_tmpdir/fusion-bm25-rm3.txt"
 fusion_bm25_dense_metadata_file="$pipeline_tmpdir/fusion-bm25-dense.txt"
 fusion_tri_source_metadata_file="$pipeline_tmpdir/fusion-tri-source.txt"
+fusion_tri_source_backfill_metadata_file="$pipeline_tmpdir/fusion-tri-source-backfill.txt"
 rerank_metadata_file="$pipeline_tmpdir/rerank.txt"
 pipeline_metadata_file="$pipeline_tmpdir/pipeline.txt"
 trap 'rm -rf "$pipeline_tmpdir"' EXIT
@@ -70,10 +71,12 @@ semantic_mode="${JASSJR_SEMANTIC_MODE:-off}"
 rrf_k="${JASSJR_FUSION_RRF_K:-60}"
 fusion_weight_bm25="${JASSJR_FUSION_WEIGHT_BM25:-0.05}"
 fusion_weight_rm3="${JASSJR_FUSION_WEIGHT_RM3:-0.55}"
-fusion_weight_dense="${JASSJR_FUSION_WEIGHT_DENSE:-0.40}"
+fusion_weight_dense="${JASSJR_FUSION_WEIGHT_DENSE:-0.35}"
+fusion_weight_dense_backfill="${JASSJR_FUSION_WEIGHT_DENSE_BACKFILL:-0.05}"
 fusion_topk_bm25="${JASSJR_FUSION_BM25_TOPK:-250}"
 fusion_topk_rm3="${JASSJR_FUSION_RM3_TOPK:-250}"
 fusion_topk_dense="${JASSJR_FUSION_DENSE_TOPK:-250}"
+fusion_topk_dense_backfill="${JASSJR_FUSION_DENSE_BACKFILL_TOPK:-1000}"
 
 run_sparse() {
   local output_file="$1"
@@ -139,6 +142,7 @@ bm25_only_output="$ablation_dir/bm25-only.trec"
 bm25_rm3_output="$ablation_dir/bm25-rm3-fusion.trec"
 bm25_dense_output="$ablation_dir/bm25-dense-fusion.trec"
 tri_source_output="$ablation_dir/bm25-rm3-dense-fusion.trec"
+tri_source_backfill_output="$ablation_dir/bm25-rm3-dense-backfill-fusion.trec"
 
 run_sparse "$bm25_results_file" JASSJR_FEEDBACK_DOCS=0 JASSJR_EXPANSION_TERMS=0 JASSJR_EXPANSION_WEIGHT=0
 cp "$bm25_results_file" "$bm25_only_output"
@@ -176,27 +180,38 @@ python3 "$repo_root/tools/fuse_runs.py" \
   --source rm3 "$rm3_results_file" "$fusion_weight_rm3" "$fusion_topk_rm3" \
   --source dense "$dense_results_file" "$fusion_weight_dense" "$fusion_topk_dense"
 
+python3 "$repo_root/tools/fuse_runs.py" \
+  --output "$tri_source_backfill_output" \
+  --metadata-file "$fusion_tri_source_backfill_metadata_file" \
+  --rrf-k "$rrf_k" \
+  --source bm25 "$bm25_results_file" "$fusion_weight_bm25" "$fusion_topk_bm25" \
+  --source rm3 "$rm3_results_file" "$fusion_weight_rm3" "$fusion_topk_rm3" \
+  --source dense "$dense_results_file" "$fusion_weight_dense" "$fusion_topk_dense" \
+  --source dense_backfill "$dense_results_file" "$fusion_weight_dense_backfill" "$fusion_topk_dense_backfill"
+
 cat > "$pipeline_metadata_file" <<EOF
 JASSJR_ABLATION_BM25_ONLY: $bm25_only_output
 JASSJR_ABLATION_BM25_RM3_FUSION: $bm25_rm3_output
 JASSJR_ABLATION_BM25_DENSE_FUSION: $bm25_dense_output
 JASSJR_ABLATION_BM25_RM3_DENSE_FUSION: $tri_source_output
+JASSJR_ABLATION_BM25_RM3_DENSE_BACKFILL_FUSION: $tri_source_backfill_output
 EOF
 append_metadata "$dense_build_metadata_file"
 append_metadata "$dense_query_metadata_file"
 append_metadata "$fusion_bm25_rm3_metadata_file"
 append_metadata "$fusion_bm25_dense_metadata_file"
 append_metadata "$fusion_tri_source_metadata_file"
+append_metadata "$fusion_tri_source_backfill_metadata_file"
 
 if [[ "$openai_mode" == "off" ]]; then
   write_off_metadata
-  cat "$tri_source_output" > "$final_results_file"
+  cat "$tri_source_backfill_output" > "$final_results_file"
 else
   python3 "$repo_root/tools/openai_rerank.py" \
     --repo-root "$repo_root" \
     --workdir "$workdir" \
     --topics-file "$topics_stdin_file" \
-    --run-file "$tri_source_output" \
+    --run-file "$tri_source_backfill_output" \
     --output-file "$final_results_file" \
     --metadata-file "$rerank_metadata_file"
   append_metadata "$rerank_metadata_file"
