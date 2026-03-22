@@ -1,0 +1,34 @@
+branch: codex/search-tri-source-scaffold
+timestamp: 20260322-173025
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+workdir: /Users/caiau/school/autoresearch/wsj-eval/codex-search-tri-source-scaffold-full-semantic
+
+=== bm25-only ===
+map                   	all	0.2364
+Rprec                 	all	0.2793
+bpref                 	all	0.3034
+recip_rank            	all	0.6329
+P_10                  	all	0.4280
+
+=== bm25-rm3-fusion ===
+map                   	all	0.2435
+Rprec                 	all	0.2831
+bpref                 	all	0.3086
+recip_rank            	all	0.6367
+P_10                  	all	0.4340
+
+=== bm25-dense-fusion ===
+map                   	all	0.2668
+Rprec                 	all	0.3016
+bpref                 	all	0.3377
+recip_rank            	all	0.7417
+P_10                  	all	0.4800
+
+=== bm25-rm3-dense-fusion ===
+map                   	all	0.2681
+Rprec                 	all	0.3023
+bpref                 	all	0.3350
+recip_rank            	all	0.7400
+P_10                  	all	0.4580
