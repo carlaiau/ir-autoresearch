@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -16,12 +17,14 @@ from typing import Dict, List, Optional, Tuple
 DEFAULT_MONO_MODEL = "gpt-5-mini"
 DEFAULT_DUO_MODEL = "gpt-5-mini"
 DEFAULT_MODE = "off"
-DEFAULT_MONO_DOCS = 25
+DEFAULT_MONO_DOCS = 85
 DEFAULT_DUO_DOCS = 10
 DEFAULT_DOC_WORDS = 220
 DEFAULT_PROMPT_VERSION = "openai-rerank-v2"
 DEFAULT_CACHE_DIR = ".cache/openai-rerank"
 OPENAI_API_URL = "https://api.openai.com/v1/responses"
+RETRYABLE_HTTP_CODES = {408, 409, 429, 500, 502, 503, 504}
+MAX_OPENAI_RETRIES = 5
 SCORE_RE = re.compile(r"-?\d+")
 VALID_MODES = {"off", "mono", "mono_duo"}
 MODEL_PRICING = {
@@ -334,12 +337,22 @@ def post_openai(config: Config, model: str, system_prompt: str, user_prompt: str
             "Content-Type": "application/json",
         },
     )
-    try:
-        with urllib.request.urlopen(request) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="ignore")
-        raise RuntimeError(f"OpenAI request failed with HTTP {exc.code}: {detail}") from exc
+    for attempt in range(1, MAX_OPENAI_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(request) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="ignore")
+            if exc.code in RETRYABLE_HTTP_CODES and attempt < MAX_OPENAI_RETRIES:
+                time.sleep(min(2 ** (attempt - 1), 16))
+                continue
+            raise RuntimeError(f"OpenAI request failed with HTTP {exc.code}: {detail}") from exc
+        except urllib.error.URLError as exc:
+            if attempt < MAX_OPENAI_RETRIES:
+                time.sleep(min(2 ** (attempt - 1), 16))
+                continue
+            raise RuntimeError(f"OpenAI request failed: {exc}") from exc
+    raise RuntimeError("OpenAI request failed after retries")
 
 
 def estimated_tokens(text: str) -> int:
