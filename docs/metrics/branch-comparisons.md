@@ -17,7 +17,7 @@ Current accepted leader [`codex/search-llm-rewrite-sidecar`](https://github.com/
 | [`codex/search-tri-source-scaffold`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-tri-source-scaffold) | [#38](https://github.com/carlaiau/ir-autoresearch/issues/38) | 0.2739 | **+0.0048** | 0.5720 | 0.4790 | 0.3113 | 0.3426 | 0.6538 | 11.08 | 8.00 |
 | [`codex/search-fusion-weight-grid`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-fusion-weight-grid) | [#39](https://github.com/carlaiau/ir-autoresearch/issues/39) | 0.2800 | **+0.0061** | 0.5960 | 0.4930 | 0.3217 | 0.3528 | 0.6538 | 12.64 | 8.77 |
 | [`codex/search-rm3-expansion-source`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rm3-expansion-source) | [#45](https://github.com/carlaiau/ir-autoresearch/issues/45) | 0.2830 | **+0.0030** | 0.5960 | 0.4970 | 0.3207 | 0.3585 | 0.6755 | 13.11 | 10.34 |
-| [`codex/search-llm-rewrite-sidecar`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-llm-rewrite-sidecar) | - | 0.2861 | **+0.0031** | 0.5960 | 0.4970 | 0.3288 | 0.3613 | 0.6769 | 13.37 | 11.57 |
+| [`codex/search-llm-rewrite-sidecar`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-llm-rewrite-sidecar) | [#47](https://github.com/carlaiau/ir-autoresearch/issues/47) | 0.2861 | **+0.0031** | 0.5960 | 0.4970 | 0.3288 | 0.3613 | 0.6769 | 13.37 | 11.57 |
 
 **Legend**
 - `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.
