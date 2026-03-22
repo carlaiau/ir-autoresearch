@@ -26,6 +26,7 @@ VECTOR_FILE_NAME = "dense-docs.f32"
 VECTOR_FILE_PART_NAME = "dense-docs.f32.part"
 META_FILE_NAME = "dense-docs.meta.json"
 META_FILE_PART_NAME = "dense-docs.meta.part.json"
+TRANSIENT_BAD_JSON_MARKER = "could not parse the json body"
 
 
 @dataclass
@@ -169,7 +170,9 @@ def post_embeddings(config: Config, texts: List[str]) -> Dict:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="ignore")
-            if exc.code in RETRYABLE_HTTP_CODES and attempt < MAX_OPENAI_RETRIES:
+            normalized_detail = detail.lower()
+            retryable_bad_json = exc.code == 400 and TRANSIENT_BAD_JSON_MARKER in normalized_detail
+            if (exc.code in RETRYABLE_HTTP_CODES or retryable_bad_json) and attempt < MAX_OPENAI_RETRIES:
                 time.sleep(min(2 ** (attempt - 1), 16))
                 continue
             raise RuntimeError(f"OpenAI embeddings request failed with HTTP {exc.code}: {detail}") from exc

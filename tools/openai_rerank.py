@@ -27,6 +27,7 @@ RETRYABLE_HTTP_CODES = {408, 409, 429, 500, 502, 503, 504}
 MAX_OPENAI_RETRIES = 5
 SCORE_RE = re.compile(r"-?\d+")
 VALID_MODES = {"off", "mono", "mono_duo"}
+TRANSIENT_BAD_JSON_MARKER = "could not parse the json body"
 MODEL_PRICING = {
     "gpt-5-mini": (0.25, 2.0),
     "gpt-5.1": (1.25, 10.0),
@@ -343,7 +344,9 @@ def post_openai(config: Config, model: str, system_prompt: str, user_prompt: str
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="ignore")
-            if exc.code in RETRYABLE_HTTP_CODES and attempt < MAX_OPENAI_RETRIES:
+            normalized_detail = detail.lower()
+            retryable_bad_json = exc.code == 400 and TRANSIENT_BAD_JSON_MARKER in normalized_detail
+            if (exc.code in RETRYABLE_HTTP_CODES or retryable_bad_json) and attempt < MAX_OPENAI_RETRIES:
                 time.sleep(min(2 ** (attempt - 1), 16))
                 continue
             raise RuntimeError(f"OpenAI request failed with HTTP {exc.code}: {detail}") from exc
