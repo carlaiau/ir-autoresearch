@@ -11,7 +11,8 @@ usage() {
 Usage: $0 --workdir <dir> [--metadata-file <file>]
 
 Read topics from stdin, run the lexical searcher, and optionally apply
-OpenAI-backed reranking before writing the final TREC run to stdout.
+tri-source fusion and OpenAI-backed reranking before writing the final
+TREC run to stdout.
 EOF
 }
 
@@ -49,43 +50,158 @@ export JASSJR_OPENAI_KEY_SOURCE="$key_source"
 
 topics_stdin_file="$(mktemp "$workdir/topics-stdin.XXXXXX.txt")"
 raw_results_file="$(mktemp "$workdir/results-raw.XXXXXX.trec")"
-trap 'rm -f "$topics_stdin_file" "$raw_results_file"' EXIT
+bm25_results_file="$(mktemp "$workdir/results-bm25.XXXXXX.trec")"
+rm3_results_file="$(mktemp "$workdir/results-rm3.XXXXXX.trec")"
+dense_results_file="$(mktemp "$workdir/results-dense.XXXXXX.trec")"
+final_results_file="$(mktemp "$workdir/results-final.XXXXXX.trec")"
+dense_build_metadata_file="$(mktemp "$workdir/semantic-build.XXXXXX.txt")"
+dense_query_metadata_file="$(mktemp "$workdir/semantic-query.XXXXXX.txt")"
+fusion_bm25_rm3_metadata_file="$(mktemp "$workdir/fusion-bm25-rm3.XXXXXX.txt")"
+fusion_bm25_dense_metadata_file="$(mktemp "$workdir/fusion-bm25-dense.XXXXXX.txt")"
+fusion_tri_source_metadata_file="$(mktemp "$workdir/fusion-tri-source.XXXXXX.txt")"
+rerank_metadata_file="$(mktemp "$workdir/rerank.XXXXXX.txt")"
+pipeline_metadata_file="$(mktemp "$workdir/pipeline.XXXXXX.txt")"
+trap 'rm -f "$topics_stdin_file" "$raw_results_file" "$bm25_results_file" "$rm3_results_file" "$dense_results_file" "$final_results_file" "$dense_build_metadata_file" "$dense_query_metadata_file" "$fusion_bm25_rm3_metadata_file" "$fusion_bm25_dense_metadata_file" "$fusion_tri_source_metadata_file" "$rerank_metadata_file" "$pipeline_metadata_file"' EXIT
 cat > "$topics_stdin_file"
 
-search_env=()
-if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" != "off" ]]; then
-  search_env+=("JASSJR_RERANK_DOCS=0")
-fi
+openai_mode="${JASSJR_OPENAI_RERANK_MODE:-off}"
+semantic_mode="${JASSJR_SEMANTIC_MODE:-off}"
+rrf_k="${JASSJR_FUSION_RRF_K:-60}"
+fusion_weight_bm25="${JASSJR_FUSION_WEIGHT_BM25:-0.45}"
+fusion_weight_rm3="${JASSJR_FUSION_WEIGHT_RM3:-0.35}"
+fusion_weight_dense="${JASSJR_FUSION_WEIGHT_DENSE:-0.20}"
+fusion_topk_bm25="${JASSJR_FUSION_BM25_TOPK:-250}"
+fusion_topk_rm3="${JASSJR_FUSION_RM3_TOPK:-250}"
+fusion_topk_dense="${JASSJR_FUSION_DENSE_TOPK:-250}"
 
-(
-  cd "$workdir" || exit 1
-  if [[ ${#search_env[@]} -gt 0 ]]; then
-    env "${search_env[@]}" ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
-  else
-    ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
-  fi
-)
+run_sparse() {
+  local output_file="$1"
+  shift
+  (
+    cd "$workdir" || exit 1
+    env JASSJR_RERANK_DOCS=0 "$@" ./jassjr-search < "$topics_stdin_file" > "$output_file"
+  )
+}
 
-if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" ]]; then
-  if [[ -n "$metadata_file" ]]; then
-    cat > "$metadata_file" <<EOF
+append_metadata() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  cat "$file" >> "$pipeline_metadata_file"
+  printf "\n" >> "$pipeline_metadata_file"
+}
+
+write_off_metadata() {
+  cat >> "$pipeline_metadata_file" <<EOF
 JASSJR_OPENAI_RERANK_MODE: off
 JASSJR_OPENAI_KEY_SOURCE: $key_source
 EOF
+}
+
+(
+  cd "$workdir" || exit 1
+  if [[ "$semantic_mode" == "off" && "$openai_mode" == "off" ]]; then
+    ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
+  else
+    env JASSJR_RERANK_DOCS=0 ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
   fi
-  cat "$raw_results_file"
+)
+
+if [[ "$semantic_mode" == "off" ]]; then
+  output_file="$raw_results_file"
+  if [[ "$openai_mode" == "off" ]]; then
+    write_off_metadata
+  else
+    python_args=(
+      "$repo_root/tools/openai_rerank.py"
+      --repo-root "$repo_root"
+      --workdir "$workdir"
+      --topics-file "$topics_stdin_file"
+      --run-file "$raw_results_file"
+      --output-file "$final_results_file"
+      --metadata-file "$rerank_metadata_file"
+    )
+    python3 "${python_args[@]}"
+    output_file="$final_results_file"
+    append_metadata "$rerank_metadata_file"
+  fi
+
+  if [[ -n "$metadata_file" ]]; then
+    cp "$pipeline_metadata_file" "$metadata_file"
+  fi
+  cat "$output_file"
   exit 0
 fi
 
-python_args=(
-  "$repo_root/tools/openai_rerank.py"
-  --repo-root "$repo_root"
-  --workdir "$workdir"
-  --topics-file "$topics_stdin_file"
-  --run-file "$raw_results_file"
+ablation_dir="$workdir/ablation-runs"
+mkdir -p "$ablation_dir"
+bm25_only_output="$ablation_dir/bm25-only.trec"
+bm25_rm3_output="$ablation_dir/bm25-rm3-fusion.trec"
+bm25_dense_output="$ablation_dir/bm25-dense-fusion.trec"
+tri_source_output="$ablation_dir/bm25-rm3-dense-fusion.trec"
+
+run_sparse "$bm25_results_file" JASSJR_FEEDBACK_DOCS=0 JASSJR_EXPANSION_TERMS=0 JASSJR_EXPANSION_WEIGHT=0
+cp "$bm25_results_file" "$bm25_only_output"
+run_sparse "$rm3_results_file"
+
+python3 "$repo_root/tools/build_dense_vectors.py" \
+  --repo-root "$repo_root" \
+  --workdir "$workdir" \
+  --metadata-file "$dense_build_metadata_file" >&2
+
+(
+  cd "$workdir" || exit 1
+  ./jassjr-dense-search --repo-root "$repo_root" --metadata-file "$dense_query_metadata_file" < "$topics_stdin_file" > "$dense_results_file"
 )
-if [[ -n "$metadata_file" ]]; then
-  python_args+=(--metadata-file "$metadata_file")
+
+python3 "$repo_root/tools/fuse_runs.py" \
+  --output "$bm25_rm3_output" \
+  --metadata-file "$fusion_bm25_rm3_metadata_file" \
+  --rrf-k "$rrf_k" \
+  --source bm25 "$bm25_results_file" "$fusion_weight_bm25" "$fusion_topk_bm25" \
+  --source rm3 "$rm3_results_file" "$fusion_weight_rm3" "$fusion_topk_rm3"
+
+python3 "$repo_root/tools/fuse_runs.py" \
+  --output "$bm25_dense_output" \
+  --metadata-file "$fusion_bm25_dense_metadata_file" \
+  --rrf-k "$rrf_k" \
+  --source bm25 "$bm25_results_file" "$fusion_weight_bm25" "$fusion_topk_bm25" \
+  --source dense "$dense_results_file" "$fusion_weight_dense" "$fusion_topk_dense"
+
+python3 "$repo_root/tools/fuse_runs.py" \
+  --output "$tri_source_output" \
+  --metadata-file "$fusion_tri_source_metadata_file" \
+  --rrf-k "$rrf_k" \
+  --source bm25 "$bm25_results_file" "$fusion_weight_bm25" "$fusion_topk_bm25" \
+  --source rm3 "$rm3_results_file" "$fusion_weight_rm3" "$fusion_topk_rm3" \
+  --source dense "$dense_results_file" "$fusion_weight_dense" "$fusion_topk_dense"
+
+cat > "$pipeline_metadata_file" <<EOF
+JASSJR_ABLATION_BM25_ONLY: $bm25_only_output
+JASSJR_ABLATION_BM25_RM3_FUSION: $bm25_rm3_output
+JASSJR_ABLATION_BM25_DENSE_FUSION: $bm25_dense_output
+JASSJR_ABLATION_BM25_RM3_DENSE_FUSION: $tri_source_output
+EOF
+append_metadata "$dense_build_metadata_file"
+append_metadata "$dense_query_metadata_file"
+append_metadata "$fusion_bm25_rm3_metadata_file"
+append_metadata "$fusion_bm25_dense_metadata_file"
+append_metadata "$fusion_tri_source_metadata_file"
+
+if [[ "$openai_mode" == "off" ]]; then
+  write_off_metadata
+  cat "$tri_source_output" > "$final_results_file"
+else
+  python3 "$repo_root/tools/openai_rerank.py" \
+    --repo-root "$repo_root" \
+    --workdir "$workdir" \
+    --topics-file "$topics_stdin_file" \
+    --run-file "$tri_source_output" \
+    --output-file "$final_results_file" \
+    --metadata-file "$rerank_metadata_file"
+  append_metadata "$rerank_metadata_file"
 fi
 
-python3 "${python_args[@]}"
+if [[ -n "$metadata_file" ]]; then
+  cp "$pipeline_metadata_file" "$metadata_file"
+fi
+cat "$final_results_file"

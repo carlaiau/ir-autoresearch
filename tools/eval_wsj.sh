@@ -146,6 +146,7 @@ fi
 merged_input="$workdir/wsj_all.xml"
 index_bin="$workdir/jassjr-index"
 search_bin="$workdir/jassjr-search"
+dense_search_bin="$workdir/jassjr-dense-search"
 timestamp="$(date '+%Y%m%d-%H%M%S')"
 eval_output_file="$eval_output_dir/trec_eval-$timestamp.txt"
 rerank_metadata_file="$workdir/rerank-metadata-$timestamp.txt"
@@ -165,6 +166,7 @@ fi
 printf "Building Go binaries in %s\n" "$workdir"
 go build -o "$index_bin" "$repo_root/index/JASSjr_index.go"
 go build -o "$search_bin" "$repo_root/search/JASSjr_search.go"
+go build -o "$dense_search_bin" "$repo_root/tools/JASSjr_dense_search.go"
 
 printf "Indexing %s\n" "$collection_file"
 rm -f \
@@ -192,7 +194,7 @@ sleep 2
 printf "Running topics from %s\n" "$topics_file"
 (
   cd "$workdir" || exit 1
-  if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" ]]; then
+  if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" && "${JASSJR_SEMANTIC_MODE:-off}" == "off" ]]; then
     "$search_bin" < "$topics_file" > "$results_file"
     cat > "$rerank_metadata_file" <<EOF
 JASSJR_OPENAI_RERANK_MODE: off
@@ -221,6 +223,19 @@ printf "%s\n" "$summary"
   emit_env_setting JASSJR_EXPANSION_TERMS
   emit_env_setting JASSJR_EXPANSION_WEIGHT
   emit_env_setting JASSJR_EXPANSION_MAX_QUERY_TERMS
+  emit_env_setting JASSJR_SEMANTIC_MODE
+  emit_env_setting JASSJR_SEMANTIC_MODEL
+  emit_env_setting JASSJR_SEMANTIC_DIMENSIONS
+  emit_env_setting JASSJR_SEMANTIC_DOC_WORDS
+  emit_env_setting JASSJR_SEMANTIC_BATCH_SIZE
+  emit_env_setting JASSJR_SEMANTIC_TOPK
+  emit_env_setting JASSJR_FUSION_RRF_K
+  emit_env_setting JASSJR_FUSION_WEIGHT_BM25
+  emit_env_setting JASSJR_FUSION_WEIGHT_RM3
+  emit_env_setting JASSJR_FUSION_WEIGHT_DENSE
+  emit_env_setting JASSJR_FUSION_BM25_TOPK
+  emit_env_setting JASSJR_FUSION_RM3_TOPK
+  emit_env_setting JASSJR_FUSION_DENSE_TOPK
   emit_env_setting JASSJR_RERANK_DOCS
   emit_env_setting JASSJR_RERANK_PASSAGE_WINDOW
   emit_env_setting JASSJR_RERANK_PASSAGE_WEIGHT
@@ -232,7 +247,7 @@ printf "%s\n" "$summary"
   emit_env_setting JASSJR_OPENAI_DOC_WORDS
   emit_env_setting JASSJR_OPENAI_PROMPT_VERSION
   emit_env_setting JASSJR_OPENAI_CACHE_DIR
-  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_FEEDBACK_DOCS:-}" || -n "${JASSJR_EXPANSION_TERMS:-}" || -n "${JASSJR_EXPANSION_WEIGHT:-}" || -n "${JASSJR_EXPANSION_MAX_QUERY_TERMS:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" || -n "${JASSJR_OPENAI_RERANK_MODE:-}" || -n "${JASSJR_OPENAI_MONO_MODEL:-}" || -n "${JASSJR_OPENAI_DUO_MODEL:-}" || -n "${JASSJR_OPENAI_MONO_DOCS:-}" || -n "${JASSJR_OPENAI_DUO_DOCS:-}" || -n "${JASSJR_OPENAI_DOC_WORDS:-}" || -n "${JASSJR_OPENAI_PROMPT_VERSION:-}" || -n "${JASSJR_OPENAI_CACHE_DIR:-}" ]]; then
+  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_FEEDBACK_DOCS:-}" || -n "${JASSJR_EXPANSION_TERMS:-}" || -n "${JASSJR_EXPANSION_WEIGHT:-}" || -n "${JASSJR_EXPANSION_MAX_QUERY_TERMS:-}" || -n "${JASSJR_SEMANTIC_MODE:-}" || -n "${JASSJR_SEMANTIC_MODEL:-}" || -n "${JASSJR_SEMANTIC_DIMENSIONS:-}" || -n "${JASSJR_SEMANTIC_DOC_WORDS:-}" || -n "${JASSJR_SEMANTIC_BATCH_SIZE:-}" || -n "${JASSJR_SEMANTIC_TOPK:-}" || -n "${JASSJR_FUSION_RRF_K:-}" || -n "${JASSJR_FUSION_WEIGHT_BM25:-}" || -n "${JASSJR_FUSION_WEIGHT_RM3:-}" || -n "${JASSJR_FUSION_WEIGHT_DENSE:-}" || -n "${JASSJR_FUSION_BM25_TOPK:-}" || -n "${JASSJR_FUSION_RM3_TOPK:-}" || -n "${JASSJR_FUSION_DENSE_TOPK:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" || -n "${JASSJR_OPENAI_RERANK_MODE:-}" || -n "${JASSJR_OPENAI_MONO_MODEL:-}" || -n "${JASSJR_OPENAI_DUO_MODEL:-}" || -n "${JASSJR_OPENAI_MONO_DOCS:-}" || -n "${JASSJR_OPENAI_DUO_DOCS:-}" || -n "${JASSJR_OPENAI_DOC_WORDS:-}" || -n "${JASSJR_OPENAI_PROMPT_VERSION:-}" || -n "${JASSJR_OPENAI_CACHE_DIR:-}" ]]; then
     printf "\n"
   fi
   emit_metadata_file "$rerank_metadata_file"
