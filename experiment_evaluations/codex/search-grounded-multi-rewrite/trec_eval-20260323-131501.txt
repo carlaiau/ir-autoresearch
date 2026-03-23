@@ -1,0 +1,224 @@
+branch: codex/search-grounded-multi-rewrite
+timestamp: 20260323-131501
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+JASSJR_SEMANTIC_MODE: openai
+JASSJR_OPENAI_RERANK_MODE: mono
+
+JASSJR_ABLATION_BM25_ONLY: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-only.trec
+JASSJR_ABLATION_BM25_RM3_FUSION: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-fusion.trec
+JASSJR_ABLATION_BM25_RM3_EXPANSION_FUSION: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-expansion-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_FUSION: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-rm3exp-rewrite-fusion.trec
+JASSJR_ABLATION_BM25_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-dense-fusion.trec
+JASSJR_ABLATION_BM25_RM3_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-dense-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-rm3exp-dense-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-rm3exp-rewrite-dense-fusion.trec
+JASSJR_OPENAI_QUERY_REWRITE_MODE: sparse
+JASSJR_OPENAI_QUERY_REWRITE_KEY_SOURCE: dotenv
+JASSJR_OPENAI_QUERY_REWRITE_MODEL: gpt-5-mini
+JASSJR_OPENAI_QUERY_REWRITE_PROMPT_VERSION: openai-query-rewrite-v4
+JASSJR_OPENAI_QUERY_REWRITE_COUNT: 2
+JASSJR_OPENAI_QUERY_REWRITE_MAX_QUERY_TERMS: 3
+JASSJR_OPENAI_QUERY_REWRITE_MAX_OUTPUT_TERMS: 8
+JASSJR_OPENAI_QUERY_REWRITE_GROUND_DOCS: 4
+JASSJR_OPENAI_QUERY_REWRITE_GROUND_TERMS: 12
+JASSJR_OPENAI_QUERY_REWRITE_GROUND_DOC_WORDS: 90
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-query-rewrite
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_ONLY: 0
+JASSJR_OPENAI_QUERY_REWRITE_QUERIES_TOTAL: 50
+JASSJR_OPENAI_QUERY_REWRITE_QUERIES_ELIGIBLE: 30
+JASSJR_OPENAI_QUERY_REWRITE_QUERIES_GROUNDED: 30
+JASSJR_OPENAI_QUERY_REWRITE_QUERIES_REWRITTEN: 30
+JASSJR_OPENAI_QUERY_REWRITE_TOTAL_REWRITES: 58
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_HITS: 30
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_MISSES: 0
+JASSJR_OPENAI_QUERY_REWRITE_CALLS: 0
+JASSJR_OPENAI_QUERY_REWRITE_EST_INPUT_TOKENS: 4208
+JASSJR_OPENAI_QUERY_REWRITE_EST_OUTPUT_TOKENS: 960
+JASSJR_OPENAI_QUERY_REWRITE_ACTUAL_INPUT_TOKENS: 6588
+JASSJR_OPENAI_QUERY_REWRITE_ACTUAL_OUTPUT_TOKENS: 1206
+JASSJR_OPENAI_QUERY_REWRITE_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/topics-rewrite.txt
+JASSJR_OPENAI_QUERY_REWRITE_SLOT_1_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/topics-rewrite-1.txt
+JASSJR_OPENAI_QUERY_REWRITE_SLOT_2_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/topics-rewrite-2.txt
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rewrite.trec
+JASSJR_FUSION_SOURCE_ORDER: rewrite1,rewrite2
+JASSJR_FUSION_SOURCE_REWRITE1_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rewrite-1.trec
+JASSJR_FUSION_SOURCE_REWRITE1_WEIGHT: 1.0
+JASSJR_FUSION_SOURCE_REWRITE1_TOPK: 150
+JASSJR_FUSION_SOURCE_REWRITE2_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rewrite-2.trec
+JASSJR_FUSION_SOURCE_REWRITE2_WEIGHT: 1.0
+JASSJR_FUSION_SOURCE_REWRITE2_TOPK: 150
+
+JASSJR_SEMANTIC_MODE: openai
+JASSJR_SEMANTIC_KEY_SOURCE: dotenv
+JASSJR_SEMANTIC_MODEL: text-embedding-3-small
+JASSJR_SEMANTIC_DIMENSIONS: 512
+JASSJR_SEMANTIC_DOC_WORDS: 220
+JASSJR_SEMANTIC_BATCH_SIZE: 64
+JASSJR_SEMANTIC_DOCUMENTS: 173252
+JASSJR_SEMANTIC_DOC_VECTOR_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/dense-docs.f32
+JASSJR_SEMANTIC_DOC_VECTOR_META: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/dense-docs.meta.json
+
+JASSJR_SEMANTIC_MODE: openai
+JASSJR_SEMANTIC_KEY_SOURCE: dotenv
+JASSJR_SEMANTIC_MODEL: text-embedding-3-small
+JASSJR_SEMANTIC_DIMENSIONS: 512
+JASSJR_SEMANTIC_DOC_WORDS: 220
+JASSJR_SEMANTIC_DOCUMENTS: 173252
+JASSJR_SEMANTIC_DOC_VECTOR_FILE: /Users/caiau/school/autoresearch/wsj-grid-search/codex/search-fusion-weight-grid/dense-docs.f32
+JASSJR_SEMANTIC_OUTPUT_DOCS: 1000
+JASSJR_SEMANTIC_PROMPT_TOKENS: 203
+JASSJR_SEMANTIC_TOTAL_TOKENS: 203
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-expansion-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-rm3exp-rewrite-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,rewrite
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_REWRITE_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rewrite.trec
+JASSJR_FUSION_SOURCE_REWRITE_WEIGHT: 0.04
+JASSJR_FUSION_SOURCE_REWRITE_TOPK: 150
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-rm3exp-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/ablation-runs/bm25-rm3-rm3exp-rewrite-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,rewrite,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_REWRITE_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-rewrite.trec
+JASSJR_FUSION_SOURCE_REWRITE_WEIGHT: 0.04
+JASSJR_FUSION_SOURCE_REWRITE_TOPK: 150
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-eval/codex-search-grounded-multi-rewrite/pipeline-run.NwLc5e/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_OPENAI_RERANK_MODE: mono
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+JASSJR_OPENAI_MONO_MODEL: gpt-5-mini
+JASSJR_OPENAI_DUO_MODEL: gpt-5-mini
+JASSJR_OPENAI_PROMPT_VERSION: openai-rerank-v2
+JASSJR_OPENAI_MONO_DOCS: 85
+JASSJR_OPENAI_DUO_DOCS: 10
+JASSJR_OPENAI_DOC_WORDS: 220
+JASSJR_OPENAI_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-rerank
+JASSJR_OPENAI_CACHE_HITS: 4250
+JASSJR_OPENAI_CACHE_MISSES: 0
+JASSJR_OPENAI_MONO_CALLS: 0
+JASSJR_OPENAI_DUO_CALLS: 0
+JASSJR_OPENAI_EST_INPUT_TOKENS: 1020409
+JASSJR_OPENAI_EST_OUTPUT_TOKENS: 34000
+JASSJR_OPENAI_ACTUAL_INPUT_TOKENS: 1327537
+JASSJR_OPENAI_ACTUAL_OUTPUT_TOKENS: 114750
+JASSJR_OPENAI_EST_COST_USD: 0.323102
+JASSJR_OPENAI_ACTUAL_COST_USD: 0.561384
+
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	50000
+num_rel               	all	6228
+num_rel_ret           	all	4227
+map                   	all	0.2819
+gm_map                	all	0.1866
+Rprec                 	all	0.3226
+bpref                 	all	0.3577
+recip_rank            	all	0.7953
+iprec_at_recall_0.00  	all	0.8189
+iprec_at_recall_0.10  	all	0.5602
+iprec_at_recall_0.20  	all	0.4497
+iprec_at_recall_0.30  	all	0.3865
+iprec_at_recall_0.40  	all	0.3314
+iprec_at_recall_0.50  	all	0.2878
+iprec_at_recall_0.60  	all	0.2340
+iprec_at_recall_0.70  	all	0.1582
+iprec_at_recall_0.80  	all	0.0961
+iprec_at_recall_0.90  	all	0.0545
+iprec_at_recall_1.00  	all	0.0080
+P_5                   	all	0.5960
+P_10                  	all	0.5400
+P_15                  	all	0.5107
+P_20                  	all	0.4970
+P_30                  	all	0.4660
+P_100                 	all	0.3050
+P_200                 	all	0.2247
+P_500                 	all	0.1324
+P_1000                	all	0.0845

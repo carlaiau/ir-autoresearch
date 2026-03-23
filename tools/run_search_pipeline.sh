@@ -61,6 +61,7 @@ final_results_file="$pipeline_tmpdir/results-final.trec"
 dense_build_metadata_file="$pipeline_tmpdir/semantic-build.txt"
 dense_query_metadata_file="$pipeline_tmpdir/semantic-query.txt"
 rewrite_metadata_file="$pipeline_tmpdir/query-rewrite.txt"
+fusion_query_rewrite_metadata_file="$pipeline_tmpdir/fusion-rewrite-sidecars.txt"
 fusion_bm25_rm3_metadata_file="$pipeline_tmpdir/fusion-bm25-rm3.txt"
 fusion_bm25_rm3_expansion_metadata_file="$pipeline_tmpdir/fusion-bm25-rm3-expansion.txt"
 fusion_bm25_rm3_expansion_rewrite_metadata_file="$pipeline_tmpdir/fusion-bm25-rm3-expansion-rewrite.txt"
@@ -76,6 +77,7 @@ cat > "$topics_stdin_file"
 openai_mode="${JASSJR_OPENAI_RERANK_MODE:-off}"
 semantic_mode="${JASSJR_SEMANTIC_MODE:-off}"
 query_rewrite_mode="${JASSJR_OPENAI_QUERY_REWRITE_MODE:-off}"
+query_rewrite_count="${JASSJR_OPENAI_QUERY_REWRITE_COUNT:-1}"
 rrf_k="${JASSJR_FUSION_RRF_K:-60}"
 fusion_weight_bm25="${JASSJR_FUSION_WEIGHT_BM25:-0.05}"
 fusion_weight_rm3="${JASSJR_FUSION_WEIGHT_RM3:-0.55}"
@@ -176,9 +178,32 @@ if [[ "$query_rewrite_mode" != "off" ]]; then
     --workdir "$workdir" \
     --topics-file "$topics_stdin_file" \
     --output-file "$rewrite_topics_file" \
+    --ground-run-file "$rm3_results_file" \
     --metadata-file "$rewrite_metadata_file"
-  if [[ -s "$rewrite_topics_file" ]]; then
-    run_sparse_topics "$rewrite_topics_file" "$rewrite_results_file" JASSJR_FEEDBACK_DOCS=0 JASSJR_EXPANSION_TERMS=0 JASSJR_EXPANSION_WEIGHT=0
+  rewrite_slot_results=()
+  for slot in $(seq 1 "$query_rewrite_count"); do
+    rewrite_slot_topics_file="${rewrite_topics_file%.txt}-$slot.txt"
+    if [[ -s "$rewrite_slot_topics_file" ]]; then
+      rewrite_slot_results_file="${rewrite_results_file%.trec}-$slot.trec"
+      run_sparse_topics "$rewrite_slot_topics_file" "$rewrite_slot_results_file" JASSJR_FEEDBACK_DOCS=0 JASSJR_EXPANSION_TERMS=0 JASSJR_EXPANSION_WEIGHT=0
+      rewrite_slot_results+=("$rewrite_slot_results_file")
+    fi
+  done
+  if [[ "${#rewrite_slot_results[@]}" -gt 0 ]]; then
+    rewrite_fuse_args=(
+      python3 "$repo_root/tools/fuse_runs.py"
+      --output "$rewrite_results_file"
+      --metadata-file "$fusion_query_rewrite_metadata_file"
+      --rrf-k "$rrf_k"
+    )
+    rewrite_slot_index=1
+    for rewrite_slot_results_file in "${rewrite_slot_results[@]}"; do
+      rewrite_fuse_args+=(
+        --source "rewrite$rewrite_slot_index" "$rewrite_slot_results_file" 1.0 "$fusion_topk_query_rewrite"
+      )
+      rewrite_slot_index=$((rewrite_slot_index + 1))
+    done
+    "${rewrite_fuse_args[@]}"
     rewrite_enabled=1
   fi
 fi
@@ -279,6 +304,7 @@ EOF
 } > "$pipeline_metadata_file"
 
 append_metadata "$rewrite_metadata_file"
+append_metadata "$fusion_query_rewrite_metadata_file"
 append_metadata "$dense_build_metadata_file"
 append_metadata "$dense_query_metadata_file"
 append_metadata "$fusion_bm25_rm3_metadata_file"
