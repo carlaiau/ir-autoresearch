@@ -71,6 +71,7 @@ fusion_tri_source_metadata_file="$pipeline_tmpdir/fusion-tri-source.txt"
 fusion_tri_source_expansion_metadata_file="$pipeline_tmpdir/fusion-tri-source-expansion.txt"
 fusion_tri_source_expansion_rewrite_metadata_file="$pipeline_tmpdir/fusion-tri-source-expansion-rewrite.txt"
 fusion_tri_source_expansion_rewrite_expansion_metadata_file="$pipeline_tmpdir/fusion-tri-source-expansion-rewrite-rm3exp.txt"
+dense_novelty_metadata_file="$pipeline_tmpdir/dense-novelty.txt"
 rerank_metadata_file="$pipeline_tmpdir/rerank.txt"
 pipeline_metadata_file="$pipeline_tmpdir/pipeline.txt"
 trap 'rm -rf "$pipeline_tmpdir"' EXIT
@@ -92,6 +93,9 @@ fusion_topk_rm3_expansion="${JASSJR_FUSION_RM3_EXPANSION_TOPK:-250}"
 fusion_topk_query_rewrite="${JASSJR_FUSION_QUERY_REWRITE_TOPK:-150}"
 fusion_topk_query_rewrite_rm3exp="${JASSJR_FUSION_QUERY_REWRITE_RM3EXP_TOPK:-150}"
 fusion_topk_dense="${JASSJR_FUSION_DENSE_TOPK:-250}"
+dense_novelty_preserve_base="${JASSJR_DENSE_NOVELTY_PRESERVE_BASE:-60}"
+dense_novelty_inject_dense="${JASSJR_DENSE_NOVELTY_INJECT_DENSE:-25}"
+dense_novelty_max_docs="${JASSJR_DENSE_NOVELTY_MAX_DOCS:-1000}"
 
 run_sparse_topics() {
   local topics_file="$1"
@@ -170,6 +174,7 @@ tri_source_output="$ablation_dir/bm25-rm3-dense-fusion.trec"
 tri_source_expansion_output="$ablation_dir/bm25-rm3-rm3exp-dense-fusion.trec"
 tri_source_expansion_rewrite_output="$ablation_dir/bm25-rm3-rm3exp-rewrite-dense-fusion.trec"
 tri_source_expansion_rewrite_expansion_output="$ablation_dir/bm25-rm3-rm3exp-rewrite-rm3exp-dense-fusion.trec"
+dense_novelty_output="$ablation_dir/sparse-dense-novelty-backfill.trec"
 
 run_sparse "$bm25_results_file" JASSJR_FEEDBACK_DOCS=0 JASSJR_EXPANSION_TERMS=0 JASSJR_EXPANSION_WEIGHT=0
 cp "$bm25_results_file" "$bm25_only_output"
@@ -178,6 +183,7 @@ run_sparse "$rm3_expansion_results_file" JASSJR_EXPANSION_ONLY=1
 
 rewrite_enabled=0
 rewrite_expansion_enabled=0
+dense_novelty_enabled=0
 if [[ "$query_rewrite_mode" != "off" ]]; then
   python3 "$repo_root/tools/openai_query_rewrite.py" \
     --repo-root "$repo_root" \
@@ -294,6 +300,27 @@ if [[ "$semantic_mode" != "off" ]]; then
   fi
 fi
 
+if [[ "$semantic_mode" != "off" && "$rewrite_enabled" -eq 1 ]]; then
+  dense_novelty_base_run="$bm25_rm3_expansion_rewrite_output"
+  dense_novelty_fallback_run="$tri_source_expansion_rewrite_output"
+  if [[ "$rewrite_expansion_enabled" -eq 1 ]]; then
+    dense_novelty_base_run="$bm25_rm3_expansion_rewrite_expansion_output"
+    dense_novelty_fallback_run="$tri_source_expansion_rewrite_expansion_output"
+  fi
+
+  python3 "$repo_root/tools/backfill_dense_novelty.py" \
+    --base-run "$dense_novelty_base_run" \
+    --fallback-run "$dense_novelty_fallback_run" \
+    --dense-run "$dense_results_file" \
+    --sparse-topics-file "$rewrite_topics_file" \
+    --output "$dense_novelty_output" \
+    --metadata-file "$dense_novelty_metadata_file" \
+    --preserve-base "$dense_novelty_preserve_base" \
+    --inject-dense "$dense_novelty_inject_dense" \
+    --max-docs "$dense_novelty_max_docs"
+  dense_novelty_enabled=1
+fi
+
 {
   cat <<EOF
 JASSJR_ABLATION_BM25_ONLY: $bm25_only_output
@@ -315,6 +342,9 @@ EOF
       if [[ "$rewrite_expansion_enabled" -eq 1 ]]; then
         printf 'JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_RM3EXP_DENSE_FUSION: %s\n' "$tri_source_expansion_rewrite_expansion_output"
       fi
+      if [[ "$dense_novelty_enabled" -eq 1 ]]; then
+        printf 'JASSJR_ABLATION_SPARSE_DENSE_NOVELTY_BACKFILL: %s\n' "$dense_novelty_output"
+      fi
     fi
   fi
 } > "$pipeline_metadata_file"
@@ -331,6 +361,7 @@ append_metadata "$fusion_tri_source_metadata_file"
 append_metadata "$fusion_tri_source_expansion_metadata_file"
 append_metadata "$fusion_tri_source_expansion_rewrite_metadata_file"
 append_metadata "$fusion_tri_source_expansion_rewrite_expansion_metadata_file"
+append_metadata "$dense_novelty_metadata_file"
 
 candidate_output="$bm25_rm3_expansion_output"
 if [[ "$rewrite_enabled" -eq 1 ]]; then
@@ -345,6 +376,9 @@ if [[ "$semantic_mode" != "off" ]]; then
     candidate_output="$tri_source_expansion_rewrite_output"
     if [[ "$rewrite_expansion_enabled" -eq 1 ]]; then
       candidate_output="$tri_source_expansion_rewrite_expansion_output"
+    fi
+    if [[ "$dense_novelty_enabled" -eq 1 ]]; then
+      candidate_output="$dense_novelty_output"
     fi
   fi
 fi
