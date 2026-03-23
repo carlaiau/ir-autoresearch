@@ -71,6 +71,7 @@ fusion_tri_source_metadata_file="$pipeline_tmpdir/fusion-tri-source.txt"
 fusion_tri_source_expansion_metadata_file="$pipeline_tmpdir/fusion-tri-source-expansion.txt"
 fusion_tri_source_expansion_rewrite_metadata_file="$pipeline_tmpdir/fusion-tri-source-expansion-rewrite.txt"
 fusion_tri_source_expansion_rewrite_expansion_metadata_file="$pipeline_tmpdir/fusion-tri-source-expansion-rewrite-rm3exp.txt"
+sparse_no_dense_metadata_file="$pipeline_tmpdir/sparse-no-dense.txt"
 rerank_metadata_file="$pipeline_tmpdir/rerank.txt"
 pipeline_metadata_file="$pipeline_tmpdir/pipeline.txt"
 trap 'rm -rf "$pipeline_tmpdir"' EXIT
@@ -170,6 +171,7 @@ tri_source_output="$ablation_dir/bm25-rm3-dense-fusion.trec"
 tri_source_expansion_output="$ablation_dir/bm25-rm3-rm3exp-dense-fusion.trec"
 tri_source_expansion_rewrite_output="$ablation_dir/bm25-rm3-rm3exp-rewrite-dense-fusion.trec"
 tri_source_expansion_rewrite_expansion_output="$ablation_dir/bm25-rm3-rm3exp-rewrite-rm3exp-dense-fusion.trec"
+sparse_no_dense_output="$ablation_dir/sparse-no-dense.trec"
 
 run_sparse "$bm25_results_file" JASSJR_FEEDBACK_DOCS=0 JASSJR_EXPANSION_TERMS=0 JASSJR_EXPANSION_WEIGHT=0
 cp "$bm25_results_file" "$bm25_only_output"
@@ -178,6 +180,7 @@ run_sparse "$rm3_expansion_results_file" JASSJR_EXPANSION_ONLY=1
 
 rewrite_enabled=0
 rewrite_expansion_enabled=0
+sparse_no_dense_enabled=0
 if [[ "$query_rewrite_mode" != "off" ]]; then
   python3 "$repo_root/tools/openai_query_rewrite.py" \
     --repo-root "$repo_root" \
@@ -294,6 +297,23 @@ if [[ "$semantic_mode" != "off" ]]; then
   fi
 fi
 
+if [[ "$semantic_mode" != "off" && "$rewrite_enabled" -eq 1 ]]; then
+  sparse_no_dense_run="$bm25_rm3_expansion_rewrite_output"
+  sparse_no_dense_fallback_run="$tri_source_expansion_rewrite_output"
+  if [[ "$rewrite_expansion_enabled" -eq 1 ]]; then
+    sparse_no_dense_run="$bm25_rm3_expansion_rewrite_expansion_output"
+    sparse_no_dense_fallback_run="$tri_source_expansion_rewrite_expansion_output"
+  fi
+
+  python3 "$repo_root/tools/select_query_run.py" \
+    --sparse-run "$sparse_no_dense_run" \
+    --fallback-run "$sparse_no_dense_fallback_run" \
+    --sparse-topics-file "$rewrite_topics_file" \
+    --output "$sparse_no_dense_output" \
+    --metadata-file "$sparse_no_dense_metadata_file"
+  sparse_no_dense_enabled=1
+fi
+
 {
   cat <<EOF
 JASSJR_ABLATION_BM25_ONLY: $bm25_only_output
@@ -315,6 +335,9 @@ EOF
       if [[ "$rewrite_expansion_enabled" -eq 1 ]]; then
         printf 'JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_RM3EXP_DENSE_FUSION: %s\n' "$tri_source_expansion_rewrite_expansion_output"
       fi
+      if [[ "$sparse_no_dense_enabled" -eq 1 ]]; then
+        printf 'JASSJR_ABLATION_SPARSE_NO_DENSE: %s\n' "$sparse_no_dense_output"
+      fi
     fi
   fi
 } > "$pipeline_metadata_file"
@@ -331,6 +354,7 @@ append_metadata "$fusion_tri_source_metadata_file"
 append_metadata "$fusion_tri_source_expansion_metadata_file"
 append_metadata "$fusion_tri_source_expansion_rewrite_metadata_file"
 append_metadata "$fusion_tri_source_expansion_rewrite_expansion_metadata_file"
+append_metadata "$sparse_no_dense_metadata_file"
 
 candidate_output="$bm25_rm3_expansion_output"
 if [[ "$rewrite_enabled" -eq 1 ]]; then
@@ -345,6 +369,9 @@ if [[ "$semantic_mode" != "off" ]]; then
     candidate_output="$tri_source_expansion_rewrite_output"
     if [[ "$rewrite_expansion_enabled" -eq 1 ]]; then
       candidate_output="$tri_source_expansion_rewrite_expansion_output"
+    fi
+    if [[ "$sparse_no_dense_enabled" -eq 1 ]]; then
+      candidate_output="$sparse_no_dense_output"
     fi
   fi
 fi
