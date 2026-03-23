@@ -1,4 +1,4 @@
-Current accepted leader [`codex/search-rewrite-rm3exp`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rewrite-rm3exp) improves `MAP` from `0.2080` on to `0.2867` (`+0.0787 (+37.8%)`). It also raises `P@5` from `0.4320` to `0.6000`.
+Current accepted leader [`codex/search-rwexp-default-weight`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rwexp-default-weight) improves `MAP` from `0.2080` on to `0.2867` (`+0.0787 (+37.8%)`). It also raises `P@5` from `0.4320` to `0.6000`.
 
 | Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -19,6 +19,7 @@ Current accepted leader [`codex/search-rewrite-rm3exp`](https://github.com/carla
 | [`codex/search-rm3-expansion-source`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rm3-expansion-source) | [#45](https://github.com/carlaiau/ir-autoresearch/issues/45) | 0.2830 | **+0.0030** | 0.5960 | 0.4970 | 0.3207 | 0.3585 | 0.6755 | 13.11 | 10.34 |
 | [`codex/search-llm-rewrite-sidecar`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-llm-rewrite-sidecar) | [#47](https://github.com/carlaiau/ir-autoresearch/issues/47) | 0.2861 | **+0.0031** | 0.5960 | 0.4970 | 0.3288 | 0.3613 | 0.6769 | 13.37 | 11.57 |
 | [`codex/search-rewrite-rm3exp`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rewrite-rm3exp) | [#50](https://github.com/carlaiau/ir-autoresearch/issues/50) | 0.2867 | **+0.0006** | 0.6000 | 0.4950 | 0.3302 | 0.3624 | 0.6768 | 13.13 | 12.20 |
+| [`codex/search-rwexp-default-weight`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rwexp-default-weight) | [#53](https://github.com/carlaiau/ir-autoresearch/issues/53) | 0.2867 | +0.0000 | 0.6000 | 0.4950 | 0.3302 | 0.3625 | 0.6768 | 13.17 | 11.88 |
 
 **Legend**
 - `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.
