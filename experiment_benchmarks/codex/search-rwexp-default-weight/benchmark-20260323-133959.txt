@@ -1,0 +1,262 @@
+branch: codex/search-rwexp-default-weight
+timestamp: 20260323-133959
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+smoke_topics: /Users/caiau/school/autoresearch/tests/fixtures/smoke_topics.txt
+iterations: 5
+
+JASSJR_SEMANTIC_MODE: openai
+JASSJR_OPENAI_RERANK_MODE: mono
+
+JASSJR_ABLATION_BM25_ONLY: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-only.trec
+JASSJR_ABLATION_BM25_RM3_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-fusion.trec
+JASSJR_ABLATION_BM25_RM3_EXPANSION_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-expansion-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_RM3EXP_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-rm3exp-fusion.trec
+JASSJR_ABLATION_BM25_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-dense-fusion.trec
+JASSJR_ABLATION_BM25_RM3_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-dense-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-dense-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-dense-fusion.trec
+JASSJR_ABLATION_BM25_RM3_RM3EXP_REWRITE_RM3EXP_DENSE_FUSION: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-rm3exp-dense-fusion.trec
+JASSJR_OPENAI_QUERY_REWRITE_MODE: sparse
+JASSJR_OPENAI_QUERY_REWRITE_KEY_SOURCE: dotenv
+JASSJR_OPENAI_QUERY_REWRITE_MODEL: gpt-5-mini
+JASSJR_OPENAI_QUERY_REWRITE_PROMPT_VERSION: openai-query-rewrite-v3
+JASSJR_OPENAI_QUERY_REWRITE_MAX_QUERY_TERMS: 3
+JASSJR_OPENAI_QUERY_REWRITE_MAX_OUTPUT_TERMS: 8
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-query-rewrite
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_ONLY: 0
+JASSJR_OPENAI_QUERY_REWRITE_QUERIES_TOTAL: 50
+JASSJR_OPENAI_QUERY_REWRITE_QUERIES_ELIGIBLE: 30
+JASSJR_OPENAI_QUERY_REWRITE_QUERIES_REWRITTEN: 30
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_HITS: 30
+JASSJR_OPENAI_QUERY_REWRITE_CACHE_MISSES: 0
+JASSJR_OPENAI_QUERY_REWRITE_CALLS: 0
+JASSJR_OPENAI_QUERY_REWRITE_EST_INPUT_TOKENS: 3128
+JASSJR_OPENAI_QUERY_REWRITE_EST_OUTPUT_TOKENS: 360
+JASSJR_OPENAI_QUERY_REWRITE_ACTUAL_INPUT_TOKENS: 5026
+JASSJR_OPENAI_QUERY_REWRITE_ACTUAL_OUTPUT_TOKENS: 1014
+JASSJR_OPENAI_QUERY_REWRITE_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/topics-rewrite.txt
+
+JASSJR_SEMANTIC_MODE: openai
+JASSJR_SEMANTIC_KEY_SOURCE: dotenv
+JASSJR_SEMANTIC_MODEL: text-embedding-3-small
+JASSJR_SEMANTIC_DIMENSIONS: 512
+JASSJR_SEMANTIC_DOC_WORDS: 220
+JASSJR_SEMANTIC_BATCH_SIZE: 64
+JASSJR_SEMANTIC_DOCUMENTS: 173252
+JASSJR_SEMANTIC_DOC_VECTOR_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/dense-docs.f32
+JASSJR_SEMANTIC_DOC_VECTOR_META: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/dense-docs.meta.json
+
+JASSJR_SEMANTIC_MODE: openai
+JASSJR_SEMANTIC_KEY_SOURCE: dotenv
+JASSJR_SEMANTIC_MODEL: text-embedding-3-small
+JASSJR_SEMANTIC_DIMENSIONS: 512
+JASSJR_SEMANTIC_DOC_WORDS: 220
+JASSJR_SEMANTIC_DOCUMENTS: 173252
+JASSJR_SEMANTIC_DOC_VECTOR_FILE: /Users/caiau/school/autoresearch/wsj-grid-search/codex/search-fusion-weight-grid/dense-docs.f32
+JASSJR_SEMANTIC_OUTPUT_DOCS: 1000
+JASSJR_SEMANTIC_PROMPT_TOKENS: 203
+JASSJR_SEMANTIC_TOTAL_TOKENS: 203
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-expansion-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,rewrite
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_REWRITE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rewrite.trec
+JASSJR_FUSION_SOURCE_REWRITE_WEIGHT: 0.08
+JASSJR_FUSION_SOURCE_REWRITE_TOPK: 150
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-rm3exp-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,rewrite,rwexp
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_REWRITE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rewrite.trec
+JASSJR_FUSION_SOURCE_REWRITE_WEIGHT: 0.08
+JASSJR_FUSION_SOURCE_REWRITE_TOPK: 150
+JASSJR_FUSION_SOURCE_RWEXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rewrite-rm3exp.trec
+JASSJR_FUSION_SOURCE_RWEXP_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_RWEXP_TOPK: 150
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,rewrite,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_REWRITE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rewrite.trec
+JASSJR_FUSION_SOURCE_REWRITE_WEIGHT: 0.08
+JASSJR_FUSION_SOURCE_REWRITE_TOPK: 150
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_OUTPUT_FILE: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/ablation-runs/bm25-rm3-rm3exp-rewrite-rm3exp-dense-fusion.trec
+JASSJR_FUSION_SOURCE_ORDER: bm25,rm3,rm3exp,rewrite,rwexp,dense
+JASSJR_FUSION_SOURCE_BM25_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-bm25.trec
+JASSJR_FUSION_SOURCE_BM25_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_BM25_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3.trec
+JASSJR_FUSION_SOURCE_RM3_WEIGHT: 0.55
+JASSJR_FUSION_SOURCE_RM3_TOPK: 250
+JASSJR_FUSION_SOURCE_RM3EXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rm3-expansion.trec
+JASSJR_FUSION_SOURCE_RM3EXP_WEIGHT: 0.1
+JASSJR_FUSION_SOURCE_RM3EXP_TOPK: 250
+JASSJR_FUSION_SOURCE_REWRITE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rewrite.trec
+JASSJR_FUSION_SOURCE_REWRITE_WEIGHT: 0.08
+JASSJR_FUSION_SOURCE_REWRITE_TOPK: 150
+JASSJR_FUSION_SOURCE_RWEXP_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-rewrite-rm3exp.trec
+JASSJR_FUSION_SOURCE_RWEXP_WEIGHT: 0.05
+JASSJR_FUSION_SOURCE_RWEXP_TOPK: 150
+JASSJR_FUSION_SOURCE_DENSE_PATH: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/pipeline-run.VsiIhz/results-dense.trec
+JASSJR_FUSION_SOURCE_DENSE_WEIGHT: 0.4
+JASSJR_FUSION_SOURCE_DENSE_TOPK: 250
+
+JASSJR_OPENAI_RERANK_MODE: mono
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+JASSJR_OPENAI_MONO_MODEL: gpt-5-mini
+JASSJR_OPENAI_DUO_MODEL: gpt-5-mini
+JASSJR_OPENAI_PROMPT_VERSION: openai-rerank-v2
+JASSJR_OPENAI_MONO_DOCS: 85
+JASSJR_OPENAI_DUO_DOCS: 10
+JASSJR_OPENAI_DOC_WORDS: 220
+JASSJR_OPENAI_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-rerank
+JASSJR_OPENAI_CACHE_HITS: 4250
+JASSJR_OPENAI_CACHE_MISSES: 0
+JASSJR_OPENAI_MONO_CALLS: 0
+JASSJR_OPENAI_DUO_CALLS: 0
+JASSJR_OPENAI_EST_INPUT_TOKENS: 1021256
+JASSJR_OPENAI_EST_OUTPUT_TOKENS: 34000
+JASSJR_OPENAI_ACTUAL_INPUT_TOKENS: 1328680
+JASSJR_OPENAI_ACTUAL_OUTPUT_TOKENS: 114750
+JASSJR_OPENAI_EST_COST_USD: 0.323314
+JASSJR_OPENAI_ACTUAL_COST_USD: 0.561670
+
+
+index_median: 13.17
+search_smoke_median: 2.33
+search_topics_median: 11.88
+
+[index]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight/jassjr-index /Users/caiau/school/wsj.xml
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 12.71
+Slowest: 13.38
+Median:  13.17
+
+[search_smoke]
+Benchmarking: /Users/caiau/school/autoresearch/tools/run_search_pipeline.sh --workdir /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 2.28
+Slowest: 2.35
+Median:  2.33
+
+[search_topics]
+Benchmarking: /Users/caiau/school/autoresearch/tools/run_search_pipeline.sh --workdir /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-rwexp-default-weight
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 11.53
+Slowest: 12.48
+Median:  11.88
