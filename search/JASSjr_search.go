@@ -31,6 +31,7 @@ const defaultFeedbackDocs = 5
 const defaultExpansionTerms = 6
 const defaultExpansionWeight = 0.45
 const defaultExpansionMaxQueryTerms = 6
+const defaultExpansionMaxDocFreqFraction = 0.10
 const defaultRerankDocs = 25
 const defaultRerankPassageWindow = 16
 const defaultRerankPassageWeight = 0.20
@@ -465,6 +466,10 @@ func selectExpansionTerms(index loadedIndex, forwardFile *os.File, forwardOffset
 			}
 			postings := int(termDetails.size / 8)
 			if postings == 0 || postings == index.documentsInCollection {
+				continue
+			}
+			if float64(postings)/float64(index.documentsInCollection) > defaultExpansionMaxDocFreqFraction {
+				// Keep extremely common collection-wide terms out of RM3 feedback.
 				continue
 			}
 

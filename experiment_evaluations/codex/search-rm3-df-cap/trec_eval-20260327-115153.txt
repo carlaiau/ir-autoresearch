@@ -1,0 +1,39 @@
+branch: codex/search-rm3-df-cap
+timestamp: 20260327-115153
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+JASSJR_OPENAI_RERANK_MODE: off
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	50000
+num_rel               	all	6228
+num_rel_ret           	all	3904
+map                   	all	0.2540
+gm_map                	all	0.1249
+Rprec                 	all	0.2989
+bpref                 	all	0.3190
+recip_rank            	all	0.6524
+iprec_at_recall_0.00  	all	0.6948
+iprec_at_recall_0.10  	all	0.4900
+iprec_at_recall_0.20  	all	0.4213
+iprec_at_recall_0.30  	all	0.3532
+iprec_at_recall_0.40  	all	0.3093
+iprec_at_recall_0.50  	all	0.2601
+iprec_at_recall_0.60  	all	0.2130
+iprec_at_recall_0.70  	all	0.1522
+iprec_at_recall_0.80  	all	0.0991
+iprec_at_recall_0.90  	all	0.0561
+iprec_at_recall_1.00  	all	0.0107
+P_5                   	all	0.4840
+P_10                  	all	0.4440
+P_15                  	all	0.4240
+P_20                  	all	0.4100
+P_30                  	all	0.3840
+P_100                 	all	0.2854
+P_200                 	all	0.2148
+P_500                 	all	0.1300
+P_1000                	all	0.0781
