@@ -7,7 +7,8 @@ run is the sole baseline for JEV, monoBERT and duoBERT experiments.
 | --- | --- | ---: | --- |
 | Stage 1: BM25 + query expansion | Fixed baseline; all reranking disabled | **0.2521** | [Saved baseline](stage1/results/integrated-main-20260918/results.md) |
 | Stage 2: JEV pointwise | Rerun required on the fixed baseline | Pending | [Experiment plan](reranking/jev.md) |
-| Stage 2: monoBERT / duoBERT | Planned | Pending | [Reranking methodology](reranking/README.md) |
+| Stage 2: monoBERT MaxP, top 100 | Evaluated; local Apple GPU | **0.2693** | [Full-document results](reranking/results/monobert-maxp-top100-20260918/results.md) |
+| Stage 2: duoBERT | Planned | Pending | [Reranking methodology](reranking/README.md) |
 
 The stage-1 baseline uses BM25 (`k1=0.7`, `b=0.3`) with five feedback documents,
 six expansion terms, expansion weight 0.45 and a six-query-term admission limit.
@@ -17,6 +18,12 @@ query-rewrite sidecars are not part of this baseline.
 The saved baseline contains the candidate run, topics, qrels, raw `trec_eval`,
 source/data hashes and timing evidence. Five-run medians are **11.03 s indexing**
 and **0.41 s search for all 50 topics**. See [stage 1](stage1/README.md).
+
+Full-document monoBERT scored 19,593 passages in 2,475 batched model calls.
+Added reranking time was **1,510.93 s** for all 50 topics; median per-query time
+was **30.27 s**, excluding shared setup. Hosted inference API cost was $0; local
+compute cost is unknown. This is one exploratory uncached run, not a latency or
+cost winner. See the [implementation](reranking/monobert.md).
 
 Previous JEV evaluations have been discarded. There is currently **no accepted
 JEV result** against this baseline. The next experiment must rerun JEV using the

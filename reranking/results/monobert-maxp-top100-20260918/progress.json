@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "query_document_pairs": 5000,
+  "passage_scoring_calls": 19593,
+  "passage_scoring_calls_attempted": 19593,
+  "model_forward_calls_attempted": 2475,
+  "model_forward_calls": 2475,
+  "hosted_inference_api_calls": 0,
+  "input_tokens": 6846925,
+  "padded_input_tokens": 7647829,
+  "unique_document_tokens": 5237180,
+  "document_tokens_across_query_pairs": 5782119,
+  "covered_document_tokens_across_query_pairs": 5782119,
+  "inference_seconds": 1492.477594842203
+}

@@ -52,5 +52,8 @@ The mixed legacy branch dashboard is retired. Report only the fixed stage-1
 baseline and rerankers actually evaluated on its exact candidates. Do not
 regenerate the legacy leaderboard. Original artifacts remain read-only history.
 
-The current task updates documentation and removes obsolete evidence. The JEV
-rerun remains pending and no new model execution is claimed.
+Full-document monoBERT MaxP is implemented and its first uncached WSJ run is
+saved under `reranking/results/monobert-maxp-top100-20260918/`: MAP 0.2693,
+1,510.93 seconds of added reranking time. Local compute cost remains unknown by
+user choice. This supports an experimental implementation, not a cost/latency
+winner or a production recommendation. The JEV rerun remains pending.
