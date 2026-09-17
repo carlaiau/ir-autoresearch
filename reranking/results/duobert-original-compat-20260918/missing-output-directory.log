@@ -24,7 +24,7 @@ For more information, please see:
   * https://github.com/tensorflow/io (for I/O related ops)
 If you depend on functionality not listed there, please file an issue.
 
-W0917 23:51:53.572004 140737458751296 lazy_loader.py:50] 
+W0917 23:51:53.572004 140737458751296 lazy_loader.py:50]
 The TensorFlow contrib module will not be included in TensorFlow 2.0.
 For more information, please see:
   * https://github.com/tensorflow/community/blob/master/rfcs/20180907-contrib-sunset.md

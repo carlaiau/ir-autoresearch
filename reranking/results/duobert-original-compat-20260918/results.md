@@ -42,7 +42,11 @@ vary. Success requires both documents to be ranked, not a particular winner.
 | Original tiny evaluator | Passed | [Log](original-eval.log), [predictions](tiny-predictions.tsv) |
 | Original BERT-large evaluator | Passed | [Log](original-large-eval.log), [predictions](large-predictions.tsv) |
 | Repository smoke tests | Passed | [Log](repo-smoke.log) |
+| Saved reproduction script at BERT-large dimensions | Passed | [Log](reproduction.log) |
 | Pretrained checkpoint inference | Blocked by download access | See below |
+
+Saved logs have trailing whitespace removed. Checkpoint HTTP evidence is
+[recorded separately](checkpoint-access.txt), with cookies omitted.
 
 The first tiny run reached inference but failed when writing into a missing
 output directory. The [failure log](missing-output-directory.log) is retained;
