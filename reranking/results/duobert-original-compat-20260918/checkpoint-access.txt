@@ -1,0 +1,18 @@
+Checkpoint access probes; no checkpoint obtained. Cookies and unrelated headers omitted.
+
+checkpoint-headers.txt
+HTTP/2 302 
+content-type: text/html; charset=utf-8
+location: https://www.dropbox.com/scl/fi/rlr7bppu50rn6uydamm4u/duobert-large-msmarco-pretrained-and-finetuned.zip?rlkey=jdowsxminud2x47yeumgz451y&dl=1
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+
+checkpoint-direct.log
+curl: (56) The requested URL returned error: 404
+
+mirror-headers.txt
+HTTP/2 302 
+content-type: text/html; charset=utf-8
+location: https://git.uwaterloo.ca/users/sign_in
+HTTP/2 200 
+content-type: text/html; charset=utf-8

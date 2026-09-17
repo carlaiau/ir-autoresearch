@@ -1,0 +1,7 @@
+2026-09-17 23:51:23.979016: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2026-09-17 23:51:23.994069: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2592055000 Hz
+2026-09-17 23:51:23.995563: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x324f3b0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2026-09-17 23:51:23.995583: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+Linux-6.12.67-linuxkit-x86_64-with-Ubuntu-18.04-bionic
+1.15.5
+5

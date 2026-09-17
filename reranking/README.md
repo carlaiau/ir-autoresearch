@@ -13,6 +13,11 @@ reranking**. Stage 2 reads its saved candidates and writes separate reports unde
 | [JEV complete document](jev-comparison.md) | Query + entire parsed article; one Noul score | 0.3055 |
 | duoBERT | Query + document pair; pair selection/aggregation still to implement | Planned |
 
+The [original duoBERT compatibility check](results/duobert-original-compat-20260918/results.md)
+ran the unchanged TensorFlow evaluator locally in an Intel CPU container at
+BERT-large dimensions with random weights. Pretrained verification is blocked
+by checkpoint download access; no duoBERT retrieval result is available yet.
+
 See the [paired JEV comparison](results/jev-comparison-20260918.md) for all five
 metrics, calls, latency, API cost, coverage audits and failed-attempt spend.
 Completed JEV runs use served model JEV 1.13.0, top 100 and eight concurrent calls

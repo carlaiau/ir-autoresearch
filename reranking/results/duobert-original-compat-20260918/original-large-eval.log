@@ -1,0 +1,141 @@
+WARNING:tensorflow:From /fixture.py:28: The name tf.python_io.TFRecordWriter is deprecated. Please use tf.io.TFRecordWriter instead.
+
+WARNING:tensorflow:From /upstream/optimization.py:84: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From run_duobert_msmarco.py:496: The name tf.app.run is deprecated. Please use tf.compat.v1.app.run instead.
+
+WARNING:tensorflow:From run_duobert_msmarco.py:309: The name tf.logging.set_verbosity is deprecated. Please use tf.compat.v1.logging.set_verbosity instead.
+
+W0917 23:52:53.599705 140737458751296 module_wrapper.py:139] From run_duobert_msmarco.py:309: The name tf.logging.set_verbosity is deprecated. Please use tf.compat.v1.logging.set_verbosity instead.
+
+WARNING:tensorflow:From run_duobert_msmarco.py:309: The name tf.logging.INFO is deprecated. Please use tf.compat.v1.logging.INFO instead.
+
+W0917 23:52:53.600137 140737458751296 module_wrapper.py:139] From run_duobert_msmarco.py:309: The name tf.logging.INFO is deprecated. Please use tf.compat.v1.logging.INFO instead.
+
+WARNING:tensorflow:From /upstream/modeling.py:92: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+W0917 23:52:53.600255 140737458751296 module_wrapper.py:139] From /upstream/modeling.py:92: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+WARNING:tensorflow:
+The TensorFlow contrib module will not be included in TensorFlow 2.0.
+For more information, please see:
+  * https://github.com/tensorflow/community/blob/master/rfcs/20180907-contrib-sunset.md
+  * https://github.com/tensorflow/addons
+  * https://github.com/tensorflow/io (for I/O related ops)
+If you depend on functionality not listed there, please file an issue.
+
+W0917 23:52:53.601797 140737458751296 lazy_loader.py:50] 
+The TensorFlow contrib module will not be included in TensorFlow 2.0.
+For more information, please see:
+  * https://github.com/tensorflow/community/blob/master/rfcs/20180907-contrib-sunset.md
+  * https://github.com/tensorflow/addons
+  * https://github.com/tensorflow/io (for I/O related ops)
+If you depend on functionality not listed there, please file an issue.
+
+WARNING:tensorflow:Estimator's model_fn (<function model_fn_builder.<locals>.model_fn at 0x7fffda42d950>) includes params argument, but params are not passed to Estimator.
+W0917 23:52:53.816618 140737458751296 estimator.py:1994] Estimator's model_fn (<function model_fn_builder.<locals>.model_fn at 0x7fffda42d950>) includes params argument, but params are not passed to Estimator.
+INFO:tensorflow:Using config: {'_model_dir': '/work/large-output', '_tf_random_seed': None, '_save_summary_steps': 100, '_save_checkpoints_steps': 1000, '_save_checkpoints_secs': None, '_session_config': allow_soft_placement: true
+graph_options {
+  rewrite_options {
+    meta_optimizer_iterations: ONE
+  }
+}
+, '_keep_checkpoint_max': 5, '_keep_checkpoint_every_n_hours': 10000, '_log_step_count_steps': None, '_train_distribute': None, '_device_fn': None, '_protocol': None, '_eval_distribute': None, '_experimental_distribute': None, '_experimental_max_worker_delay_secs': None, '_session_creation_timeout_secs': 7200, '_service': None, '_cluster_spec': <tensorflow.python.training.server_lib.ClusterSpec object at 0x7fffd7690518>, '_task_type': 'worker', '_task_id': 0, '_global_id_in_cluster': 0, '_master': '', '_evaluation_master': '', '_is_chief': True, '_num_ps_replicas': 0, '_num_worker_replicas': 1, '_tpu_config': TPUConfig(iterations_per_loop=1000, num_shards=8, num_cores_per_replica=None, per_host_input_for_training=3, tpu_job_name=None, initial_infeed_sleep_secs=None, input_partition_dims=None, eval_training_input_configuration=2, experimental_host_call_every_n_steps=1), '_cluster': None}
+I0917 23:52:53.818868 140737458751296 estimator.py:212] Using config: {'_model_dir': '/work/large-output', '_tf_random_seed': None, '_save_summary_steps': 100, '_save_checkpoints_steps': 1000, '_save_checkpoints_secs': None, '_session_config': allow_soft_placement: true
+graph_options {
+  rewrite_options {
+    meta_optimizer_iterations: ONE
+  }
+}
+, '_keep_checkpoint_max': 5, '_keep_checkpoint_every_n_hours': 10000, '_log_step_count_steps': None, '_train_distribute': None, '_device_fn': None, '_protocol': None, '_eval_distribute': None, '_experimental_distribute': None, '_experimental_max_worker_delay_secs': None, '_session_creation_timeout_secs': 7200, '_service': None, '_cluster_spec': <tensorflow.python.training.server_lib.ClusterSpec object at 0x7fffd7690518>, '_task_type': 'worker', '_task_id': 0, '_global_id_in_cluster': 0, '_master': '', '_evaluation_master': '', '_is_chief': True, '_num_ps_replicas': 0, '_num_worker_replicas': 1, '_tpu_config': TPUConfig(iterations_per_loop=1000, num_shards=8, num_cores_per_replica=None, per_host_input_for_training=3, tpu_job_name=None, initial_infeed_sleep_secs=None, input_partition_dims=None, eval_training_input_configuration=2, experimental_host_call_every_n_steps=1), '_cluster': None}
+INFO:tensorflow:_TPUContext: eval_on_tpu True
+I0917 23:52:53.819192 140737458751296 tpu_context.py:220] _TPUContext: eval_on_tpu True
+WARNING:tensorflow:eval_on_tpu ignored because use_tpu is False.
+W0917 23:52:53.819369 140737458751296 tpu_context.py:222] eval_on_tpu ignored because use_tpu is False.
+WARNING:tensorflow:From run_duobert_msmarco.py:375: The name tf.logging.info is deprecated. Please use tf.compat.v1.logging.info instead.
+
+W0917 23:52:53.819489 140737458751296 module_wrapper.py:139] From run_duobert_msmarco.py:375: The name tf.logging.info is deprecated. Please use tf.compat.v1.logging.info instead.
+
+INFO:tensorflow:***** Running evaluation *****
+I0917 23:52:53.819553 140737458751296 run_duobert_msmarco.py:375] ***** Running evaluation *****
+INFO:tensorflow:    Batch size = 2
+I0917 23:52:53.819604 140737458751296 run_duobert_msmarco.py:376]     Batch size = 2
+WARNING:tensorflow:From run_duobert_msmarco.py:381: The name tf.gfile.Exists is deprecated. Please use tf.io.gfile.exists instead.
+
+W0917 23:52:53.819853 140737458751296 module_wrapper.py:139] From run_duobert_msmarco.py:381: The name tf.gfile.Exists is deprecated. Please use tf.io.gfile.exists instead.
+
+WARNING:tensorflow:From run_duobert_msmarco.py:390: The name tf.gfile.Open is deprecated. Please use tf.io.gfile.GFile instead.
+
+W0917 23:52:53.820273 140737458751296 module_wrapper.py:139] From run_duobert_msmarco.py:390: The name tf.gfile.Open is deprecated. Please use tf.io.gfile.GFile instead.
+
+WARNING:tensorflow:From run_duobert_msmarco.py:414: The name tf.logging.WARN is deprecated. Please use tf.compat.v1.logging.WARN instead.
+
+W0917 23:52:53.820986 140737458751296 module_wrapper.py:139] From run_duobert_msmarco.py:414: The name tf.logging.WARN is deprecated. Please use tf.compat.v1.logging.WARN instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/resource_variable_ops.py:1630: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.
+W0917 23:52:53.841200 140737458751296 deprecation.py:506] From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/resource_variable_ops.py:1630: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/autograph/converters/directives.py:119: The name tf.FixedLenSequenceFeature is deprecated. Please use tf.io.FixedLenSequenceFeature instead.
+
+W0917 23:52:53.892109 140737458751296 module_wrapper.py:139] From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/autograph/converters/directives.py:119: The name tf.FixedLenSequenceFeature is deprecated. Please use tf.io.FixedLenSequenceFeature instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/autograph/converters/directives.py:119: The name tf.FixedLenFeature is deprecated. Please use tf.io.FixedLenFeature instead.
+
+W0917 23:52:53.892410 140737458751296 module_wrapper.py:139] From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/autograph/converters/directives.py:119: The name tf.FixedLenFeature is deprecated. Please use tf.io.FixedLenFeature instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/autograph/converters/directives.py:119: The name tf.parse_single_example is deprecated. Please use tf.io.parse_single_example instead.
+
+W0917 23:52:53.892615 140737458751296 module_wrapper.py:139] From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/autograph/converters/directives.py:119: The name tf.parse_single_example is deprecated. Please use tf.io.parse_single_example instead.
+
+WARNING:tensorflow:From /upstream/modeling.py:172: The name tf.variable_scope is deprecated. Please use tf.compat.v1.variable_scope instead.
+
+W0917 23:52:53.969210 140737458751296 module_wrapper.py:139] From /upstream/modeling.py:172: The name tf.variable_scope is deprecated. Please use tf.compat.v1.variable_scope instead.
+
+WARNING:tensorflow:From /upstream/modeling.py:411: The name tf.get_variable is deprecated. Please use tf.compat.v1.get_variable instead.
+
+W0917 23:52:53.970545 140737458751296 module_wrapper.py:139] From /upstream/modeling.py:411: The name tf.get_variable is deprecated. Please use tf.compat.v1.get_variable instead.
+
+WARNING:tensorflow:From /upstream/modeling.py:680: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use keras.layers.Dense instead.
+W0917 23:52:53.995649 140737458751296 deprecation.py:323] From /upstream/modeling.py:680: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use keras.layers.Dense instead.
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/layers/core.py:187: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `layer.__call__` method instead.
+W0917 23:52:53.996297 140737458751296 deprecation.py:323] From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/layers/core.py:187: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `layer.__call__` method instead.
+WARNING:tensorflow:From /upstream/modeling.py:277: The name tf.erf is deprecated. Please use tf.math.erf instead.
+
+W0917 23:52:54.039878 140737458751296 module_wrapper.py:139] From /upstream/modeling.py:277: The name tf.erf is deprecated. Please use tf.math.erf instead.
+
+WARNING:tensorflow:From run_duobert_msmarco.py:181: The name tf.trainable_variables is deprecated. Please use tf.compat.v1.trainable_variables instead.
+
+W0917 23:52:55.484273 140737458751296 module_wrapper.py:139] From run_duobert_msmarco.py:181: The name tf.trainable_variables is deprecated. Please use tf.compat.v1.trainable_variables instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/array_ops.py:1475: where (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+W0917 23:52:55.607299 140737458751296 deprecation.py:323] From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/ops/array_ops.py:1475: where (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+2026-09-17 23:52:55.852993: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2026-09-17 23:52:55.866865: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2592055000 Hz
+2026-09-17 23:52:55.868406: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x373c1c0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2026-09-17 23:52:55.868431: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+INFO:tensorflow:Eval dev:
+I0917 23:53:05.801946 140737458751296 run_duobert_msmarco.py:489] Eval dev:
+INFO:tensorflow:MAP    RPrec    MRR    NDCG    MRR@10
+I0917 23:53:05.802114 140737458751296 run_duobert_msmarco.py:490] MAP    RPrec    MRR    NDCG    MRR@10
+INFO:tensorflow:[1. 1. 1. 1. 1.]
+I0917 23:53:05.802166 140737458751296 run_duobert_msmarco.py:491] [1. 1. 1. 1. 1.]
+INFO:tensorflow:Done evaluating dev
+I0917 23:53:05.803612 140737458751296 run_duobert_msmarco.py:492] Done evaluating dev
+real 14.69
+user 0.01
+sys 0.01
