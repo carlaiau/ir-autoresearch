@@ -166,6 +166,17 @@ rm -f \
   "$search_bin" < "$topics_file" > "$results_file"
 )
 
+jev_metadata=""
+if [[ "${JASSJR_JEV_RERANK:-off}" == "on" ]]; then
+  cp "$results_file" "$workdir/lexical.trec"
+  jev_metadata="$eval_output_dir/jev-$timestamp.json"
+  "${JASSJR_JEV_PYTHON:-python3}" "$repo_root/tools/rerank_jev.py" \
+    --collection "$collection_file" --topics "$topics_file" \
+    --run "$workdir/lexical.trec" --output "$results_file" \
+    --metadata "$jev_metadata" --cache "$repo_root/wsj-eval/jev-cache" \
+    --top-k "${JASSJR_JEV_TOP_K:-100}" --model "${JASSJR_JEV_MODEL:-jev-latest}"
+fi
+
 printf "Run file written to %s\n" "$results_file"
 printf "Evaluating with trec_eval against %s\n" "$qrels_file"
 summary="$(
@@ -178,6 +189,8 @@ printf "%s\n" "$summary"
   printf "collection: %s\n" "$collection_file"
   printf "topics: %s\n" "$topics_file"
   printf "qrels: %s\n\n" "$qrels_file"
+  printf "JASSJR_JEV_RERANK: %s\n" "${JASSJR_JEV_RERANK:-off}"
+  printf "jev_metadata: %s\n" "$jev_metadata"
   printf "%s\n" "$summary"
 } > "$eval_output_file"
 printf "Summary written to %s\n" "$eval_output_file"

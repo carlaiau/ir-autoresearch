@@ -118,18 +118,8 @@ def render_summary(rows: List[Dict[str, str]]) -> str:
     latest_map = float(latest["map"])
     baseline_p5 = float(baseline["p_5"])
     latest_p5 = float(latest["p_5"])
-    baseline_search = float(baseline["search_topics_median"])
-    latest_search = float(latest["search_topics_median"])
-    baseline_index = float(baseline["index_median"])
-    latest_index = float(latest["index_median"])
-
-    index_change = format_speed_change(latest_index, baseline_index)
-    index_clause = f"index median moved from `{baseline_index:.2f}s` to `{latest_index:.2f}s`"
-    if index_change:
-        index_clause += f" ({index_change})"
-
     return (
-        f"Current accepted leader {display_branch(latest)} improves `MAP` from `{baseline_map:.4f}` on "
+        f"Current accepted leader {display_branch(latest)} improves `MAP` from `{baseline_map:.4f}` on `original` "
         f"to `{latest_map:.4f}` "
         f"(`{format_change(latest_map, baseline_map)}`). It also raises `P@5` from "
         f"`{baseline_p5:.4f}` to `{latest_p5:.4f}`."

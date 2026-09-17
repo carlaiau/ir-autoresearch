@@ -5,7 +5,7 @@ This repository provides a compact sandbox for experimenting with a simple, unde
 ## Current Results
 
 <!-- README_METRICS_TABLE_START -->
-Current accepted leader [`codex/search-bm25-grid-search`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-grid-search) improves `MAP` from `0.2080` on to `0.2402` (`+0.0322 (+15.5%)`). It also raises `P@5` from `0.4320` to `0.4680`.
+Current accepted leader [`codex/search-jev-post25`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-jev-post25) improves `MAP` from `0.2080` on `original` to `0.2925` (`+0.0845 (+40.6%)`). It also raises `P@5` from `0.4320` to `0.6720`.
 
 | Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -16,6 +16,7 @@ Current accepted leader [`codex/search-bm25-grid-search`](https://github.com/car
 | [`codex/search-bm25-b-030`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-b-030) | [#14](https://github.com/carlaiau/ir-autoresearch/issues/14) | 0.2365 | **+0.0010** | 0.4600 | 0.3980 | 0.2801 | 0.3048 | 0.6016 | 8.83 | 0.20 |
 | [`codex/search-prf`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-prf) | [#23](https://github.com/carlaiau/ir-autoresearch/issues/23) | 0.2396 | **+0.0031** | 0.4640 | 0.3960 | 0.2840 | 0.3071 | 0.6031 | 10.42 | 0.21 |
 | [`codex/search-bm25-grid-search`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-grid-search) | [#25](https://github.com/carlaiau/ir-autoresearch/issues/25) | 0.2402 | **+0.0006** | 0.4680 | 0.3950 | 0.2826 | 0.3062 | 0.6029 | 10.61 | 0.22 |
+| [`codex/search-jev-post25`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-jev-post25) | [#58](https://github.com/carlaiau/ir-autoresearch/issues/58) | 0.2925 | **+0.0523** | 0.6720 | 0.5250 | 0.3143 | 0.3445 | 0.6029 | n/a | n/a |
 
 **Legend**
 - `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.

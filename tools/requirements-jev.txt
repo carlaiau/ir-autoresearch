@@ -1,0 +1,2 @@
+# Install with: pip install -r tools/requirements-jev.txt --extra-index-url https://pypi.typesafe.ai/
+typesafe-sdk==0.6.0

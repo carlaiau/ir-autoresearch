@@ -5,3 +5,7 @@ wsj-eval/
 wsj-benchmark/
 wsj-eval
 smoke-eval
+.env
+.env.local
+__pycache__/
+.venv/
