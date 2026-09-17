@@ -7,9 +7,8 @@ candidate run is the common input for every stage-2 comparison.
 ## Implementation
 
 The engine remains in `index/JASSjr_index.go` and `search/JASSjr_search.go`.
-The saved pre-JEV configuration descends from BM25 tuning commit
-`552f36baf50784122de36fc419b6cbb9eac07256`. Current code retains main's later
-RM3-style feedback improvements; new runs form a separate baseline cohort.
+The sole baseline is the saved BM25 + query-expansion run with **MAP 0.2521**,
+before all reranking. Its implementation and settings are described below.
 
 1. Read WSJ records and associate terms with DOCNO. The lexer recognizes ASCII
    alphanumeric tokens (including internal hyphens), lowercases them and applies
@@ -21,8 +20,7 @@ RM3-style feedback improvements; new runs form a separate baseline cohort.
 3. Score title queries with BM25: `k1=0.7`, `b=0.3`, and `log(N/df)` IDF.
    `JASSJR_BM25_K1` and `JASSJR_BM25_B` override these defaults and are recorded.
 4. Apply existing lightweight pseudo-relevance feedback inside lexical retrieval:
-   the historical saved baseline used two leading documents, one new term and
-   weight 0.10. Current main defaults use five feedback documents, six expansion
+   the fixed baseline uses five feedback documents, six expansion
    terms, weight 0.45 and a six-query-term admission limit. All effective settings
    are recorded in `lexical_config`. The runner forces `JASSJR_RERANK_DOCS=0` so
    the optional sparse passage reranking cannot leak into stage 1.
@@ -59,16 +57,27 @@ for repeated lexical benchmarks (legacy branch artifact directory).
 step succeeds. `-t`, `-q`, `-w` and `-o` remain supported; input is now a single WSJ
 file, not a directory. `--results-dir` selects a new explicit result directory.
 
-## Baselines
+## Fixed stage-1 baseline
 
-[Current integrated-main lexical baseline](results/integrated-main-20260918/results.md)
-has MAP 0.2521 with passage reranking disabled.
-[Preserved pre-JEV baseline](results/pre-jev/results.md) has MAP 0.2402.
-It is the paired input for the historical JEV experiment, not a claim that it is
-current main. Current `main` remains the code approval baseline. The `original`
-artifacts are historical initialization data and remain untouched.
+[Stage 1 baseline: BM25 + query expansion](results/integrated-main-20260918/results.md)
 
-The accepted fusion, dense and rewrite code remains available through the legacy
-`tools/eval_pipeline_wsj.sh` entry point. Those historical fused configurations
-have different candidates and API usage; they are not interchangeable with the
-new lexical-only stage-1 manifest.
+| MAP | Rprec | P_10 | bpref | recip_rank |
+| ---: | ---: | ---: | ---: | ---: |
+| **0.2521** | 0.2989 | 0.4460 | 0.3178 | 0.6271 |
+
+All reranking is disabled (`JASSJR_RERANK_DOCS=0`). No JEV, OpenAI reranker,
+dense-retrieval or query-rewrite sidecar contributes to this run. The saved folder
+name identifies when the run was captured; it does not name another algorithm.
+
+Use this exact saved `run.trec`, topics and qrels for every reranking comparison.
+Candidate SHA-256:
+`d1f737713de16e857ba69988ee85f5d30fef2bc4f4d6004d4ff73e87c7c9045b`.
+
+The [manifest](results/integrated-main-20260918/manifest.json) records all effective
+settings and content hashes. The [benchmark](results/integrated-main-20260918/benchmark.md)
+records five-run medians: 11.03 s indexing and 0.41 s for all 50 title queries.
+Single-pass timings in the manifest are separate measurements.
+
+Do not replace this baseline automatically when main changes or when an evaluation
+is rerun. Any proposed replacement requires an explicit decision. JEV has no
+accepted result yet and will be rerun against this saved baseline.

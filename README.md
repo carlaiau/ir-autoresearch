@@ -1,93 +1,52 @@
 # Two-stage retrieval and reranking research
 
-The repository separates lexical candidate retrieval from reranking. The current
-research focus is comparing JEV, monoBERT and duoBERT on identical candidates,
-measuring retrieval effectiveness, search time and cost.
+**Stage 1 is fixed at MAP 0.2521, before all reranking.** Its saved candidate
+run is the sole baseline for JEV, monoBERT and duoBERT experiments.
 
-| Stage | Implementation and methodology | Result Markdown folders |
-| --- | --- | --- |
-| 1. Lexical retrieval | [Stage 1](stage1/README.md): JASSjr BM25 + existing feedback | [stage1/results/](stage1/results/) |
-| 2. Reranking | [Stage 2](reranking/README.md): JEV pointwise; monoBERT/duoBERT planned | [reranking/results/](reranking/results/) |
+| Stage | Status | MAP | Results |
+| --- | --- | ---: | --- |
+| Stage 1: BM25 + query expansion | Fixed baseline; all reranking disabled | **0.2521** | [Saved baseline](stage1/results/integrated-main-20260918/results.md) |
+| Stage 2: JEV pointwise | Rerun required on the fixed baseline | Pending | [Experiment plan](reranking/jev.md) |
+| Stage 2: monoBERT / duoBERT | Planned | Pending | [Reranking methodology](reranking/README.md) |
 
-Stage 1 saves its own run and `trec_eval` before stage 2 starts. Every new result
-has a `results.md` and machine-readable manifest. Stage 2 verifies the baseline's
-content hashes and reports its gain, added time and estimated cost separately.
+The stage-1 baseline uses BM25 (`k1=0.7`, `b=0.3`) with five feedback documents,
+six expansion terms, expansion weight 0.45 and a six-query-term admission limit.
+Sparse passage reranking is disabled. JEV, OpenAI reranking, dense retrieval and
+query-rewrite sidecars are not part of this baseline.
+
+The saved baseline contains the candidate run, topics, qrels, raw `trec_eval`,
+source/data hashes and timing evidence. Five-run medians are **11.03 s indexing**
+and **0.41 s search for all 50 topics**. See [stage 1](stage1/README.md).
+
+Previous JEV evaluations have been discarded. There is currently **no accepted
+JEV result** against this baseline. The next experiment must rerun JEV using the
+saved candidates and report effectiveness, added search time and cost separately.
+See [stage 2](reranking/README.md) and [program.md](program.md).
+
+For the next JEV experiment, use the existing baseline rather than generating a
+new candidate set:
 
 ```sh
-./tests/smoke.sh
-python3 stage1/run.py /absolute/path/to/wsj.xml
-# Substitute the exact directory printed by stage 1; use a Python environment
-# with tools/requirements-jev.txt installed and TYPESAFE_API_KEY configured.
-python3 reranking/run.py stage1/results/<branch>/<run-id> --top-k 100
+python3 reranking/run.py stage1/results/integrated-main-20260918 \
+  --top-k 100 --cache wsj-eval/jev-stage1-02521-fresh
 ```
 
-`./tools/eval_wsj.sh` now runs stage 1 only. The old
-`JASSJR_JEV_RERANK=on` switch is rejected with migration instructions.
-`./tools/benchmark_wsj.sh` remains a repeated lexical-only benchmark.
-Current main's expanded-feedback searcher and fusion/rewrite tools are preserved.
-The separate stage-1 runner uses the current lexical searcher with passage
-reranking disabled; its results form a new baseline cohort. Earlier MAP 0.2402
-artifacts remain frozen and keep their original source hashes. The historical
-fused workflow remains available as `tools/eval_pipeline_wsj.sh` and
-`tools/benchmark_pipeline_wsj.sh`; those explicit legacy entry points can invoke
-API services according to their environment settings.
-See [program.md](program.md) for the research workflow.
+The command requires the JEV dependencies and API configuration. Use a new empty
+cache for the initial uncached timing/cost run. The rerun is pending; this command
+is the plan, not evidence of completed execution.
 
-The historical paired result is MAP **0.2402 → 0.2925** for lexical retrieval
-followed by top-100 JEV. Historical reranking latency and dollar cost are unknown;
-this establishes effectiveness evidence, not a speed or cost win.
-
-## Historical branch dashboard
-
-The following dashboard and `docs/metrics/` summarize legacy branch artifacts.
-They mix lexical and reranked experiments and are retained as history. Its Search
-column measures lexical batch time where available, not stage-2 or end-to-end time.
-Use the separate stage result folders for new comparisons. Legacy exporter and
-branch-vs-main tools read `experiment_evaluations/` / `experiment_benchmarks/` only;
-they do not ingest the new stage manifests. `original` is read-only initialization
-history; `main` remains the code approval baseline.
-
-<!-- README_METRICS_TABLE_START -->
-Current accepted leader [`codex/search-jev-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-jev-recall) improves `MAP` from `0.2080` on `original` to `0.3265` (`+0.1185 (+57.0%)`). It also raises `P@5` from `0.4320` to `0.7040`.
-
-| Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `original` | - | 0.2080 | baseline | 0.4320 | 0.3660 | 0.2563 | 0.2880 | 0.5634 | 9.89 | 0.42 |
-| [`codex/search-bm25-rsj`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-rsj) | [#1](https://github.com/carlaiau/ir-autoresearch/issues/1) | 0.2349 | **+0.0269** | 0.4440 | 0.3910 | 0.2741 | 0.3036 | 0.5986 | 9.75 | 0.24 |
-| [`codex/search-skip-metadata-fields`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-skip-metadata-fields) | [#6](https://github.com/carlaiau/ir-autoresearch/issues/6) | 0.2350 | **+0.0001** | 0.4480 | 0.3920 | 0.2758 | 0.3040 | 0.5986 | 9.71 | 0.23 |
-| [`codex/search-headline-boost`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-headline-boost) | [#10](https://github.com/carlaiau/ir-autoresearch/issues/10) | 0.2355 | **+0.0005** | 0.4520 | 0.3910 | 0.2768 | 0.3046 | 0.6007 | 8.99 | 0.19 |
-| [`codex/search-bm25-b-030`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-b-030) | [#14](https://github.com/carlaiau/ir-autoresearch/issues/14) | 0.2365 | **+0.0010** | 0.4600 | 0.3980 | 0.2801 | 0.3048 | 0.6016 | 8.83 | 0.20 |
-| [`codex/search-prf`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-prf) | [#23](https://github.com/carlaiau/ir-autoresearch/issues/23) | 0.2396 | **+0.0031** | 0.4640 | 0.3960 | 0.2840 | 0.3071 | 0.6031 | 10.42 | 0.21 |
-| [`codex/search-bm25-grid-search`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-bm25-grid-search) | [#25](https://github.com/carlaiau/ir-autoresearch/issues/25) | 0.2402 | **+0.0006** | 0.4680 | 0.3950 | 0.2826 | 0.3062 | 0.6029 | 10.61 | 0.22 |
-| [`codex/search-rerank-span`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rerank-span) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2410 | **+0.0008** | 0.4720 | 0.3950 | 0.2826 | 0.3065 | 0.6029 | 10.03 | 0.24 |
-| [`codex/search-duobert-grid`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-duobert-grid) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2418 | **+0.0008** | 0.4600 | 0.4010 | 0.2836 | 0.3074 | 0.6029 | 11.95 | 0.26 |
-| [`codex/search-openai-mono`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-openai-mono) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2485 | **+0.0067** | 0.5240 | 0.4080 | 0.2781 | 0.3086 | 0.6029 | 12.04 | 0.71 |
-| [`codex/search-rm3-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rm3-recall) | [#33](https://github.com/carlaiau/ir-autoresearch/issues/33) | 0.2530 | **+0.0045** | 0.4840 | 0.4060 | 0.2989 | 0.3182 | 0.6268 | 12.59 | 0.48 |
-| [`codex/search-openai-mono-rm3`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-openai-mono-rm3) | [#30](https://github.com/carlaiau/ir-autoresearch/issues/30) | 0.2691 | **+0.0161** | 0.5640 | 0.4830 | 0.3053 | 0.3275 | 0.6268 | 11.53 | 1.19 |
-| [`codex/search-tri-source-scaffold`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-tri-source-scaffold) | [#38](https://github.com/carlaiau/ir-autoresearch/issues/38) | 0.2739 | **+0.0048** | 0.5720 | 0.4790 | 0.3113 | 0.3426 | 0.6538 | 11.08 | 8.00 |
-| [`codex/search-fusion-weight-grid`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-fusion-weight-grid) | [#39](https://github.com/carlaiau/ir-autoresearch/issues/39) | 0.2800 | **+0.0061** | 0.5960 | 0.4930 | 0.3217 | 0.3528 | 0.6538 | 12.64 | 8.77 |
-| [`codex/search-rm3-expansion-source`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rm3-expansion-source) | [#45](https://github.com/carlaiau/ir-autoresearch/issues/45) | 0.2830 | **+0.0030** | 0.5960 | 0.4970 | 0.3207 | 0.3585 | 0.6755 | 13.11 | 10.34 |
-| [`codex/search-llm-rewrite-sidecar`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-llm-rewrite-sidecar) | [#47](https://github.com/carlaiau/ir-autoresearch/issues/47) | 0.2861 | **+0.0031** | 0.5960 | 0.4970 | 0.3288 | 0.3613 | 0.6769 | 13.37 | 11.57 |
-| [`codex/search-rewrite-rm3exp`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rewrite-rm3exp) | [#50](https://github.com/carlaiau/ir-autoresearch/issues/50) | 0.2867 | **+0.0006** | 0.6000 | 0.4950 | 0.3302 | 0.3624 | 0.6768 | 13.13 | 12.20 |
-| [`codex/search-rwexp-default-weight`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rwexp-default-weight) | [#53](https://github.com/carlaiau/ir-autoresearch/issues/53) | 0.2867 | +0.0000 | 0.6000 | 0.4950 | 0.3302 | 0.3625 | 0.6768 | 13.17 | 11.88 |
-| [`codex/search-jev-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-jev-recall) | [#61](https://github.com/carlaiau/ir-autoresearch/issues/61) | 0.3265 | **+0.0398** | 0.7040 | 0.5700 | 0.3463 | 0.3904 | 0.6704 | n/a | n/a |
-
-**Legend**
-- `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.
-- `P@5` and `P@20`: How many of the top 5 or top 20 results are relevant. Higher means better early precision.
-- `R-prec`: Precision after retrieving `R` results, where `R` is the number of relevant documents for that query. Higher is better.
-- `bpref`: A relevance metric that is more tolerant of incomplete judgment sets. Higher is better.
-- `recall` (`num_rel_ret / num_rel`): Fraction of all judged-relevant documents that were retrieved anywhere in the run. higher is better.
-- `Index (s)`: Median wall-clock indexing time in seconds across benchmark runs; lower is better.
-- `Search (s)`: Median wall-clock search time in seconds for the full topics file across benchmark runs; lower is better.
-<!-- README_METRICS_TABLE_END -->
+`stage1/run.py` and `tools/eval_wsj.sh` can verify lexical retrieval, but their
+outputs do not automatically replace the fixed baseline. `main` is the code
+integration branch; the saved stage-1 run is the experimental comparison baseline.
+The original initialization archive remains read-only and is not a competing
+baseline. Legacy combined-pipeline commands are outside this comparison workflow.
 
 ## Inspiration And Provenance
 
 This project is inspired by two upstream efforts:
 
 - [karpathy/autoresearch](https://github.com/karpathy/autoresearch), which frames software improvement as an autonomous experiment loop driven by branch-based iteration and measurable outcomes. That repository is MIT-licensed.
-- [andrewtrotman/JASSjr](https://github.com/andrewtrotman/JASSjr), which provides the minimal BM25 search engine foundation and the teaching-oriented WSJ/TREC setup that this repository adapts. JASSjr is BSD-2-Clause licensed and this repo keeps that upstream attribution in derived source files and includes the BSD-2-Clause text in [LICENSE.txt](LICENSE.txt).
+- [andrewtrotman/JASSjr](https://github.com/andrewtrotman/JASSjr), which provides the minimal BM25 search engine foundation and the teaching-oriented WSJ/TREC setup that this repository adapts. JASSjr is BSD-2-Clause licensed and this repo keeps that upstream attribution in derived source files and includes the BSD-2-Clause text in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
 
 The goal here is to bring the autonomous experiment-management ideas from `autoresearch` into information retrieval, and to further test the hypothesis that an agent can improve any system as long as it has a measurable objective.
 
