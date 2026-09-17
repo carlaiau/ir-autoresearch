@@ -35,5 +35,25 @@ with tempfile.TemporaryDirectory() as tmp:
         pass
     else:
         raise AssertionError('missing DOCNO accepted')
-print('JEV pointwise contracts passed')
+# A tail candidate can propagate through overlapping windows to rank one.
+rows = [(str(i), i, 0) for i in range(20)]
+def judge(window):
+    return {row[0]: int(row[0] == "19") for row in window}
+ranked = m.choice_windows(rows, 10, 5, judge)
+assert ranked[0][0] == "19"
+assert {r[0] for r in ranked} == {r[0] for r in rows}
+assert m.choice_windows(rows, 10, 5, lambda w: {r[0]: 0 for r in w}) == rows
+valid = {"model":"test", "answers":{"best":{"type":"choice", "choice":"a", "probabilities":{"a":0.8,"b":0.2}}}}
+assert m.validate_choice(valid, ["a","b"]) == {"a":0.8,"b":0.2}
+rounded = {"model":"test", "answers":{"best":{"type":"choice", "choice":"a", "probabilities":{"a":0.50,"b":0.49}}}}
+assert m.validate_choice(rounded, ["a","b"]) == {"a":0.50,"b":0.49}
+for probs in ({"a":0.8}, {"a":0.8,"b":float("nan")}, {"a":0.8,"b":0.8}):
+    invalid = {"model":"test", "answers":{"best":{"type":"choice", "choice":"a", "probabilities":probs}}}
+    try:
+        m.validate_choice(invalid,["a","b"])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Invalid choice distribution accepted")
+print('JEV pointwise and Choice window contracts passed')
 PY

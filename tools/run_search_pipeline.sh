@@ -79,9 +79,9 @@ cat > "$topics_stdin_file"
 
 jev_mode="${JASSJR_JEV_RERANK:-off}"
 case "$jev_mode" in
-  off|pointwise) ;;
+  off|pointwise|choice) ;;
   on) jev_mode=pointwise ;;
-  *) printf 'JASSJR_JEV_RERANK must be off or pointwise\n' >&2; exit 1 ;;
+  *) printf 'JASSJR_JEV_RERANK must be off, pointwise, or choice\n' >&2; exit 1 ;;
 esac
 openai_mode="${JASSJR_OPENAI_RERANK_MODE:-off}"
 if [[ "$jev_mode" != "off" ]]; then
@@ -140,7 +140,10 @@ apply_jev() {
     --run "$workdir/pre-jev.trec" --output "$final_results_file" \
     --metadata "$workdir/jev-metadata.json" \
     --cache "${JASSJR_JEV_CACHE:-$repo_root/wsj-eval/jev-cache}" \
-    --top-k "${JASSJR_JEV_TOP_K:-100}" --model "${JASSJR_JEV_MODEL:-jev-latest}"
+    --top-k "${JASSJR_JEV_TOP_K:-100}" --model "${JASSJR_JEV_MODEL:-jev-latest}" \
+    --mode "$jev_mode" --window-size "${JASSJR_JEV_WINDOW_SIZE:-10}" \
+    --window-stride "${JASSJR_JEV_WINDOW_STRIDE:-5}" \
+    --choice-chars "${JASSJR_JEV_CHOICE_CHARS:-2400}"
   printf 'JASSJR_JEV_RERANK: %s\nJASSJR_JEV_METADATA: %s\n' "$jev_mode" "$workdir/jev-metadata.json" >> "$pipeline_metadata_file"
 }
 
