@@ -2,6 +2,20 @@
 
 If explicit user instructions conflict with this file, follow the user. Otherwise, treat this file as the default operating contract for autonomous work in this repository.
 
+## Two-stage workflow (current)
+
+The current research focus is reranking. Follow `stage1/README.md`,
+`reranking/README.md` and `program.md` for the stage boundary and measurement
+contract. New Markdown results and their raw evidence go in `stage1/results/`
+and `reranking/results/`. `tools/eval_wsj.sh` now freezes stage 1 only; invoke
+`reranking/run.py` separately. Legacy branch artifacts/dashboard remain history.
+Freeze the same stage-1 candidate run for JEV, monoBERT and duoBERT comparisons.
+Report reranking and end-to-end search time, cache mode, usage and cost explicitly;
+unknown cost/time is not zero. Lexical benchmark guardrails below apply to stage 1;
+assess stage-2 changes using measured effectiveness/time/cost tradeoffs.
+For bounded maintenance requests, complete the requested work without starting
+the continuous experiment loop. Preserve unrelated user edits.
+
 ## Purpose
 
 This repository is an autonomous experimentation sandbox for a compact JASSjr-derived search engine.
