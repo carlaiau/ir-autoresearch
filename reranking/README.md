@@ -78,7 +78,7 @@ loading according to the stated benchmark scope; local inference is not free.
 | Method | Scoring unit | Status | Required controls |
 | --- | --- | --- | --- |
 | JEV | Query + document, pointwise | Implemented | K, model returned, question, text cap, workers, cache and token rates |
-| monoBERT | Query + document, pointwise | Planned | Checkpoint/revision, tokenizer, token cap, batch size, device and compute rate |
+| [monoBERT MaxP](monobert.md) | Query + every document passage, pointwise | Evaluated: MAP 0.2693 | Checkpoint/revision, tokenizer, token cap, batch size, device and compute rate |
 | duoBERT | Query + document pair, pairwise | Planned | All mono settings plus pair selection, orientation and score aggregation |
 
 The [monoBERT/duoBERT paper](https://arxiv.org/abs/1910.14424) motivates measuring
@@ -97,5 +97,6 @@ neural reranking. Do not claim a winner when latency or cost is unknown.
 Previous JEV evaluations have been discarded. There is no accepted JEV result
 against the fixed baseline. Follow the [JEV rerun plan](jev.md); use an empty
 cache for its first uncached measurement and retain the resulting responses for
-replay. New results must identify the canonical candidate hash. monoBERT and
-duoBERT remain planned comparisons.
+replay. New results must identify the canonical candidate hash. Full-document
+[monoBERT](monobert.md) is implemented with local batched inference and explicit
+call/time/cost reporting. duoBERT remains planned.
