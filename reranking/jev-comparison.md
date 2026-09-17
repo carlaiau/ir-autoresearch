@@ -45,13 +45,13 @@ Use the environment from monoBERT and the pinned SDK:
 .venv-monobert/bin/python -m pip install -r tools/requirements-jev.txt \
   --extra-index-url https://pypi.typesafe.ai/
 .venv-monobert/bin/python reranking/jev_compare.py \
-  --mode passages \
+  --mode passages --expected-model jev-1.13.0 \
   --results-dir reranking/results/jev-passages-maxp-top100-20260918-retry \
   --cache .cache/jev-passages-maxp-top100-20260918-retry \
   --input-usd-per-million 0.042 --output-usd-per-million 0 \
   --pricing-source 'https://typesafe.ai/blog/introducing-system-one-models-and-jev; verified 2026-09-18'
 .venv-monobert/bin/python reranking/jev_compare.py \
-  --mode documents \
+  --mode documents --expected-model jev-1.13.0 \
   --results-dir reranking/results/jev-full-documents-top100-20260918 \
   --cache .cache/jev-full-documents-top100-20260918 \
   --input-usd-per-million 0.042 --output-usd-per-million 0 \
@@ -104,4 +104,15 @@ TREC run, aggregate and paired per-topic evaluations, candidate recall, query
 times, score records and attempt records. Raw API response caches remain ignored.
 A failed run gets `failure.json` and is not a completed effectiveness evaluation.
 
-Both runs are pending execution; no new JEV effectiveness result is claimed yet.
+Both runs completed. See the [paired results](results/jev-comparison-20260918.md),
+including the failed first attempt, full evidence audits and measured tradeoffs.
+
+To independently verify the submitted text hashes, full coverage, ranking and
+accounting from the local collection and saved evidence:
+
+```sh
+.venv-monobert/bin/python reranking/audit_jev_compare.py \
+  reranking/results/jev-passages-maxp-top100-20260918-retry
+.venv-monobert/bin/python reranking/audit_jev_compare.py \
+  reranking/results/jev-full-documents-top100-20260918
+```

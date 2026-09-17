@@ -6,7 +6,8 @@ run is the sole baseline for JEV, monoBERT and duoBERT experiments.
 | Stage | Status | MAP | Results |
 | --- | --- | ---: | --- |
 | Stage 1: BM25 + query expansion | Fixed baseline; all reranking disabled | **0.2521** | [Saved baseline](stage1/results/integrated-main-20260918/results.md) |
-| Stage 2: JEV pointwise | Rerun required on the fixed baseline | Pending | [Experiment plan](reranking/jev.md) |
+| Stage 2: JEV passage MaxP | Evaluated; hosted JEV | **0.3053** | [Results](reranking/results/jev-passages-maxp-top100-20260918-retry/results.md) |
+| Stage 2: JEV complete document | Evaluated; hosted JEV | **0.3055** | [Results](reranking/results/jev-full-documents-top100-20260918/results.md) |
 | Stage 2: monoBERT MaxP, top 100 | Evaluated; local Apple GPU | **0.2693** | [Full-document results](reranking/results/monobert-maxp-top100-20260918/results.md) |
 | Stage 2: duoBERT | Planned | Pending | [Reranking methodology](reranking/README.md) |
 
@@ -25,22 +26,12 @@ was **30.27 s**, excluding shared setup. Hosted inference API cost was $0; local
 compute cost is unknown. This is one exploratory uncached run, not a latency or
 cost winner. See the [implementation](reranking/monobert.md).
 
-Previous JEV evaluations have been discarded. There is currently **no accepted
-JEV result** against this baseline. The next experiment must rerun JEV using the
-saved candidates and report effectiveness, added search time and cost separately.
-See [stage 2](reranking/README.md) and [program.md](program.md).
-
-For the next JEV experiment, use the existing baseline rather than generating a
-new candidate set:
-
-```sh
-python3 reranking/run.py stage1/results/integrated-main-20260918 \
-  --top-k 100 --cache wsj-eval/jev-stage1-02521-fresh
-```
-
-The command requires the JEV dependencies and API configuration. Use a new empty
-cache for the initial uncached timing/cost run. The rerun is pending; this command
-is the plan, not evidence of completed execution.
+Both JEV experiments are complete. Passage MaxP used 19,593 scores,
+with 767.73 s added time and an estimated $0.605227 API cost.
+Complete-document scoring used 5,000 scores, with 211.49 s
+added time and an estimated $0.328312 API cost. See the
+[paired comparison](reranking/results/jev-comparison-20260918.md), including the
+failed first attempt and full cost/timing scope. Local compute remains unknown.
 
 `stage1/run.py` and `tools/eval_wsj.sh` can verify lexical retrieval, but their
 outputs do not automatically replace the fixed baseline. `main` is the code

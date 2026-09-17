@@ -1,102 +1,70 @@
 # Stage 2: reranking research
 
-The current research focus is comparing rerankers on the **fixed stage-1
-baseline: MAP 0.2521, before all reranking**. Stage 2 reads the saved run and writes its own evaluation and
-Markdown report under `reranking/results/`; it never replaces the lexical run.
+Compare rerankers on the **fixed stage-1 MAP 0.2521 baseline, before all
+reranking**. Stage 2 reads its saved candidates and writes separate reports under
+`reranking/results/`. Indexing and the frozen lexical run are unchanged.
 
-## JEV pointwise implementation
+## Implementations and results
 
-`jev.py` implements mono-like query/document scoring with TypeSafe System One.
-One request contains the query and one candidate article and asks whether it
-provides substantive relevant information. The `Noul` response is a score in
-[0, 1]. This is a pointwise reranker, not a monoBERT checkpoint or architecture.
-See the [TypeSafe reranking cookbook](https://docs.typesafe.ai/cookbooks/rerank_typesafe).
+| Method | Scoring unit and document score | MAP |
+| --- | --- | ---: |
+| [monoBERT MaxP](monobert.md) | Query + each passage; maximum passage score | 0.2693 |
+| [JEV passage MaxP](jev-comparison.md) | Query + each identical monoBERT window; maximum Noul score | 0.3053 |
+| [JEV complete document](jev-comparison.md) | Query + entire parsed article; one Noul score | 0.3055 |
+| duoBERT | Query + document pair; pair selection/aggregation still to implement | Planned |
 
-Exact DOCNO joins preserve document identity. Article fields are retained in source
-order after removing DOCNO and tags, decoding entities and collapsing whitespace.
-The default content policy truncates at 24,000 characters. Rerank the top K by
-score, preserve the lexical order for equal JEV scores, and append the untouched
-tail. Strictly decreasing synthetic TREC scores encode this final order.
-All documents remain in the run, so reranking cannot increase full-run recall.
+See the [paired JEV comparison](results/jev-comparison-20260918.md) for all five
+metrics, calls, latency, API cost, coverage audits and failed-attempt spend.
+Completed JEV runs use served model JEV 1.13.0, top 100 and eight concurrent calls
+per query. The passage run scored all 19,593 monoBERT windows; the complete-document
+run scored 5,000 query/document pairs without a character cap. Local compute
+cost remains unknown by user choice.
 
-The low-level CLI default is K=200; the planned JEV rerun explicitly uses K=100.
-Eight concurrent workers are the default. Cache keys include endpoint, requested
-model, question, payload and document hash. Missing candidates, malformed scores
-or failed API calls fail the evaluation. Responses already obtained remain cached.
-The mutable `jev-latest` alias is recorded alongside actual returned model IDs;
-cache replay supports exact reproduction of completed runs.
+## Reproduce JEV
 
-## Run
+Follow the [run commands](jev-comparison.md#run) for `jev_compare.py`. Install the
+pinned SDK and configure `TYPESAFE_API_KEY` in the environment or ignored `.env` /
+`.env.local`. Use separate fresh caches for uncached comparisons. The runner
+verifies the fixed input hashes and every saved monoBERT passage boundary before
+making requests. Raw response caches remain local and ignored.
 
-Install `tools/requirements-jev.txt` into a virtual environment. Set
-`TYPESAFE_API_KEY` and optionally `TYPESAFE_ENDPOINT` in the environment or ignored
-root `.env` / `.env.local`. From the repository root:
+JEV uses TypeSafe System One with the existing Noul relevance question: whether
+the candidate article provides substantive information relevant to the query.
+Noul yields a score in [0,1]. The pointwise decision is made independently for
+each passage or document; it is not a monoBERT checkpoint or architecture.
+Qrels are used only for evaluation and are never sent to the API.
 
-```sh
-python3 reranking/run.py stage1/results/integrated-main-20260918 \
-  --top-k 100 --cache wsj-eval/jev-stage1-02521-fresh
-# Repeat without making new API calls:
-python3 reranking/run.py stage1/results/integrated-main-20260918 \
-  --top-k 100 --cache wsj-eval/jev-stage1-02521-fresh --cache-only
-```
+The older `jev.py` / `run.py` interfaces retain their historical 24,000-character
+cap and default K=200. They were not used for the new experiments. The current
+comparison runner takes K=100 from the saved monoBERT manifest and applies no
+content cap. See [JEV history](jev.md).
 
-Use the virtual environment's Python for stage 2. `--collection` can relocate the
-WSJ file but must match its saved hash. Stage 2 also verifies run, topics and qrels
-hashes before scoring. Qrels are used only by evaluation, never sent to JEV.
-`tools/rerank_jev.py` remains a low-level compatibility entry point; use
-`reranking/run.py` to save paired reports, timing and cost.
+## Comparison contract
 
-## Effectiveness, time and cost contract
+Freeze the stage-1 run/data hashes, topics, qrels and candidate depth. Retain all
+candidates and untouched tails; stable ties preserve stage-1 ordering. Reranking
+cannot change recall of that candidate set. Report MAP, Rprec, P_10, bpref and
+reciprocal rank, paired per-topic changes and candidate recall at K.
 
-Each run saves `results.md`, `manifest.json`, `trec_eval.txt`, `run.trec` and
-`jev.json`. Report MAP, Rprec, P_10, bpref and reciprocal rank with stage-1 deltas.
-Retain per-topic diagnostics and candidate recall at K when comparing depths.
+Match content policies where possible and record differences. For JEV passages,
+text is decoded from the original BERT token slices; whole-document inputs retain
+the original parsed text. Different tokenizers and normalization are explicit
+comparison limitations. Retain exact model versions and payload/coverage hashes.
 
-The runner measures complete reranking batch wall time, including process startup,
-article extraction, scoring/cache reads and output serialization. End-to-end search
-is the saved stage-1 search time plus this reranking time; index construction,
-data hash validation and trec_eval are excluded. This sum is a composed measurement,
-not a fresh integrated service benchmark. Per-pair times live in `jev.json` and
-are not query latencies. Batch time divided by topic count measures amortized
-throughput. For latency studies measure individual queries separately, report
-p50/p95 and repeat runs for medians; record hardware, concurrency, batching,
-network region and warm-up policy. Never mix cache replay with uncached inference.
+Report successful scores, actual API attempts, failures, cache hits, returned
+usage, estimated costs and assumptions. Unknown cost is not zero. Client-cache
+replay is a reproducibility check, never uncached performance. Include failed
+attempts in total experiment spend and distinguish estimates from invoices.
 
-Token totals separate all scored responses from newly requested responses. To
-estimate cost, supply **both** `--input-usd-per-million` and
-`--output-usd-per-million`, plus `--pricing-source` containing the model, source and
-effective date. No price is assumed. Reports distinguish estimated new API cost
-from estimated cost of scoring all pairs without cache; missing pricing/usage is
-`null` (unknown), not zero. An all-cache replay has zero new API calls. Estimates
-are not invoices and may exclude provider retries or charges on failed requests.
-Record actual billed spend separately, especially after interrupted experiments.
-For local BERT runs use GPU/CPU seconds × an explicit hourly rate, including model
-loading according to the stated benchmark scope; local inference is not free.
+Measure shared setup, total reranking, and per-query p50/p95 separately. Composed
+search time adds the saved lexical time and reranking time; it is not a fresh
+integrated benchmark. State concurrency, batching, hardware, network and warm-up
+scope. The present results are single uncached runs, not repeated benchmark
+medians; hosted JEV and local Apple-GPU BERT are different execution environments.
 
-## Comparison protocol
-
-| Method | Scoring unit | Status | Required controls |
-| --- | --- | --- | --- |
-| JEV | Query + document, pointwise | Implemented | K, model returned, question, text cap, workers, cache and token rates |
-| [monoBERT MaxP](monobert.md) | Query + every document passage, pointwise | Evaluated: MAP 0.2693 | Checkpoint/revision, tokenizer, token cap, batch size, device and compute rate |
-| duoBERT | Query + document pair, pairwise | Planned | All mono settings plus pair selection, orientation and score aggregation |
-
-The [monoBERT/duoBERT paper](https://arxiv.org/abs/1910.14424) motivates measuring
-quality against latency while varying admission depth. A mono→duo cascade belongs
-inside this repository's stage 2: report its component and combined time/cost.
-Full ordered-pair comparison at K requires K(K−1) comparisons; sampled or pruned
-pair policies must be stated explicitly.
-
-Freeze stage-1 run/data hashes, topics, qrels and candidate depth for a paired
-comparison. Match document-content policies where possible and document different
-character/token limits. Label tuned results on topics 51–100 exploratory; choose
-settings on separate development data before claiming held-out gains. Report
-quality/time/cost tradeoffs rather than apply lexical-only slowdown thresholds to
-neural reranking. Do not claim a winner when latency or cost is unknown.
-
-Previous JEV evaluations have been discarded. There is no accepted JEV result
-against the fixed baseline. Follow the [JEV rerun plan](jev.md); use an empty
-cache for its first uncached measurement and retain the resulting responses for
-replay. New results must identify the canonical candidate hash. Full-document
-[monoBERT](monobert.md) is implemented with local batched inference and explicit
-call/time/cost reporting. duoBERT remains planned.
+Treat settings selected on topics 51–100 as exploratory, not held-out proof.
+Assess measured quality/time/cost tradeoffs; do not apply lexical-only slowdown
+thresholds to neural rerankers or declare a universal winner from one metric.
+The [monoBERT/duoBERT paper](https://arxiv.org/abs/1910.14424) motivates comparisons
+across depth and latency. A mono→duo cascade belongs within stage 2; report its
+component and combined time/cost, pair selection, orientation and aggregation.

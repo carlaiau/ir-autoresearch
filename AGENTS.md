@@ -34,9 +34,11 @@ Main is the code integration branch, not a moving experimental baseline. New
 lexical evaluation runs and changes to main do not replace the fixed baseline.
 Any proposed replacement requires an explicit decision.
 
-Previous JEV results have been discarded. Follow `reranking/jev.md` for the
-pending top-100 JEV rerun, using a new empty cache for uncached time/cost evidence.
-Do not claim any JEV effectiveness or performance result before that run completes.
+Obsolete JEV results were discarded. The current completed passage-MaxP and
+complete-document experiments are compared in
+`reranking/results/jev-comparison-20260918.md`. Follow
+`reranking/jev-comparison.md` for reproduction, using fresh caches for uncached
+time/cost evidence; preserve failed-attempt usage separately.
 
 The `original` evaluation/benchmark folders remain read-only initialization
 history, not an approval baseline. The mixed branch dashboard is retired. Do not

@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "scoring_units": 5000,
+  "query_document_pairs": 5000,
+  "document_tokens_covered_across_query_pairs": 5782119,
+  "api_attempts": 5000,
+  "evaluated_source_revisions": {
+    "reranking/jev.py": "current checkout",
+    "reranking/jev_compare.py": "current checkout",
+    "reranking/monobert.py": "current checkout",
+    "reranking/run.py": "current checkout",
+    "tools/stage_artifacts.py": "current checkout"
+  },
+  "checks": [
+    "immutable reference/source hashes",
+    "exact decoded passage or whole-document payload hashes",
+    "full token coverage",
+    "MaxP/pointwise rank reconstruction and unchanged tail",
+    "API attempt and successful response counts",
+    "reported token usage and cost arithmetic",
+    "per-query scoring counts"
+  ]
+}

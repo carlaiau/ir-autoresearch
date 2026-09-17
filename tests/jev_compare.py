@@ -81,9 +81,9 @@ class Tests(unittest.TestCase):
 
     def test_real_sdk_transient_errors_are_counted_and_retried(self):
         from unittest.mock import patch
-        from typesafe_sdk._core.errors import TypeSafeRateLimitError, TypeSafeAPITimeoutError
+        from typesafe_sdk._core.errors import TypeSafeRateLimitError, TypeSafeAPITimeoutError, TypeSafeInternalServerError
         import httpx2
-        for error in (TypeSafeRateLimitError(429, {}, httpx2.Headers()), TypeSafeAPITimeoutError(120.0)):
+        for error in (TypeSafeRateLimitError(429, {}, httpx2.Headers()), TypeSafeInternalServerError(503, {}, httpx2.Headers()), TypeSafeAPITimeoutError(120.0)):
             with self.subTest(error=type(error).__name__), tempfile.TemporaryDirectory() as tmp:
                 root=Path(tmp)
                 class Transient(Client):
