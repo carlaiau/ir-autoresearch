@@ -75,7 +75,9 @@ def timestamp_from_file(path: Path) -> str:
     return match.group(1)
 
 
-def latest_timestamp(eval_file: Path, bench_file: Path) -> str:
+def latest_timestamp(eval_file: Path, bench_file: Path | None) -> str:
+    if bench_file is None:
+        return timestamp_from_file(eval_file)
     return max(timestamp_from_file(eval_file), timestamp_from_file(bench_file))
 
 
@@ -145,26 +147,26 @@ def collect_metrics(repo_root: Path) -> list[BranchMetrics]:
 
         branch_eval = latest_file(eval_root / branch_name, "trec_eval-*.txt")
         branch_bench = latest_file(bench_root / branch_name, "benchmark-*.txt")
-        if branch_eval is None or branch_bench is None:
-            print(f"Skipping {branch_name}: missing evaluation or benchmark artifact.", file=sys.stderr)
+        if branch_eval is None:
+            print(f"Skipping {branch_name}: missing evaluation artifact.", file=sys.stderr)
             continue
 
         branch_topics = meta_value(branch_eval, "topics")
         branch_qrels = meta_value(branch_eval, "qrels")
-        branch_bench_topics = meta_value(branch_bench, "topics")
-        branch_smoke_topics = meta_value(branch_bench, "smoke_topics")
-        branch_iterations = meta_value(branch_bench, "iterations")
+        branch_bench_topics = meta_value(branch_bench, "topics") if branch_bench else ""
+        branch_smoke_topics = meta_value(branch_bench, "smoke_topics") if branch_bench else ""
+        branch_iterations = meta_value(branch_bench, "iterations") if branch_bench else ""
 
-        if branch_topics != original_topics or branch_qrels != original_qrels:
+        if Path(branch_topics).name != Path(original_topics).name or Path(branch_qrels).name != Path(original_qrels).name:
             print(
                 f"Skipping {branch_name}: evaluation metadata does not match the original archive.",
                 file=sys.stderr,
             )
             continue
 
-        if (
-            branch_bench_topics != original_topics
-            or branch_smoke_topics != original_smoke_topics
+        if branch_bench and (
+            Path(branch_bench_topics).name != Path(original_topics).name
+            or Path(branch_smoke_topics).name != Path(original_smoke_topics).name
             or branch_iterations != original_iterations
         ):
             print(
@@ -185,10 +187,10 @@ def collect_metrics(repo_root: Path) -> list[BranchMetrics]:
                 rprec=eval_metric(branch_eval, "Rprec"),
                 bpref=eval_metric(branch_eval, "bpref"),
                 num_rel_ret_over_num_rel=relevance_ratio(branch_eval),
-                index_median=bench_metric(branch_bench, "index_median"),
-                search_topics_median=bench_metric(branch_bench, "search_topics_median"),
+                index_median=bench_metric(branch_bench, "index_median") if branch_bench else "n/a",
+                search_topics_median=bench_metric(branch_bench, "search_topics_median") if branch_bench else "n/a",
                 eval_file=str(branch_eval),
-                bench_file=str(branch_bench),
+                bench_file=str(branch_bench) if branch_bench else "n/a",
             )
         )
 
