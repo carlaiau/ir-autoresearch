@@ -1,6 +1,6 @@
-# stage1 results
+# Stage 1 baseline: BM25 + query expansion
 
-Status: complete
+Status: complete; designated sole pre-reranking baseline (MAP 0.2521).
 
 | Metric | Value | Delta vs stage 1 |
 | --- | ---: | ---: |

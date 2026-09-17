@@ -1,279 +1,107 @@
 # Repository Agent Guide
 
-If explicit user instructions conflict with this file, follow the user. Otherwise, treat this file as the default operating contract for autonomous work in this repository.
+Explicit user instructions take precedence. Use the `gh` CLI for all GitHub
+interaction; do not use the GitHub connector/plugin.
 
-## Two-stage workflow (current)
+## Purpose and scope
 
-The current research focus is reranking. Follow `stage1/README.md`,
-`reranking/README.md` and `program.md` for the stage boundary and measurement
-contract. New Markdown results and their raw evidence go in `stage1/results/`
-and `reranking/results/`. `tools/eval_wsj.sh` now freezes stage 1 only; invoke
-`reranking/run.py` separately. Legacy branch artifacts/dashboard remain history.
-Freeze the same stage-1 candidate run for JEV, monoBERT and duoBERT comparisons.
-Report reranking and end-to-end search time, cache mode, usage and cost explicitly;
-unknown cost/time is not zero. Lexical benchmark guardrails below apply to stage 1;
-assess stage-2 changes using measured effectiveness/time/cost tradeoffs.
-For bounded maintenance requests, complete the requested work without starting
-the continuous experiment loop. Preserve unrelated user edits.
+This repository compares reranking methods on a fixed WSJ/TREC candidate set.
+Stage 1 is lexical retrieval; stage 2 is reranking. For bounded maintenance or
+documentation requests, complete the requested work without starting experiments.
 
-## Purpose
-
-This repository is an autonomous experimentation sandbox for a compact JASSjr-derived search engine.
-
-The current goal is to improve end-to-end retrieval effectiveness on the WSJ/TREC setup. Computational efficiency work is deferred for now; benchmark results are informational when present, but they are not part of the current approval gate.
-
-This is not a binary-compatibility project. Internal index structure may evolve if end-to-end behavior improves.
-
-## Read First
-
-Before making changes, read these files:
+Read before changes:
 
 - `README.md`
 - `program.md`
+- `stage1/README.md`
+- `reranking/README.md`
 - `index/JASSjr_index.go`
 - `search/JASSjr_search.go`
 - `tools/eval_wsj.sh`
 - `tools/benchmark_wsj.sh`
-- `tools/compare_branch_to_main.sh`
-- `tools/update_metrics_dashboard.sh`
 
-This repository uses shell smoke tests, not Bats.
-
-## Required Input
-
-The agent needs an absolute path to the WSJ collection file.
-
-If the WSJ path is not supplied by the user and cannot be discovered locally with confidence, stop and ask for it.
-
-## WSJ Collection Format
-
-The WSJ collection is a single file containing repeated document records of the form:
-
-```xml
-<DOC>
-  <DOCNO>WSJ000000-0001</DOCNO>
-  <HL>Example headline</HL>
-  <DD>01/01/87</DD>
-  <SO>WALL STREET JOURNAL (J)</SO>
-  <DATELINE>NEW YORK</DATELINE>
-  <TEXT>
-    Example body text with markup entities like &amp;.
-  </TEXT>
-</DOC>
-```
-
-Important parsing assumptions:
-
-- `<DOC>...</DOC>` defines a single document boundary.
-- `<DOCNO>` is the document identifier used in retrieval output and evaluation.
-- useful terms may appear outside `<TEXT>`, especially in `<HL>`
-- XML entities such as `&amp;` can appear in the collection
-- documents may contain multiple tagged fields, not just `<TEXT>`
-
-When changing indexing or tokenization logic, preserve:
-
-- correct document boundary handling
-- correct extraction of `DOCNO`
-- stable association between indexed terms and the right document ID
-
-## Baseline And Success Criteria
-
-Treat `main` as the active baseline. Treat `original` as a read-only initialization archive.
-Do not infer current workflow or approval rules from files under `experiment_evaluations/original/` or `experiment_benchmarks/original/`.
-
-Before experimentation, establish the baseline with:
-
-```bash
-git checkout main
-git pull --ff-only
-./tests/smoke.sh
-./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>
-```
-
-Headline retrieval metric:
-
-- `map`
-
-Secondary retrieval metrics:
-
-- `Rprec`
-- `P_10`
-- `bpref`
-- `recip_rank`
-
-A change is acceptable only if all of the following are true:
-
-1. `./tests/smoke.sh` passes.
-2. `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>` completes successfully.
-3. Overall retrieval effectiveness improves relative to the current accepted branch baseline, with `map` as the main headline metric.
-
-Benchmark runs are optional for now. If they are run, treat the results as informational and not approval-gating.
-
-## Git And Branching
-
-Use a dedicated experiment branch for each accepted line of work.
-Use a dedicated experiment branch for rejected experiments as well if you need to preserve their history.
-
-Branch naming format:
-
-- `codex/search-<tag>`
-
-Do not use destructive git commands.
-Do not overwrite unrelated user changes.
-Do not merge to `main` unless the user explicitly asks for it.
-Do not reuse a rejected experiment branch for unrelated follow-up work; keep it as a historical record.
-
-## Experiment Loop
-
-Unless the user says otherwise, use this loop:
-
-1. Inspect current repo state and GitHub state.
-2. Review open GitHub issues and PRs with `gh` to avoid duplicating work.
-3. Refresh the active baseline on `main`:
-   - `git checkout main`
-   - `git pull --ff-only`
-   - `./tests/smoke.sh`
-   - `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>`
-4. Pick one concrete retrieval hypothesis.
-5. Create or update a GitHub issue for that hypothesis.
-6. Create a new branch from `main`:
-   - `codex/search-<tag>`
-7. Make the smallest plausible code change.
-8. Run the full validation sequence:
-   - `./tests/smoke.sh`
-   - `./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>`
-   - optionally run `./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>` if the user explicitly wants fresh efficiency numbers
-   - optionally run `./tools/compare_branch_to_main.sh <branch>` when compatible benchmark artifacts exist
-   - optionally run `./tools/update_metrics_dashboard.sh` when you want to refresh the historical dashboard assets
-9. Evaluate the result against the latest compatible `main` artifacts.
-10. If the change is rejected:
-   - commit and push the attempted code change plus the branch's evaluation artifacts, and any benchmark artifacts that were produced, before abandoning the experiment
-   - keep the rejected branch as a historical record; do not reset it to the last accepted state
-   - comment on the GitHub issue with the attempted idea, metrics, and rejection reason
-   - include the rejection commit hash in the issue comment when possible
-   - close the issue or mark it rejected
-11. If the change is accepted:
-   - commit the code change plus dashboard assets, the branch's evaluation artifacts, and any benchmark artifacts that were produced
-   - open or update a PR
-   - link the PR to the issue
-12. After completing either the rejected or accepted path, return to step 1 and begin the next experiment.
-   - for the next distinct hypothesis, create a new GitHub issue
-   - create a fresh branch from `main` using `codex/search-<tag>`
-   - continue until blocked or explicitly told to stop
-
-Default stopping rule:
-
-- continue looping until blocked, the WSJ path or required credentials are missing, no concrete next hypothesis is available, or the user asks to stop
-
-## What To Change
-
-Good experiment targets:
-
-- tokenization
-- normalization
-- stopword handling
-- stemming or conflation
-- document length handling
-- BM25 parameter tuning
-- query term weighting
-- candidate ordering and tie-breaking
-- internal vocabulary or postings structure
-
-Avoid changes with no clear retrieval hypothesis.
-
-## GitHub Issue Rules
-
-Every experiment should have a GitHub issue unless it is obviously the continuation of an existing experiment.
-
-Issue title format:
-
-- `Experiment: <specific idea>`
-
-Each issue should include:
-
-- the hypothesis
-- the likely files to change
-- acceptance criteria
-- the retrieval metric to watch
-- any important implementation or evaluation risks to watch
-
-When an experiment is rejected, record the reason and the key metrics in the issue before closing or marking it not pursued.
-
-## Pull Request Rules
-
-Open or update a PR only for accepted experiments.
-
-Every PR should include:
-
-- the hypothesis
-- a concise summary of the code change
-- the latest `map`, `Rprec`, `P_10`, `bpref`, and `recip_rank`
-- the summary from `./tools/compare_branch_to_main.sh <branch>` when compatible benchmark artifacts exist
-- the experiment's committed evaluation artifacts for that branch
-- any benchmark artifacts for that branch, if benchmark runs were produced
-- note that `main` is the approval baseline and `original` is a read-only initialization archive
-- note that the README dashboard was refreshed if it was updated
-- a link to the GitHub issue
-
-If a PR does not clearly improve retrieval effectiveness, do not keep pushing it forward. Benchmark data may still be included for context when available, but it is not approval-gating right now.
-
-## Artifacts And Dashboard
-
-Generated evaluation artifacts are written under:
-
-- `experiment_evaluations/<branch>/`
-
-Generated benchmark artifacts are written under:
-
-- `experiment_benchmarks/<branch>/`
-
-Commit the branch-local evaluation and benchmark artifacts that correspond to the final validation run for each experiment branch.
-This applies to accepted experiments and rejected experiments that are being abandoned but preserved historically. Benchmark artifacts are optional when no benchmark run was performed.
-Do not commit refreshed `main` baseline artifacts unless the user explicitly asks.
-Never modify or recommit anything under the read-only `original` artifact folders.
-
-Do commit these dashboard assets after each accepted experiment:
-
-- `docs/metrics/branch-comparisons.tsv`
-- `docs/metrics/branch-comparisons.md`
-- `README.md`
-
-The README dashboard is a Markdown table. It starts with `original`, excludes `main`, and then lists one row per non-main branch with compatible local artifacts.
-
-If historical non-main artifacts are not present locally, still refresh the dashboard from available data and note the limitation in the PR.
-
-## Validation Commands
-
-Core commands:
-
-```bash
-./tests/smoke.sh
-./tools/eval_wsj.sh <WSJ_XML_ABS_PATH>
-```
-
-Optional commands:
-
-```bash
-./tools/benchmark_wsj.sh <WSJ_XML_ABS_PATH>
-./tools/compare_branch_to_main.sh <branch>
-./tools/update_metrics_dashboard.sh
-```
-
-Useful exports:
-
-```bash
-./tools/export_metrics_history.sh
-./tools/export_branch_comparisons.sh
-```
-
-## Reporting Back
-
-When stopping, report:
-
-- issues created or updated
-- branches created
-- experiments accepted or rejected
-- PRs opened or updated
-- best current metrics versus `original`
-- note that archived `original` artifacts are historical initialization data, not the approval baseline
-- blockers or missing prerequisites
+The repository uses shell smoke tests, not Bats. An actual WSJ experiment requires
+an absolute path to the collection file; discover it locally or ask if unavailable.
+
+## Fixed baseline
+
+**MAP 0.2521 before all reranking** is the sole stage-1 baseline, saved in
+`stage1/results/integrated-main-20260918/`. Use its exact candidate run, topics,
+qrels and manifest hashes for every reranker experiment. The manifest records
+BM25, query-expansion settings and `JASSJR_RERANK_DOCS=0`.
+
+Main is the code integration branch, not a moving experimental baseline. New
+lexical evaluation runs and changes to main do not replace the fixed baseline.
+Any proposed replacement requires an explicit decision.
+
+Previous JEV results have been discarded. Follow `reranking/jev.md` for the
+pending top-100 JEV rerun, using a new empty cache for uncached time/cost evidence.
+Do not claim any JEV effectiveness or performance result before that run completes.
+
+The `original` evaluation/benchmark folders remain read-only initialization
+history, not an approval baseline. The mixed branch dashboard is retired. Do not
+use legacy exporters or branch-vs-main artifact comparisons for current approval.
+
+## Collection integrity
+
+WSJ is a single file containing repeated `<DOC>...</DOC>` records. DOCNO supplies
+the retrieval document ID. Useful text includes headlines and may span multiple
+fields; entities such as `&amp;` occur. Preserve document boundaries, exact DOCNO
+association and the declared field/normalization policy when changing parsers.
+
+## Git and experiment workflow
+
+- Inspect local state and GitHub issues/PRs with gh before starting work.
+- Use a fresh `codex/search-<tag>` branch for each distinct hypothesis.
+- Never overwrite unrelated user changes, use destructive git commands or reuse
+  rejected experiment branches for unrelated work.
+- Do not merge into main without explicit user authorization.
+- Create an issue for each experiment unless continuing an existing one. Use
+  `Experiment: <specific idea>` and include hypothesis, files, acceptance criteria,
+  retrieval metrics and timing/cost risks.
+- Make the smallest change that tests the hypothesis. Keep the fixed stage-1 input.
+- Run `./tests/smoke.sh`, relevant reranking contract tests and the actual paired
+  evaluation. Use `bash tests/two_stage.sh` for stage-boundary changes.
+- Record MAP, Rprec, P_10, bpref and recip_rank against the fixed baseline, candidate
+  recall at K, per-topic changes, reranking/end-to-end time, cache state and cost.
+- Preserve accepted and rejected experiment code plus final branch-local evidence.
+  Commit and push experiment branches, including rejected attempts. Record results,
+  rejection reasons and commit hashes on the issue; do not reset rejected history.
+- Open PRs only for accepted experiments. Maintenance PRs describe their actual
+  change and verification without inventing retrieval improvements.
+
+For autonomous research explicitly requested by the user, continue with a new
+hypothesis after completing the accepted/rejected path until stopped or blocked.
+This does not authorize an experiment loop for ordinary documentation work.
+
+## Effectiveness and performance
+
+MAP is the headline metric. Compare rerankers using the same saved candidates,
+query set and judgments. Record model/checkpoint, content coverage or truncation,
+worker/batch settings, device and pricing assumptions. Tune on development data;
+settings selected on evaluation topics are exploratory rather than held-out proof.
+
+Report cached replay separately from uncached inference. Unknown time or cost is
+not zero. Assess rerankers by measured effectiveness/time/cost tradeoffs, not MAP
+alone. For a separately authorized lexical change, benchmark against a controlled
+lexical baseline: <=5% median slowdown is acceptable; >5% to 15% needs a worthwhile
+retrieval gain; >15% indexing or search slowdown is rejected by default.
+
+## Artifacts and reporting
+
+Current reports and their raw evidence belong in:
+
+- `stage1/results/` — the fixed baseline and clearly labeled verification runs.
+- `reranking/results/` — experiments identifying the fixed stage-1 manifest/run.
+
+Preserve the canonical run, raw trec_eval, topics, qrels and manifest unchanged.
+Commit final experiment evidence. Never commit WSJ article text, API secrets or
+cache contents. Never modify/recommit original archive artifacts. Legacy
+`experiment_evaluations/` and `experiment_benchmarks/` are not active comparisons.
+Do not regenerate the retired README branch leaderboard.
+
+PRs should include hypothesis (for experiments), change, metrics and deltas,
+timing/cost scope, evidence links, validation and issue link where applicable.
+Distinguish pending, failed and completed runs. At completion, report issues,
+branches/PRs, accepted/rejected experiments, results versus stage 1 and blockers as
+applicable to the task. Do not invent fresh results for documentation-only work.

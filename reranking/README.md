@@ -1,7 +1,7 @@
 # Stage 2: reranking research
 
-The current research focus is comparing rerankers on the **same frozen stage-1
-candidate run**. Stage 2 reads the saved run and writes its own evaluation and
+The current research focus is comparing rerankers on the **fixed stage-1
+baseline: MAP 0.2521, before all reranking**. Stage 2 reads the saved run and writes its own evaluation and
 Markdown report under `reranking/results/`; it never replaces the lexical run.
 
 ## JEV pointwise implementation
@@ -19,12 +19,12 @@ score, preserve the lexical order for equal JEV scores, and append the untouched
 tail. Strictly decreasing synthetic TREC scores encode this final order.
 All documents remain in the run, so reranking cannot increase full-run recall.
 
-The inherited working default is K=200; the accepted historical result used K=100.
+The low-level CLI default is K=200; the planned JEV rerun explicitly uses K=100.
 Eight concurrent workers are the default. Cache keys include endpoint, requested
 model, question, payload and document hash. Missing candidates, malformed scores
 or failed API calls fail the evaluation. Responses already obtained remain cached.
 The mutable `jev-latest` alias is recorded alongside actual returned model IDs;
-cache replay is required for exact historical reproduction.
+cache replay supports exact reproduction of completed runs.
 
 ## Run
 
@@ -33,11 +33,11 @@ Install `tools/requirements-jev.txt` into a virtual environment. Set
 root `.env` / `.env.local`. From the repository root:
 
 ```sh
-python3 stage1/run.py /absolute/path/to/wsj.xml
-# Use the exact directory printed above:
-python3 reranking/run.py stage1/results/<branch>/<run-id> --top-k 100
+python3 reranking/run.py stage1/results/integrated-main-20260918 \
+  --top-k 100 --cache wsj-eval/jev-stage1-02521-fresh
 # Repeat without making new API calls:
-python3 reranking/run.py stage1/results/<branch>/<run-id> --top-k 100 --cache-only
+python3 reranking/run.py stage1/results/integrated-main-20260918 \
+  --top-k 100 --cache wsj-eval/jev-stage1-02521-fresh --cache-only
 ```
 
 Use the virtual environment's Python for stage 2. `--collection` can relocate the
@@ -94,8 +94,8 @@ settings on separate development data before claiming held-out gains. Report
 quality/time/cost tradeoffs rather than apply lexical-only slowdown thresholds to
 neural reranking. Do not claim a winner when latency or cost is unknown.
 
-[Historical JEV results](results/jev-top100/results.md) and
-[implementation/experiment notes](jev-post25.md) preserve the existing evidence.
-Future monoBERT and duoBERT adapters must produce the same manifest/report fields
-and point back to the exact stage-1 manifest. Neither BERT comparator has been run
-or implemented as part of this restructuring.
+Previous JEV evaluations have been discarded. There is no accepted JEV result
+against the fixed baseline. Follow the [JEV rerun plan](jev.md); use an empty
+cache for its first uncached measurement and retain the resulting responses for
+replay. New results must identify the canonical candidate hash. monoBERT and
+duoBERT remain planned comparisons.
