@@ -79,5 +79,6 @@ records five-run medians: 11.03 s indexing and 0.41 s for all 50 title queries.
 Single-pass timings in the manifest are separate measurements.
 
 Do not replace this baseline automatically when main changes or when an evaluation
-is rerun. Any proposed replacement requires an explicit decision. JEV has no
-accepted result yet and will be rerun against this saved baseline.
+is rerun. Any proposed replacement requires an explicit decision. The completed JEV
+passage and whole-document results use this same saved baseline; see the
+[paired comparison](../reranking/results/jev-comparison-20260918.md).

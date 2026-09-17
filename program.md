@@ -20,8 +20,10 @@ replace it either. Propose any baseline replacement explicitly.
 2. Choose a concrete reranking hypothesis and create an experiment issue.
 3. Work on a fresh codex/search-<tag> branch. Main is the code approval baseline;
    the frozen lexical run is the effectiveness baseline for the reranker.
-4. Rerun JEV pointwise on the fixed baseline with explicit top-k 100 and a new
-   empty cache. Follow `reranking/jev.md`. Previous JEV results have been discarded.
+4. Compare JEV on identical monoBERT passages (MaxP) and complete uncapped
+   documents at top-k 100 with separate fresh caches. Follow
+   `reranking/jev-comparison.md`. These two user-requested experiments may share
+   one branch. Previous JEV results have been discarded.
 5. Run smoke and reranking contract tests. Compare MAP, Rprec, P_10, bpref and
    reciprocal rank against the exact stage-1 run. Record candidate recall at K,
    per-topic changes, reranking and composed end-to-end time, and cost.
@@ -56,4 +58,6 @@ Full-document monoBERT MaxP is implemented and its first uncached WSJ run is
 saved under `reranking/results/monobert-maxp-top100-20260918/`: MAP 0.2693,
 1,510.93 seconds of added reranking time. Local compute cost remains unknown by
 user choice. This supports an experimental implementation, not a cost/latency
-winner or a production recommendation. The JEV rerun remains pending.
+winner or a production recommendation. The JEV passage-MaxP and complete-document
+runs are now complete; see `reranking/results/jev-comparison-20260918.md` for their
+paired effectiveness, timing, cost and preserved failed-attempt evidence.

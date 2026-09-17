@@ -133,7 +133,9 @@ P_10, bpref and reciprocal rank on the fixed baseline. Full-document monoBERT an
 [Full result](results/monobert-maxp-top100-20260918/results.md), top 100 candidates
 for each of 50 topics: MAP **0.2693** versus **0.2521** (+0.0172, +6.8%).
 All five headline metrics improved. This is an exploratory evaluation, with no
-claim of held-out tuning or superiority to JEV/duoBERT, whose runs are pending.
+claim of held-out tuning or superiority to other methods. The subsequent
+[JEV comparison](results/jev-comparison-20260918.md) is now complete; duoBERT remains
+pending.
 
 On an Apple M3 Pro with 36 GiB memory, MPS and float32, this run scored **19,593
 passages in 2,475 model calls**. Reranking took **1,510.93 seconds** including shared

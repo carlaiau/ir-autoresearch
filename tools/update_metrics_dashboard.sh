@@ -4,5 +4,5 @@ set -euo pipefail
 printf '%s\n' \
   'The legacy branch dashboard is retired.' \
   'Current baseline: stage1/results/integrated-main-20260918/results.md (MAP 0.2521).' \
-  'Reranking status: reranking/results/README.md; JEV rerun pending.' \
+  'Reranking status: reranking/results/README.md; paired JEV results available.' \
   'Update the stage reports from matching baseline manifests instead.'

@@ -1,0 +1,6 @@
+{
+  "status": "failed",
+  "note": "Initial attempt; stopped on TypeSafeInternalServerError before complete evaluation. SDK error compatibility corrected in subsequent run. Responses remain cached locally; partial evidence retained, no MAP claimed.",
+  "source_sha256": "449ef022f89ae6fd887545af4ad9c6db3fd57891465221b3fdd76c818410dc96",
+  "parent_commit": "2884f8659194ca7634418f24fbcb4923ce1bb574"
+}
