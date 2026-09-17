@@ -1,0 +1,110 @@
+{
+  "definition": "Unweighted normalized token occurrences in the full forward index, before the 220-term dense prefix limit",
+  "indexed_tokens": {
+    "documents": 173252,
+    "mean": 456.48942003555516,
+    "population_sd": 459.79443451099917,
+    "minimum": 1,
+    "maximum": 12804,
+    "maximum_docno": "WSJ911114-0035",
+    "median": 258.0,
+    "p90": 1082.0,
+    "p95": 1298.0,
+    "p99": 1992.0,
+    "sigma_ranges": {
+      "1": {
+        "lower": -3.305014475444011,
+        "upper": 916.2838545465543,
+        "documents_within": 146497,
+        "fraction_within": 0.8455717682912751
+      },
+      "2": {
+        "lower": -463.0994489864432,
+        "upper": 1376.0782890575535,
+        "documents_within": 166425,
+        "fraction_within": 0.9605949714866207
+      }
+    },
+    "above_220": 95981,
+    "fraction_above_220": 0.5539964906610024,
+    "fraction_tokens_retained_at_220": 0.3838305208123058,
+    "mean_per_document_fraction_retained_at_220": 0.6824429966681811
+  },
+  "tokenizer": "cl100k_base",
+  "tiktoken_version": "0.14.0",
+  "full_indexed_text_embedding_tokens": {
+    "documents": 173252,
+    "mean": 534.6368526770253,
+    "population_sd": 542.2244285409486,
+    "minimum": 1,
+    "maximum": 18897,
+    "maximum_docno": "WSJ911114-0035",
+    "median": 306.0,
+    "p90": 1255.0,
+    "p95": 1519.0,
+    "p99": 2313.0,
+    "sigma_ranges": {
+      "1": {
+        "lower": -7.5875758639232345,
+        "upper": 1076.861281217974,
+        "fraction_within": 0.8521402350333618
+      },
+      "2": {
+        "lower": -549.8120044048718,
+        "upper": 1619.0857097589223,
+        "fraction_within": 0.9615415695056911
+      }
+    }
+  },
+  "actual_220_term_prefix_embedding_tokens": {
+    "documents": 173252,
+    "mean": 208.43432687645742,
+    "population_sd": 70.89820675433086,
+    "minimum": 1,
+    "maximum": 504,
+    "maximum_docno": "WSJ881110-0065",
+    "median": 245.0,
+    "p90": 271.0,
+    "p95": 278.0,
+    "p99": 295.0,
+    "sigma_ranges": {
+      "1": {
+        "lower": 137.53612012212656,
+        "upper": 279.33253363078825,
+        "fraction_within": 0.7416422321243045
+      },
+      "2": {
+        "lower": 66.6379133677957,
+        "upper": 350.23074038511913,
+        "fraction_within": 0.9520409576801422
+      }
+    }
+  },
+  "original_article_embedding_tokens": {
+    "definition": "Original document text with XML/SGML tags and DOCNO removed, entities decoded, whitespace collapsed; matches untruncated JEV article text",
+    "tokenizer": "cl100k_base",
+    "tiktoken_version": "0.14.0",
+    "documents": 173252,
+    "mean": 629.3146976658278,
+    "population_sd": 610.053244486893,
+    "minimum": 1,
+    "maximum": 20933,
+    "maximum_docno": "WSJ911114-0035",
+    "median": 377.0,
+    "p90": 1437.0,
+    "p95": 1738.0,
+    "p99": 2646.0,
+    "sigma_ranges": {
+      "1": {
+        "lower": 19.261453178934744,
+        "upper": 1239.3679421527208,
+        "fraction_within": 0.8500738808210007
+      },
+      "2": {
+        "lower": -590.7917913079583,
+        "upper": 1849.421186639614,
+        "fraction_within": 0.9611433057049846
+      }
+    }
+  }
+}
