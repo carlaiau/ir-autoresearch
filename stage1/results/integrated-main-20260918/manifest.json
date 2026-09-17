@@ -1,0 +1,42 @@
+{
+  "api_cost_usd": 0,
+  "bm25_b": "0.3",
+  "bm25_k1": "0.7",
+  "branch": "codex/search-two-stage-workflow",
+  "collection": "/Users/caiau/school/wsj.xml",
+  "collection_sha256": "8c696265462fc49b123d3e3fc46e95a94399954a3f1a12e7d596ef032ea4d7c8",
+  "commit": "8860260205419cbdba546d8c4b2e01bacd4e1f60",
+  "compute_cost_usd": null,
+  "dirty": true,
+  "index_seconds": 11.016016709152609,
+  "lexical_config": {
+    "JASSJR_BM25_B": "0.3",
+    "JASSJR_BM25_K1": "0.7",
+    "JASSJR_EXPANSION_MAX_QUERY_TERMS": "6",
+    "JASSJR_EXPANSION_ONLY": "0",
+    "JASSJR_EXPANSION_TERMS": "6",
+    "JASSJR_EXPANSION_WEIGHT": "0.45",
+    "JASSJR_FEEDBACK_DOCS": "5",
+    "JASSJR_RERANK_DOCS": "0"
+  },
+  "metrics": {
+    "P_10": 0.446,
+    "Rprec": 0.2989,
+    "bpref": 0.3178,
+    "map": 0.2521,
+    "recip_rank": 0.6271
+  },
+  "platform": "macOS-26.4-arm64-arm-64bit-Mach-O",
+  "processor": "arm",
+  "qrels_sha256": "3ba5b51ca171ad272709ada5a357cc065b718950d46392fef817178944b2e101",
+  "queries": 50,
+  "run_sha256": "d1f737713de16e857ba69988ee85f5d30fef2bc4f4d6004d4ff73e87c7c9045b",
+  "search_seconds": 0.6869103750213981,
+  "source_sha256": {
+    "index/JASSjr_index.go": "9d42d345e8b5f73ce1d1137d0b318903ca9f9e6b51310a41175dc9b381bd9d13",
+    "search/JASSjr_search.go": "18fe18f97b75500803b3962d96c54a755ca58c9480deddec73b128597e3b60aa"
+  },
+  "stage": "stage1",
+  "status": "complete",
+  "topics_sha256": "c1bce334f551e1e813ef0510e61d6441617570ae92be2f2f471826c3baa23317"
+}

@@ -1,0 +1,314 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
+source "$repo_root/tools/load_env.sh"
+key_source="$(load_repo_env_with_key_source "$repo_root")"
+load_repo_env "$repo_root"
+export JASSJR_OPENAI_KEY_SOURCE="$key_source"
+if [[ "${JASSJR_JEV_RERANK:-off}" != "off" ]]; then
+  export JASSJR_OPENAI_RERANK_MODE=off
+fi
+branch_name="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
+branch_name="${branch_name:-detached-head}"
+
+if [[ "$branch_name" == "original" ]]; then
+  printf "Refusing to write evaluation artifacts for branch 'original'. The original artifact folders are read-only initialization archives.\n" >&2
+  exit 1
+fi
+
+topics_file="$repo_root/51-100.titles.txt"
+qrels_file="$repo_root/51-100.qrels.txt"
+workdir="$repo_root/wsj-eval/$branch_name"
+eval_output_dir="$repo_root/experiment_evaluations/$branch_name"
+results_file=""
+
+usage() {
+  cat <<EOF
+Usage: $0 [-t topics.txt] [-q qrels.txt] [-w workdir] [-o results.trec] <wsj-dir-or-file>
+
+Build the index, run the bundled topics, and evaluate with trec_eval.
+Artifacts are grouped by the current git branch:
+  $branch_name
+The trec_eval summary is written to a timestamped file in:
+  $eval_output_dir
+
+Options:
+  -t <file>  Topics file to feed into the searcher.
+             Default: $topics_file
+  -q <file>  Qrels file for trec_eval.
+             Default: $qrels_file
+  -w <dir>   Working directory for merged input, binaries, and index files.
+             Default: $workdir
+  -o <file>  Output run file path.
+             Default: <workdir>/results.trec
+  -h         Show this help text.
+
+Examples:
+  $0 /path/to/wsj
+  $0 -w /tmp/wsj-eval /path/to/wsj
+  $0 -t my.topics -q my.qrels /path/to/wsj_all.xml
+EOF
+}
+
+emit_env_setting() {
+  local name="$1"
+  if [[ -n "${!name:-}" ]]; then
+    printf "%s: %s\n" "$name" "${!name}"
+  fi
+}
+
+emit_metadata_file() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  cat "$file"
+}
+
+workdir_lock_dir=""
+
+release_workdir_lock() {
+  if [[ -n "$workdir_lock_dir" && -d "$workdir_lock_dir" ]]; then
+    rm -rf "$workdir_lock_dir"
+  fi
+}
+
+acquire_workdir_lock() {
+  local target_workdir="$1"
+  local lock_dir="$target_workdir/.active-run.lock"
+  local holder_pid=""
+  if [[ -f "$lock_dir/pid" ]]; then
+    holder_pid="$(cat "$lock_dir/pid" 2>/dev/null || true)"
+  fi
+
+  if [[ -n "$holder_pid" ]] && ! kill -0 "$holder_pid" 2>/dev/null; then
+    rm -rf "$lock_dir"
+  fi
+
+  if ! mkdir "$lock_dir" 2>/dev/null; then
+    printf "Another WSJ evaluation is already using workdir %s\n" "$target_workdir" >&2
+    if [[ -f "$lock_dir/info" ]]; then
+      printf "Current lock holder:\n" >&2
+      cat "$lock_dir/info" >&2
+    fi
+    exit 1
+  fi
+
+  printf "%s\n" "$$" > "$lock_dir/pid"
+  {
+    printf "pid: %s\n" "$$"
+    printf "script: %s\n" "$0"
+    printf "started_at: %s\n" "$(date '+%Y-%m-%d %H:%M:%S %z')"
+  } > "$lock_dir/info"
+  workdir_lock_dir="$lock_dir"
+}
+
+trap release_workdir_lock EXIT
+
+while getopts ":t:q:w:o:h" opt; do
+  case "$opt" in
+    t)
+      topics_file="$OPTARG"
+      ;;
+    q)
+      qrels_file="$OPTARG"
+      ;;
+    w)
+      workdir="$OPTARG"
+      ;;
+    o)
+      results_file="$OPTARG"
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    :)
+      printf "Missing value for -%s\n\n" "$OPTARG" >&2
+      usage >&2
+      exit 1
+      ;;
+    \?)
+      printf "Unknown option: -%s\n\n" "$OPTARG" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+shift "$((OPTIND - 1))"
+
+if [[ $# -ne 1 ]]; then
+  usage >&2
+  exit 1
+fi
+
+input_path="$1"
+
+if [[ ! -e "$input_path" ]]; then
+  printf "Input path does not exist: %s\n" "$input_path" >&2
+  exit 1
+fi
+
+if [[ ! -f "$topics_file" ]]; then
+  printf "Topics file does not exist: %s\n" "$topics_file" >&2
+  exit 1
+fi
+
+if [[ ! -f "$qrels_file" ]]; then
+  printf "Qrels file does not exist: %s\n" "$qrels_file" >&2
+  exit 1
+fi
+
+if ! command -v go >/dev/null 2>&1; then
+  printf "go is required but was not found on PATH\n" >&2
+  exit 1
+fi
+
+if ! command -v trec_eval >/dev/null 2>&1; then
+  printf "trec_eval is required but was not found on PATH\n" >&2
+  exit 1
+fi
+
+mkdir -p "$workdir"
+mkdir -p "$eval_output_dir"
+
+workdir="$(cd "$workdir" >/dev/null 2>&1 && pwd)"
+eval_output_dir="$(cd "$eval_output_dir" >/dev/null 2>&1 && pwd)"
+topics_file="$(cd "$(dirname "$topics_file")" >/dev/null 2>&1 && pwd)/$(basename "$topics_file")"
+qrels_file="$(cd "$(dirname "$qrels_file")" >/dev/null 2>&1 && pwd)/$(basename "$qrels_file")"
+acquire_workdir_lock "$workdir"
+
+if [[ -z "$results_file" ]]; then
+  results_file="$workdir/results.trec"
+elif [[ "$results_file" != /* ]]; then
+  results_file="$PWD/$results_file"
+fi
+
+if [[ "$input_path" != /* ]]; then
+  input_path="$PWD/$input_path"
+fi
+
+merged_input="$workdir/wsj_all.xml"
+index_bin="$workdir/jassjr-index"
+search_bin="$workdir/jassjr-search"
+dense_search_bin="$workdir/jassjr-dense-search"
+timestamp="$(date '+%Y%m%d-%H%M%S')"
+eval_output_file="$eval_output_dir/trec_eval-$timestamp.txt"
+rerank_metadata_file="$workdir/rerank-metadata-$timestamp.txt"
+index_log_file="$workdir/index-progress-$timestamp.log"
+
+if [[ -d "$input_path" ]]; then
+  printf "Merging WSJ files from %s\n" "$input_path"
+  find "$input_path" -type f | LC_ALL=C sort | while IFS= read -r file; do
+    cat "$file"
+    printf '\n'
+  done > "$merged_input"
+  collection_file="$merged_input"
+else
+  collection_file="$input_path"
+fi
+
+export JASSJR_JEV_COLLECTION="$collection_file"
+
+printf "Building Go binaries in %s\n" "$workdir"
+go build -o "$index_bin" "$repo_root/index/JASSjr_index.go"
+go build -o "$search_bin" "$repo_root/search/JASSjr_search.go"
+go build -o "$dense_search_bin" "$repo_root/tools/JASSjr_dense_search.go"
+
+printf "Indexing %s\n" "$collection_file"
+rm -f \
+  "$workdir/docids.bin" \
+  "$workdir/forward.bin" \
+  "$workdir/forward_offsets.bin" \
+  "$index_log_file" \
+  "$workdir/lengths.bin" \
+  "$workdir/postings.bin" \
+  "$workdir/results.bin" \
+  "$workdir/stdout.bin" \
+  "$workdir/vocab.bin" \
+  "$rerank_metadata_file" \
+  "$results_file"
+
+(
+  cd "$workdir" || exit 1
+  "$index_bin" "$collection_file" > "$index_log_file"
+)
+tail -n 5 "$index_log_file"
+
+# Give the OS a brief moment to release indexing pressure before loading the search index.
+sleep 2
+
+printf "Running topics from %s\n" "$topics_file"
+(
+  cd "$workdir" || exit 1
+  if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" && "${JASSJR_SEMANTIC_MODE:-off}" == "off" && "${JASSJR_OPENAI_QUERY_REWRITE_MODE:-off}" == "off" && "${JASSJR_JEV_RERANK:-off}" == "off" ]]; then
+    "$search_bin" < "$topics_file" > "$results_file"
+    cat > "$rerank_metadata_file" <<EOF
+JASSJR_OPENAI_RERANK_MODE: off
+JASSJR_OPENAI_KEY_SOURCE: $key_source
+EOF
+  else
+    "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$rerank_metadata_file" < "$topics_file" > "$results_file"
+  fi
+)
+
+if [[ "${JASSJR_JEV_RERANK:-off}" != "off" ]]; then
+  cp "$workdir/jev-metadata.json" "$eval_output_dir/jev-$timestamp.json"
+  cp "$workdir/pre-jev.trec" "$eval_output_dir/pre-jev-$timestamp.trec"
+  cp "$results_file" "$eval_output_dir/jev-$timestamp.trec"
+fi
+
+printf "Run file written to %s\n" "$results_file"
+printf "Evaluating with trec_eval against %s\n" "$qrels_file"
+summary="$(
+  trec_eval -c -M1000 "$qrels_file" "$results_file"
+)"
+printf "%s\n" "$summary"
+{
+  printf "branch: %s\n" "$branch_name"
+  printf "timestamp: %s\n" "$timestamp"
+  printf "collection: %s\n" "$collection_file"
+  printf "topics: %s\n" "$topics_file"
+  printf "qrels: %s\n\n" "$qrels_file"
+  emit_env_setting JASSJR_JEV_RERANK
+  emit_env_setting JASSJR_JEV_TOP_K
+  emit_env_setting JASSJR_JEV_MODEL
+  emit_env_setting JASSJR_OPENAI_QUERY_REWRITE_MODE
+  emit_env_setting JASSJR_BM25_K1
+  emit_env_setting JASSJR_BM25_B
+  emit_env_setting JASSJR_FEEDBACK_DOCS
+  emit_env_setting JASSJR_EXPANSION_TERMS
+  emit_env_setting JASSJR_EXPANSION_WEIGHT
+  emit_env_setting JASSJR_EXPANSION_MAX_QUERY_TERMS
+  emit_env_setting JASSJR_SEMANTIC_MODE
+  emit_env_setting JASSJR_SEMANTIC_MODEL
+  emit_env_setting JASSJR_SEMANTIC_DIMENSIONS
+  emit_env_setting JASSJR_SEMANTIC_DOC_WORDS
+  emit_env_setting JASSJR_SEMANTIC_BATCH_SIZE
+  emit_env_setting JASSJR_SEMANTIC_TOPK
+  emit_env_setting JASSJR_FUSION_RRF_K
+  emit_env_setting JASSJR_FUSION_WEIGHT_BM25
+  emit_env_setting JASSJR_FUSION_WEIGHT_RM3
+  emit_env_setting JASSJR_FUSION_WEIGHT_DENSE
+  emit_env_setting JASSJR_FUSION_BM25_TOPK
+  emit_env_setting JASSJR_FUSION_RM3_TOPK
+  emit_env_setting JASSJR_FUSION_DENSE_TOPK
+  emit_env_setting JASSJR_RERANK_DOCS
+  emit_env_setting JASSJR_RERANK_PASSAGE_WINDOW
+  emit_env_setting JASSJR_RERANK_PASSAGE_WEIGHT
+  emit_env_setting JASSJR_OPENAI_RERANK_MODE
+  emit_env_setting JASSJR_OPENAI_MONO_MODEL
+  emit_env_setting JASSJR_OPENAI_DUO_MODEL
+  emit_env_setting JASSJR_OPENAI_MONO_DOCS
+  emit_env_setting JASSJR_OPENAI_DUO_DOCS
+  emit_env_setting JASSJR_OPENAI_DOC_WORDS
+  emit_env_setting JASSJR_OPENAI_PROMPT_VERSION
+  emit_env_setting JASSJR_OPENAI_CACHE_DIR
+  if [[ -n "${JASSJR_BM25_K1:-}" || -n "${JASSJR_BM25_B:-}" || -n "${JASSJR_FEEDBACK_DOCS:-}" || -n "${JASSJR_EXPANSION_TERMS:-}" || -n "${JASSJR_EXPANSION_WEIGHT:-}" || -n "${JASSJR_EXPANSION_MAX_QUERY_TERMS:-}" || -n "${JASSJR_SEMANTIC_MODE:-}" || -n "${JASSJR_SEMANTIC_MODEL:-}" || -n "${JASSJR_SEMANTIC_DIMENSIONS:-}" || -n "${JASSJR_SEMANTIC_DOC_WORDS:-}" || -n "${JASSJR_SEMANTIC_BATCH_SIZE:-}" || -n "${JASSJR_SEMANTIC_TOPK:-}" || -n "${JASSJR_FUSION_RRF_K:-}" || -n "${JASSJR_FUSION_WEIGHT_BM25:-}" || -n "${JASSJR_FUSION_WEIGHT_RM3:-}" || -n "${JASSJR_FUSION_WEIGHT_DENSE:-}" || -n "${JASSJR_FUSION_BM25_TOPK:-}" || -n "${JASSJR_FUSION_RM3_TOPK:-}" || -n "${JASSJR_FUSION_DENSE_TOPK:-}" || -n "${JASSJR_RERANK_DOCS:-}" || -n "${JASSJR_RERANK_PASSAGE_WINDOW:-}" || -n "${JASSJR_RERANK_PASSAGE_WEIGHT:-}" || -n "${JASSJR_OPENAI_RERANK_MODE:-}" || -n "${JASSJR_OPENAI_MONO_MODEL:-}" || -n "${JASSJR_OPENAI_DUO_MODEL:-}" || -n "${JASSJR_OPENAI_MONO_DOCS:-}" || -n "${JASSJR_OPENAI_DUO_DOCS:-}" || -n "${JASSJR_OPENAI_DOC_WORDS:-}" || -n "${JASSJR_OPENAI_PROMPT_VERSION:-}" || -n "${JASSJR_OPENAI_CACHE_DIR:-}" ]]; then
+    printf "\n"
+  fi
+  emit_metadata_file "$rerank_metadata_file"
+  [[ -f "$rerank_metadata_file" ]] && printf "\n"
+  printf "%s\n" "$summary"
+} > "$eval_output_file"
+printf "Summary written to %s\n" "$eval_output_file"

@@ -1,8 +1,51 @@
-# Search Experiment Sandbox
+# Two-stage retrieval and reranking research
 
-This repository provides a compact sandbox for experimenting with a simple, understandable IR system. The aim is to enable an agent to iteratively optimize indexing and ranking strategies, evaluate each iteration with `trec_eval`, and preserve only the changes that improve overall retrieval effectiveness. Computational efficiency work is deferred for now; benchmark data is optional context when available, not part of the current approval gate.
+The repository separates lexical candidate retrieval from reranking. The current
+research focus is comparing JEV, monoBERT and duoBERT on identical candidates,
+measuring retrieval effectiveness, search time and cost.
 
-## Experimental Progression
+| Stage | Implementation and methodology | Result Markdown folders |
+| --- | --- | --- |
+| 1. Lexical retrieval | [Stage 1](stage1/README.md): JASSjr BM25 + existing feedback | [stage1/results/](stage1/results/) |
+| 2. Reranking | [Stage 2](reranking/README.md): JEV pointwise; monoBERT/duoBERT planned | [reranking/results/](reranking/results/) |
+
+Stage 1 saves its own run and `trec_eval` before stage 2 starts. Every new result
+has a `results.md` and machine-readable manifest. Stage 2 verifies the baseline's
+content hashes and reports its gain, added time and estimated cost separately.
+
+```sh
+./tests/smoke.sh
+python3 stage1/run.py /absolute/path/to/wsj.xml
+# Substitute the exact directory printed by stage 1; use a Python environment
+# with tools/requirements-jev.txt installed and TYPESAFE_API_KEY configured.
+python3 reranking/run.py stage1/results/<branch>/<run-id> --top-k 100
+```
+
+`./tools/eval_wsj.sh` now runs stage 1 only. The old
+`JASSJR_JEV_RERANK=on` switch is rejected with migration instructions.
+`./tools/benchmark_wsj.sh` remains a repeated lexical-only benchmark.
+Current main's expanded-feedback searcher and fusion/rewrite tools are preserved.
+The separate stage-1 runner uses the current lexical searcher with passage
+reranking disabled; its results form a new baseline cohort. Earlier MAP 0.2402
+artifacts remain frozen and keep their original source hashes. The historical
+fused workflow remains available as `tools/eval_pipeline_wsj.sh` and
+`tools/benchmark_pipeline_wsj.sh`; those explicit legacy entry points can invoke
+API services according to their environment settings.
+See [program.md](program.md) for the research workflow.
+
+The historical paired result is MAP **0.2402 → 0.2925** for lexical retrieval
+followed by top-100 JEV. Historical reranking latency and dollar cost are unknown;
+this establishes effectiveness evidence, not a speed or cost win.
+
+## Historical branch dashboard
+
+The following dashboard and `docs/metrics/` summarize legacy branch artifacts.
+They mix lexical and reranked experiments and are retained as history. Its Search
+column measures lexical batch time where available, not stage-2 or end-to-end time.
+Use the separate stage result folders for new comparisons. Legacy exporter and
+branch-vs-main tools read `experiment_evaluations/` / `experiment_benchmarks/` only;
+they do not ingest the new stage manifests. `original` is read-only initialization
+history; `main` remains the code approval baseline.
 
 <!-- README_METRICS_TABLE_START -->
 Current accepted leader [`codex/search-jev-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-jev-recall) improves `MAP` from `0.2080` on `original` to `0.3265` (`+0.1185 (+57.0%)`). It also raises `P@5` from `0.4320` to `0.7040`.
@@ -39,34 +82,6 @@ Current accepted leader [`codex/search-jev-recall`](https://github.com/carlaiau/
 - `Search (s)`: Median wall-clock search time in seconds for the full topics file across benchmark runs; lower is better.
 <!-- README_METRICS_TABLE_END -->
 
-Generated files:
-
-- `docs/metrics/branch-comparisons.tsv`
-- `docs/metrics/branch-comparisons.md`
-
-## JEV versus the earlier reranking experiments
-
-The progression above records historical accepted runs, not a controlled ablation: retrieval sources, candidate depths and text budgets evolved between rows. `MAP Δ` is the difference from the preceding displayed row. `main` remains the approval baseline; `original` is read-only initialization history. No new timing benchmark was run for JEV.
-
-| Experiment / final reranker | MAP | Rprec | P@10 | bpref | Reciprocal rank | JEV MAP gain |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| [DuoBERT-style sparse passage scaffold](https://github.com/carlaiau/ir-autoresearch/pull/29) | 0.2418 | 0.2836 | 0.4300 | 0.3074 | 0.6687 | +35.0% |
-| [OpenAI mono, GPT-5-mini](https://github.com/carlaiau/ir-autoresearch/pull/31) | 0.2485 | 0.2781 | 0.4780 | 0.3086 | 0.7069 | +31.4% |
-| [OpenAI mono + RM3](https://github.com/carlaiau/ir-autoresearch/pull/35) | 0.2691 | 0.3053 | 0.5220 | 0.3275 | 0.7752 | +21.3% |
-| Tri-source recall + OpenAI mono | 0.2739 | 0.3113 | 0.5200 | 0.3426 | 0.7895 | +19.2% |
-| Latest historical expanded recall + OpenAI mono | 0.2867 | 0.3302 | 0.5360 | 0.3625 | 0.8053 | +13.9% |
-| [JEV on the post-#25 index](https://github.com/carlaiau/ir-autoresearch/pull/59) | 0.2925 | 0.3143 | 0.6100 | 0.3445 | 0.8322 | +11.6% |
-| Identical current fused candidates, before JEV | 0.2833 | 0.3159 | 0.5060 | 0.3545 | 0.7730 | +15.2% |
-| **Retained expanded recall + JEV pointwise** | **0.3265** | **0.3463** | **0.6660** | **0.3904** | **0.8963** | — |
-
-- **The clearest reranking evidence is the same-candidate comparison:** JEV raises MAP from 0.2833 to 0.3265 and P@10 from 0.5060 to 0.6660. AP improves on 46 of 50 topics and declines on 4. The retrieved set and order below rank 100 are unchanged.
-- **Retaining recall expansion matters:** current fusion retrieves 4,175 judged-relevant documents, versus 3,755 in the post-#25 experiment. JEV then scores the top 100 using original article text, producing a higher MAP than the earlier JEV-only fork. These historical runs do not isolate each recall source's contribution.
-- **JEV exceeds every listed prior reranking stage on all five headline metrics.** Against the latest historical OpenAI-mono pipeline, MAP rises 13.9% and P@10 rises 24.3%. Total retrieved relevance is slightly lower (4,175 versus 4,215), so this is an ordering improvement, not a claim of uniformly higher recall. A fresh same-candidate OpenAI comparison has not been run.
-- **“Mono/duo BERT” describes the earlier design lineage, not measured pretrained BERT checkpoints.** PR #29 explicitly used a sparse passage scaffold; the model-backed accepted runs used GPT-5-mini mono scoring. The archived accepted reports do not establish a model-backed duo result. This table therefore does not claim superiority over published monoBERT/duoBERT benchmarks.
-- **Configuration differences remain:** JEV uses up to 24,000 original-text characters per article; earlier mono runs used a 220-indexed-term input budget and different reranking depths. The result supports the complete JEV pipeline, not a model-only causal claim. Choice/listwise ranking and a matched text-budget control remain separate experiments; no speed or cost superiority is claimed.
-
-See the [experiment record](docs/experiments/jev-recall.md), [paired analysis](experiment_evaluations/codex/search-jev-recall/analysis.json), and [full evaluation](experiment_evaluations/codex/search-jev-recall/trec_eval-20260917-160716.txt). To reproduce the accepted configuration, use the environment settings and command in the experiment record; external retrieval and JEV are opt-in when no configuration is supplied.
-
 ## Inspiration And Provenance
 
 This project is inspired by two upstream efforts:
@@ -77,135 +92,3 @@ This project is inspired by two upstream efforts:
 The goal here is to bring the autonomous experiment-management ideas from `autoresearch` into information retrieval, and to further test the hypothesis that an agent can improve any system as long as it has a measurable objective.
 
 This project is licensed under the MIT License, except for JassJr related code which is included in this repository, which are licensed under their respective open-source licenses, please see THIRD_PARTY_NOTICES.txt for details.
-
-## What This Repo Is For
-
-- experimenting with indexing logic in `index/JASSjr_index.go`
-- experimenting with ranking and query processing in `search/JASSjr_search.go`
-- validating end-to-end behavior with a tiny smoke fixture
-- evaluating real retrieval quality on the WSJ/TREC setup
-- optionally benchmarking indexing and search time for future efficiency work
-
-This repo is intentionally small so an automated agent can understand the full workflow and iterate quickly.
-
-## Core Workflow
-
-Use these commands in order:
-
-```bash
-git checkout main
-git pull --ff-only
-./tests/smoke.sh
-./tools/eval_wsj.sh /absolute/path/to/your/wsj.xml
-./tools/update_metrics_dashboard.sh
-```
-
-What they do:
-
-- `./tests/smoke.sh`
-  Runs a tiny fixture-based smoke evaluation to catch obvious breakage.
-- `./tools/eval_wsj.sh`
-  Builds the search engine, runs the TREC topics, and records a timestamped `trec_eval` summary.
-- `./tools/benchmark_wsj.sh`
-  Optional: runs a few indexing and search benchmarks and records timestamped timings for later efficiency work.
-- `./tools/update_metrics_dashboard.sh`
-  Exports the README branch metrics and refreshes the metrics table embedded in this README.
-- `./tools/compare_branch_to_main.sh <branch>`
-  Compares the latest evaluation and benchmark artifacts for a branch against the active baseline on `main`.
-- `./tools/export_metrics_history.sh [branch]`
-  Exports a TSV time series from saved artifacts so MAP and benchmark medians can be reviewed over time.
-- `./tools/export_branch_comparisons.sh`
-  Exports the latest compatible artifact from every non-main branch as a branch-vs-main comparison TSV.
-
-## Artifact Layout
-
-Artifacts are grouped by the current git branch.
-
-Evaluation summaries are written to:
-
-- `experiment_evaluations/<branch>/`
-
-Benchmark summaries are written to:
-
-- `experiment_benchmarks/<branch>/`
-
-This makes it easy to compare experiments branch by branch while keeping raw outputs out of git history. The `experiment_evaluations/original/` and `experiment_benchmarks/original/` folders are immutable initialization archives and must never be refreshed or overwritten.
-
-Each new research loop should begin by refreshing the active baseline on `main`:
-
-```bash
-git checkout main
-git pull --ff-only
-./tests/smoke.sh
-./tools/eval_wsj.sh /absolute/path/to/your/wsj.xml
-```
-
-After that, create or update an experiment branch from the refreshed `main` baseline and require the branch to beat the newest `main` evaluation artifact before approving a PR. Benchmark artifacts can still be collected when desired, but they are not part of the current approval gate.
-
-To compare a branch against the current production baseline:
-
-```bash
-./tools/compare_branch_to_main.sh codex/search-my-idea
-```
-
-To export a history TSV for the production branch:
-
-```bash
-./tools/export_metrics_history.sh > main-metrics.tsv
-```
-
-To refresh the committed dashboard assets:
-
-```bash
-./tools/update_metrics_dashboard.sh
-```
-
-The raw history export from `tools/export_metrics_history.sh` is designed for simple analysis of:
-
-- retrieval effectiveness over time, especially `map`
-- benchmark medians over time for indexing and search, when benchmark artifacts exist
-
-That TSV also includes enough metadata to filter or separate runs:
-
-- `collection`, `topics`, and `qrels` for evaluation rows
-- `collection`, `topics`, `smoke_topics`, and `iterations` for benchmark rows
-
-That matters because you may occasionally record toy or verification runs alongside full WSJ/TREC runs. For production reporting, filter to the real WSJ collection and the standard `51-100` topics/qrels before comparing `map`, and only compare benchmark medians when benchmark artifacts are available.
-
-## Success Criteria
-
-A change is worth keeping only if:
-
-- the smoke test still passes
-- `trec_eval` improves overall retrieval effectiveness relative to the latest compatible evaluation on `main`
-
-In practice, `map` is the main headline metric, but `Rprec`, `P_10`, `bpref`, and `recip_rank` should also be watched. Benchmark runs remain available for future efficiency work, but they are optional right now.
-
-## Repository Structure
-
-- `index/`
-  Index construction logic.
-- `search/`
-  Query evaluation and ranking logic.
-- `tests/fixtures/`
-  Tiny smoke-test collection and toy qrels/topics.
-- `tools/smoke_eval.sh`
-  Lightweight shell-based smoke evaluation.
-- `tools/eval_wsj.sh`
-  Full WSJ/TREC evaluation with timestamped reports.
-- `tools/benchmark.sh`
-  Generic timing helper used by benchmark scripts.
-- `tools/benchmark_wsj.sh`
-  Branch-aware indexing and search benchmark runner.
-- `tools/update_metrics_dashboard.sh`
-  Refreshes the committed metrics TSV, generated Markdown table, and README metrics section.
-- `tools/compare_branch_to_main.sh`
-  Branch-vs-main artifact comparison helper.
-- `tools/export_metrics_history.sh`
-  TSV exporter for long-run metric history and reporting.
-- `tools/export_branch_comparisons.sh`
-  TSV exporter for the README branch metrics table.
-- `tools/render_metrics_table.py`
-  Markdown table renderer for the committed README metrics section.
-- `program.md`
-  The agent operating plan for autonomous search experiments.

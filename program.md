@@ -1,188 +1,59 @@
-# Search Agent Program
+# Two-stage research program
 
-This repository is for autonomous retrieval experiments on a compact search engine implementation. The agent's job is to improve end-to-end retrieval effectiveness on the WSJ/TREC setup. Computational efficiency work is deferred for now, so benchmark results are informational when present rather than approval-gating.
+Read AGENTS.md, stage1/README.md and reranking/README.md before experimenting.
+The immediate objective is reranking research: improve effectiveness and quantify
+the additional search time and cost on an unchanged candidate set.
 
-## Mission
+## Stage 1: establish and freeze the input
 
-Optimize the indexing and searching strategy in:
+Read the Go index/search sources and confirm the absolute WSJ collection path.
+Refresh main in a clean checkout when establishing an approval baseline; preserve
+unrelated working changes. Run smoke tests, `python3 stage1/run.py <WSJ>` and
+`./tools/benchmark_wsj.sh <WSJ>`. Preserve the complete stage-1 result directory,
+including results.md, raw trec_eval, run and data/configuration hashes. Document
+BM25 and existing feedback as a single candidate-generation stage.
 
-- `index/JASSjr_index.go`
-- `search/JASSjr_search.go`
+Freeze this input across a reranker comparison. Any lexical change requires a new
+stage-1 baseline and a separate comparison cohort, not a silent replacement.
 
-The system is judged primarily by `trec_eval` results on the shipped WSJ topics/qrels:
+## Stage 2: reranking experiment loop
 
-- `51-100.titles.txt`
-- `51-100.qrels.txt`
+1. Inspect repo state and GitHub issues/PRs using gh CLI; avoid duplicate work.
+2. Choose a concrete reranking hypothesis and create an experiment issue.
+3. Work on a fresh codex/search-<tag> branch. Main is the code approval baseline;
+   the frozen lexical run is the effectiveness baseline for the reranker.
+4. Start with JEV pointwise scoring. Run `python3 reranking/run.py <stage1-dir>`
+   with an explicit candidate depth and record configuration, model and cache mode.
+5. Run smoke and reranking contract tests. Compare MAP, Rprec, P_10, bpref and
+   reciprocal rank against the exact stage-1 run. Record candidate recall at K,
+   per-topic changes, reranking and composed end-to-end time, and cost.
+6. Repeat timing runs under controlled cache, hardware, concurrency and warm-up
+   conditions. Unknown dollar cost is not zero. Use verified model-specific rates.
+7. Compare monoBERT and duoBERT only when adapters exist and their measurements
+   share the same data/candidates and explicit content/batching policies.
+8. Preserve accepted and rejected experiment code and final result artifacts.
+   Commit/push experiment branches and document results on the issue. Open PRs
+   only for accepted experiments; never reset rejected history or merge without
+   explicit user instruction. Follow AGENTS.md's issue and PR requirements.
 
-Every accepted change must improve overall retrieval effectiveness.
+For lexical changes retain the AGENTS.md performance guardrails (over 15% median
+slowdown is rejected by default). For stage 2, explicitly assess the measured
+quality/latency/cost tradeoff; a neural reranker cannot be approved from MAP alone
+when time or cost is unknown. Selecting depths on the evaluation topics is
+exploratory evidence, not held-out validation.
 
-## Setup
+## Artifact policy
 
-Before experimentation begins, do this once per run:
+New result Markdown files live separately in stage1/results/ and
+reranking/results/, alongside their raw outputs and manifests. Commit final
+branch-local evidence for accepted and rejected experiments. Never include WSJ
+article text, secrets or API cache contents. Do not refresh or overwrite original
+archive folders. Do not commit refreshed main artifacts unless requested.
 
-1. Choose a run tag based on the date and idea family.
-2. Use `main` as the starting point for the next dedicated experiment branch:
-   - Branch name format: `codex/search-<tag>`
-3. Read the in-scope files:
-   - `README.md`
-   - `program.md`
-   - `index/JASSjr_index.go`
-   - `search/JASSjr_search.go`
-   - `tools/smoke_eval.sh`
-   - `tools/eval_wsj.sh`
-   - `tools/benchmark.sh`
-   - `tools/benchmark_wsj.sh`
-   - `tools/update_metrics_dashboard.sh`
-4. Confirm the WSJ collection file exists on disk.
-5. Refresh the active baseline on `main` before starting a new research loop:
-   - `git checkout main`
-   - `git pull --ff-only`
-6. Run a baseline smoke check:
-   - `./tests/smoke.sh`
-7. Run a baseline evaluation:
-   - `./tools/eval_wsj.sh /absolute/path/to/wsj.xml`
-8. Note the latest evaluation report for `main`.
-9. Create or refresh the experiment branch from the updated `main`.
-10. Know how to compare an experiment branch against the active baseline on `main` when compatible benchmark artifacts exist:
-   - `./tools/compare_branch_to_main.sh <branch>`
+Legacy experiment_evaluations/, experiment_benchmarks/ and docs/metrics/ are
+historical records. Their exporters and README dashboard do not yet consume stage
+manifests. Keep stage reports authoritative for new work; do not combine legacy
+lexical timings with reranked effectiveness and label that an end-to-end benchmark.
 
-## Optimization Objective
-
-Primary objective:
-
-- Increase retrieval effectiveness, with `map` as the main headline metric.
-
-Secondary objectives:
-
-- Improve or preserve `Rprec`, `P_10`, `bpref`, and `recip_rank`.
-- Prefer simpler changes when retrieval gains are similar.
-
-## Acceptance Rules
-
-A change is acceptable only if all of the following are true:
-
-1. `./tests/smoke.sh` passes.
-2. `./tools/eval_wsj.sh /absolute/path/to/wsj.xml` completes successfully.
-3. Overall retrieval effectiveness improves relative to the latest compatible evaluation on `main`.
-
-Benchmark runs are optional for now. If benchmark artifacts exist, treat them as supplementary context rather than approval criteria.
-
-## Experiment Loop
-
-Loop continuously until stopped:
-
-1. Check out `main`, pull the latest remote changes, and refresh the `main` smoke/evaluation artifacts.
-2. Pick one retrieval idea.
-3. Create or update the experiment branch from refreshed `main`.
-4. Edit the indexer and/or searcher.
-5. Run the lightweight smoke test:
-   - `./tests/smoke.sh`
-6. If smoke fails, fix or discard immediately.
-7. Run full evaluation:
-   - `./tools/eval_wsj.sh /absolute/path/to/wsj.xml`
-8. Optionally run a benchmark pass:
-   - `./tools/benchmark_wsj.sh /absolute/path/to/wsj.xml`
-9. Optionally compare the branch against the latest `main` artifacts:
-   - `./tools/compare_branch_to_main.sh <branch>`
-10. Optionally refresh the committed dashboard assets:
-   - `./tools/update_metrics_dashboard.sh`
-11. If the change improves retrieval:
-   - commit it
-   - keep the branch moving forward
-   - update or open a PR
-12. If the change does not improve retrieval:
-   - discard it
-   - return the branch to the last accepted commit
-
-## Good Experiment Targets
-
-Safe areas to explore:
-
-- tokenization changes
-- normalization rules
-- stopword handling
-- stemming or conflation
-- document length handling
-- BM25 parameter tuning
-- query term weighting
-- candidate ordering and tie-breaking
-- vocabulary or postings layout changes that preserve end-to-end behavior
-
-Avoid changes that only reshuffle code without a plausible retrieval hypothesis.
-
-## Artifact Policy
-
-Artifacts are grouped by git branch automatically.
-
-Evaluation reports go to:
-
-- `experiment_evaluations/<branch>/`
-
-Benchmark reports go to:
-
-- `experiment_benchmarks/<branch>/`
-
-The `experiment_evaluations/original/` and `experiment_benchmarks/original/` folders are immutable initialization archives. Do not write new artifacts into them and do not use them for active approval comparisons.
-
-Do not commit generated evaluation artifacts unless the active repository policy explicitly says to preserve them for the branch. Benchmark artifacts are optional when no benchmark run was performed.
-
-Do commit the PR dashboard assets after each accepted experiment:
-
-- `docs/metrics/branch-comparisons.tsv`
-- `docs/metrics/branch-comparisons.md`
-- `README.md`
-
-For long-run production history exports, use:
-
-- `./tools/export_metrics_history.sh`
-
-When reporting, use only rows from the real WSJ/TREC evaluation setup. Do not mix smoke or toy verification runs into production metric summaries.
-
-For the README metrics table, keep `original` as the first row and list non-main PR branches after it using:
-
-- `./tools/export_branch_comparisons.sh`
-
-## GitHub Workflow
-
-Use the same high-level interaction model as the original autonomous research loop:
-
-1. Work on a dedicated experiment branch.
-2. Keep only accepted improvements on that branch.
-3. Open or update a PR from the experiment branch into the base branch.
-4. In the PR description, summarize:
-   - the hypothesis
-   - the code changes
-   - the latest `trec_eval` headline metrics
-   - the latest benchmark medians, if benchmark runs were performed
-   - the branch-vs-main comparison from `./tools/compare_branch_to_main.sh <branch>`, when compatible benchmark artifacts exist
-   - the updated README metrics table that shows `original` plus the current PR branch row
-   - any tradeoffs
-5. Before opening or updating the PR, refresh:
-   - `./tools/update_metrics_dashboard.sh`
-6. Only merge PRs that improve overall search effectiveness.
-
-Benchmark information may still be included for context when available, but it is not part of the current merge gate.
-
-## Reporting Format
-
-For every accepted experiment, record:
-
-- commit hash
-- branch name
-- evaluation report path
-- benchmark report path, if a benchmark run was produced
-- key metric deltas:
-  - `map`
-  - `Rprec`
-  - `P_10`
-  - index median, if benchmark data exists
-  - search median, if benchmark data exists
-- one short description of the idea
-
-## Operating Principle
-
-This is not a binary-compatibility project. Internal index structure may evolve. The only things that matter are:
-
-- the system still works end to end
-- smoke checks stay green
-- retrieval quality improves
+This restructuring is a bounded maintenance task; it does not start an unbounded
+experiment loop or authorize paid runs merely to validate the folder migration.

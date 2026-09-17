@@ -23,7 +23,7 @@ JASSJR_SEMANTIC_MODE=openai JASSJR_OPENAI_QUERY_REWRITE_MODE=sparse \
 JASSJR_OPENAI_RERANK_MODE=off JASSJR_JEV_RERANK=pointwise \
 JASSJR_FUSION_WEIGHT_BM25=0.05 JASSJR_FUSION_WEIGHT_RM3=0.55 \
 JASSJR_FUSION_WEIGHT_DENSE=0.40 JASSJR_JEV_PYTHON=/path/to/venv/bin/python \
-  ./tools/eval_wsj.sh /absolute/path/to/wsj.xml
+  ./tools/eval_pipeline_wsj.sh /absolute/path/to/wsj.xml
 ```
 
 Those explicit fusion weights are the later accepted main defaults, superseding
