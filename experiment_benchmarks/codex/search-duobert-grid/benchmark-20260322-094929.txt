@@ -1,0 +1,53 @@
+branch: codex/search-duobert-grid
+timestamp: 20260322-094929
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+smoke_topics: /Users/caiau/school/autoresearch/tests/fixtures/smoke_topics.txt
+iterations: 5
+
+JASSJR_RERANK_DOCS: 25
+JASSJR_RERANK_PASSAGE_WINDOW: 16
+JASSJR_RERANK_PASSAGE_WEIGHT: 0.20
+
+index_median: 11.95
+search_smoke_median: 0.06
+search_topics_median: 0.26
+
+[index]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-duobert-grid/jassjr-index /Users/caiau/school/wsj.xml
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 11.68
+Slowest: 12.12
+Median:  11.95
+
+[search_smoke]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-duobert-grid/jassjr-search
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.06
+Slowest: 0.07
+Median:  0.06
+
+[search_topics]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-benchmark/codex/search-duobert-grid/jassjr-search
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 0.26
+Slowest: 0.27
+Median:  0.26

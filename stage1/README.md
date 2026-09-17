@@ -7,8 +7,9 @@ candidate run is the common input for every stage-2 comparison.
 ## Implementation
 
 The engine remains in `index/JASSjr_index.go` and `search/JASSjr_search.go`.
-The current configuration descends from the pre-JEV BM25 tuning commit
-`552f36baf50784122de36fc419b6cbb9eac07256`.
+The saved pre-JEV configuration descends from BM25 tuning commit
+`552f36baf50784122de36fc419b6cbb9eac07256`. Current code retains main's later
+RM3-style feedback improvements; new runs form a separate baseline cohort.
 
 1. Read WSJ records and associate terms with DOCNO. The lexer recognizes ASCII
    alphanumeric tokens (including internal hyphens), lowercases them and applies
@@ -20,7 +21,11 @@ The current configuration descends from the pre-JEV BM25 tuning commit
 3. Score title queries with BM25: `k1=0.7`, `b=0.3`, and `log(N/df)` IDF.
    `JASSJR_BM25_K1` and `JASSJR_BM25_B` override these defaults and are recorded.
 4. Apply existing lightweight pseudo-relevance feedback inside lexical retrieval:
-   use two leading documents, select one new term and add it at weight 0.10.
+   the historical saved baseline used two leading documents, one new term and
+   weight 0.10. Current main defaults use five feedback documents, six expansion
+   terms, weight 0.45 and a six-query-term admission limit. All effective settings
+   are recorded in `lexical_config`. The runner forces `JASSJR_RERANK_DOCS=0` so
+   the optional sparse passage reranking cannot leak into stage 1.
    This baseline is BM25 **with feedback**, not pure one-pass BM25.
 5. Emit up to 1,000 nonzero-scoring results per query in TREC format. The engine
    breaks exact score ties by descending internal document ID. Evaluation and
@@ -56,7 +61,14 @@ file, not a directory. `--results-dir` selects a new explicit result directory.
 
 ## Baselines
 
+[Current integrated-main lexical baseline](results/integrated-main-20260918/results.md)
+has MAP 0.2521 with passage reranking disabled.
 [Preserved pre-JEV baseline](results/pre-jev/results.md) has MAP 0.2402.
 It is the paired input for the historical JEV experiment, not a claim that it is
 current main. Current `main` remains the code approval baseline. The `original`
 artifacts are historical initialization data and remain untouched.
+
+The accepted fusion, dense and rewrite code remains available through the legacy
+`tools/eval_pipeline_wsj.sh` entry point. Those historical fused configurations
+have different candidates and API usage; they are not interchangeable with the
+new lexical-only stage-1 manifest.

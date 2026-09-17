@@ -25,6 +25,12 @@ def main():
         p.error('collection must be the absolute path to a single WSJ file')
     if os.environ.get('JASSJR_JEV_RERANK', 'off') != 'off':
         p.error('stage 1 cannot rerank; run reranking/run.py on its saved result directory')
+    search_env = dict(os.environ, JASSJR_RERANK_DOCS='0')
+    lexical_defaults = {'JASSJR_BM25_K1': '0.7', 'JASSJR_BM25_B': '0.3',
+                        'JASSJR_FEEDBACK_DOCS': '5', 'JASSJR_EXPANSION_TERMS': '6',
+                        'JASSJR_EXPANSION_WEIGHT': '0.45', 'JASSJR_EXPANSION_MAX_QUERY_TERMS': '6',
+                        'JASSJR_EXPANSION_ONLY': '0', 'JASSJR_RERANK_DOCS': '0'}
+    lexical_config = {key: search_env.get(key, value) for key, value in lexical_defaults.items()}
     context = provenance()
     if context['branch'] == 'original':
         p.error('original is a read-only initialization archive')
@@ -43,7 +49,7 @@ def main():
         with (destination / 'index.log').open('w') as log:
             index_seconds = timed([index, collection], cwd=work, stdout=log)
         with topics.open() as queries, (destination / 'run.trec').open('w') as run:
-            search_seconds = timed([search], cwd=work, stdin=queries, stdout=run)
+            search_seconds = timed([search], cwd=work, stdin=queries, stdout=run, env=search_env)
     shutil.copyfile(topics, destination / 'topics.txt')
     shutil.copyfile(qrels, destination / 'qrels.txt')
     metrics = evaluate(destination / 'qrels.txt', destination / 'run.trec', destination / 'trec_eval.txt')
@@ -52,7 +58,7 @@ def main():
                 'run_sha256': sha(destination / 'run.trec'), 'metrics': metrics,
                 'queries': sum(bool(line.strip()) for line in topics.read_text().splitlines()),
                 'index_seconds': index_seconds, 'search_seconds': search_seconds,
-                'api_cost_usd': 0, 'compute_cost_usd': None,
+                'lexical_config': lexical_config, 'api_cost_usd': 0, 'compute_cost_usd': None,
                 'bm25_k1': os.environ.get('JASSJR_BM25_K1', '0.7'),
                 'bm25_b': os.environ.get('JASSJR_BM25_B', '0.3'),
                 'source_sha256': {name: sha(ROOT / name) for name in ('index/JASSjr_index.go', 'search/JASSjr_search.go')}}

@@ -123,6 +123,26 @@ def render_run(runs, scores, top_k):
     return "\n".join(lines) + "\n"
 
 
+def cached_response(payload, key, args, endpoint, validate):
+    path = args.cache / (key + ".json")
+    hit = path.exists()
+    if hit:
+        response = json.loads(path.read_text())
+    else:
+        if args.cache_only:
+            raise RuntimeError("Missing cached response")
+        if not os.environ.get("TYPESAFE_API_KEY"):
+            raise RuntimeError("TYPESAFE_API_KEY is missing")
+        import msgspec
+        from typesafe_sdk import TypeSafeClient
+        with TypeSafeClient(api_key=os.environ["TYPESAFE_API_KEY"], base_url=endpoint, timeout=120.0) as client:
+            response = msgspec.to_builtins(client.system_one(**payload))
+        validate(response)
+        atomic_write(path, json.dumps(response, sort_keys=True) + "\n")
+    validate(response)
+    return response, hit
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ("collection", "topics", "run", "output", "metadata"):
@@ -153,22 +173,7 @@ def main():
         qid, docid = pair
         payload = {"model": args.model, "state": {"query": topics[qid], "candidate_article": docs[docid][:args.max_chars]}, "questions": {"relevant": QUESTION}}
         key = digest({"endpoint": endpoint, "payload": payload, "document_sha256": digest(docs[docid])})
-        path = args.cache / (key + ".json")
-        cached = path.exists()
-        if cached:
-            response = json.loads(path.read_text())
-        else:
-            if args.cache_only:
-                raise RuntimeError("Missing cached response")
-            if not os.environ.get("TYPESAFE_API_KEY"):
-                raise RuntimeError("TYPESAFE_API_KEY is missing")
-            import msgspec
-            from typesafe_sdk import TypeSafeClient
-            with TypeSafeClient(api_key=os.environ["TYPESAFE_API_KEY"], base_url=endpoint, timeout=120.0) as client:
-                result = client.system_one(**payload)
-                response = msgspec.to_builtins(result)
-            validate_response(response)
-            atomic_write(path, json.dumps(response, sort_keys=True) + "\n")
+        response, cached = cached_response(payload, key, args, endpoint, validate_response)
         value = validate_response(response)
         return {"pair_seconds": time.perf_counter() - pair_start, "qid": qid, "docid": docid, "cache_key": key, "score": value, "response": response, "cache_hit": cached, "truncated": len(docs[docid]) > args.max_chars}
 
@@ -181,7 +186,7 @@ def main():
             if len(results) % 100 == 0:
                 print(f"Scored {len(results)}/{len(pairs)} pairs", file=sys.stderr, flush=True)
     scores = {(r["qid"], r["docid"]): r["score"] for r in results}
-    metadata = {"status": "complete", "workers": args.workers, "cache_only": args.cache_only, "model": args.model, "top_k": args.top_k, "max_chars": args.max_chars, "question": QUESTION, "pairs": len(pairs), "cache_hits": sum(r["cache_hit"] for r in results), "truncated_pairs": sum(r["truncated"] for r in results), "run_sha256": hashlib.sha256(args.run.read_bytes()).hexdigest(), "topics_sha256": hashlib.sha256(args.topics.read_bytes()).hexdigest(), "results": results}
+    metadata = {"status": "complete", "mode": "pointwise", "workers": args.workers, "cache_only": args.cache_only, "model": args.model, "top_k": args.top_k, "max_chars": args.max_chars, "question": QUESTION, "pairs": len(pairs), "cache_hits": sum(r["cache_hit"] for r in results), "truncated_pairs": sum(r["truncated"] for r in results), "run_sha256": hashlib.sha256(args.run.read_bytes()).hexdigest(), "topics_sha256": hashlib.sha256(args.topics.read_bytes()).hexdigest(), "results": results}
     atomic_write(args.metadata, json.dumps(metadata, sort_keys=True, indent=2) + "\n")
     atomic_write(args.output, render_run(runs, scores, args.top_k))
     print(f"Complete: {len(pairs)} pairs; {metadata['cache_hits']} cached; {metadata['truncated_pairs']} truncated", file=sys.stderr)

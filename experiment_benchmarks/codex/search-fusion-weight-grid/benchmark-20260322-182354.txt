@@ -1,0 +1,61 @@
+branch: codex/search-fusion-weight-grid
+timestamp: 20260322-182354
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+smoke_topics: /Users/caiau/school/autoresearch/tests/fixtures/smoke_topics.txt
+iterations: 5
+
+JASSJR_SEMANTIC_MODE: openai
+JASSJR_SEMANTIC_MODEL: text-embedding-3-small
+JASSJR_SEMANTIC_DIMENSIONS: 512
+JASSJR_FUSION_RRF_K: 60
+JASSJR_FUSION_WEIGHT_BM25: 0.05
+JASSJR_FUSION_WEIGHT_RM3: 0.55
+JASSJR_FUSION_WEIGHT_DENSE: 0.40
+JASSJR_FUSION_BM25_TOPK: 250
+JASSJR_FUSION_RM3_TOPK: 250
+JASSJR_FUSION_DENSE_TOPK: 250
+JASSJR_OPENAI_RERANK_MODE: mono
+
+index_median: 12.64
+search_smoke_median: 1.67
+search_topics_median: 8.77
+
+[index]
+Benchmarking: /Users/caiau/school/autoresearch/wsj-grid-search/codex/search-fusion-weight-grid/jassjr-index /Users/caiau/school/wsj.xml
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 12.46
+Slowest: 14.82
+Median:  12.64
+
+[search_smoke]
+Benchmarking: /Users/caiau/school/autoresearch/tools/run_search_pipeline.sh --workdir /Users/caiau/school/autoresearch/wsj-grid-search/codex/search-fusion-weight-grid
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 1.56
+Slowest: 65.35
+Median:  1.67
+
+[search_topics]
+Benchmarking: /Users/caiau/school/autoresearch/tools/run_search_pipeline.sh --workdir /Users/caiau/school/autoresearch/wsj-grid-search/codex/search-fusion-weight-grid
+Warmup
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+Fastest: 8.52
+Slowest: 10.86
+Median:  8.77

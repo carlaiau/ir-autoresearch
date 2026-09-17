@@ -1,0 +1,58 @@
+branch: codex/search-openai-mono-rm3
+timestamp: 20260322-142431
+collection: /Users/caiau/school/wsj.xml
+topics: /Users/caiau/school/autoresearch/51-100.titles.txt
+qrels: /Users/caiau/school/autoresearch/51-100.qrels.txt
+
+JASSJR_OPENAI_RERANK_MODE: mono
+
+JASSJR_OPENAI_RERANK_MODE: mono
+JASSJR_OPENAI_KEY_SOURCE: dotenv
+JASSJR_OPENAI_MONO_MODEL: gpt-5-mini
+JASSJR_OPENAI_DUO_MODEL: gpt-5-mini
+JASSJR_OPENAI_PROMPT_VERSION: openai-rerank-v2
+JASSJR_OPENAI_MONO_DOCS: 85
+JASSJR_OPENAI_DUO_DOCS: 10
+JASSJR_OPENAI_DOC_WORDS: 220
+JASSJR_OPENAI_CACHE_DIR: /Users/caiau/school/autoresearch/.cache/openai-rerank
+JASSJR_OPENAI_CACHE_HITS: 4250
+JASSJR_OPENAI_CACHE_MISSES: 0
+JASSJR_OPENAI_MONO_CALLS: 0
+JASSJR_OPENAI_DUO_CALLS: 0
+JASSJR_OPENAI_EST_INPUT_TOKENS: 1034837
+JASSJR_OPENAI_EST_OUTPUT_TOKENS: 34000
+JASSJR_OPENAI_ACTUAL_INPUT_TOKENS: 1344141
+JASSJR_OPENAI_ACTUAL_OUTPUT_TOKENS: 114750
+JASSJR_OPENAI_EST_COST_USD: 0.326709
+JASSJR_OPENAI_ACTUAL_COST_USD: 0.565535
+
+runid                 	all	JASSjr
+num_q                 	all	50
+num_ret               	all	50000
+num_rel               	all	6228
+num_rel_ret           	all	3904
+map                   	all	0.2691
+gm_map                	all	0.1472
+Rprec                 	all	0.3053
+bpref                 	all	0.3275
+recip_rank            	all	0.7752
+iprec_at_recall_0.00  	all	0.8054
+iprec_at_recall_0.10  	all	0.5651
+iprec_at_recall_0.20  	all	0.4342
+iprec_at_recall_0.30  	all	0.3671
+iprec_at_recall_0.40  	all	0.3239
+iprec_at_recall_0.50  	all	0.2626
+iprec_at_recall_0.60  	all	0.2108
+iprec_at_recall_0.70  	all	0.1461
+iprec_at_recall_0.80  	all	0.0912
+iprec_at_recall_0.90  	all	0.0523
+iprec_at_recall_1.00  	all	0.0109
+P_5                   	all	0.5640
+P_10                  	all	0.5220
+P_15                  	all	0.4987
+P_20                  	all	0.4830
+P_30                  	all	0.4333
+P_100                 	all	0.2838
+P_200                 	all	0.2138
+P_500                 	all	0.1293
+P_1000                	all	0.0781

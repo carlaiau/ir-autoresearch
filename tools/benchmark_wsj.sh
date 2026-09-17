@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# Stage 1 never performs the optional sparse passage reranking.
+export JASSJR_RERANK_DOCS=0
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 branch_name="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
 branch_name="${branch_name:-detached-head}"

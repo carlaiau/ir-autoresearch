@@ -9,3 +9,4 @@ smoke-eval
 .env.local
 __pycache__/
 .venv/
+.cache/

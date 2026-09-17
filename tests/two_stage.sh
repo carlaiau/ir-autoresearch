@@ -17,7 +17,7 @@ root = Path.cwd()
 with tempfile.TemporaryDirectory() as tmp:
     work = Path(tmp)
     source, result, cache = work/'stage1', work/'stage2', work/'cache'
-    env = dict(os.environ, JASSJR_JEV_RERANK='off')
+    env = dict(os.environ, JASSJR_JEV_RERANK='off', JASSJR_RERANK_DOCS='25')
     # Prevent local dotenv files from changing cache identity or enabling calls.
     env['TYPESAFE_ENDPOINT'] = 'https://offline.invalid'
     env['TYPESAFE_API_KEY'] = 'offline-test'
@@ -33,6 +33,7 @@ with tempfile.TemporaryDirectory() as tmp:
     subprocess.run(command, env=env, check=True)
     before = {p.name: p.read_bytes() for p in source.iterdir()}
     baseline = json.loads((source/'manifest.json').read_text())
+    assert baseline['lexical_config']['JASSJR_RERANK_DOCS'] == '0'
     runs = jev.read_run(source/'run.trec')
     topics = dict(line.split(maxsplit=1) for line in (source/'topics.txt').read_text().splitlines())
     pairs = [(qid,r[0]) for qid,rows in runs.items() for r in rows[:2]]

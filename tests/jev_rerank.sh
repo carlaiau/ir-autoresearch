@@ -35,5 +35,5 @@ with tempfile.TemporaryDirectory() as tmp:
         pass
     else:
         raise AssertionError('missing DOCNO accepted')
-print('JEV ranking, tie ordering, document boundaries and score validation passed')
+print('JEV pointwise contracts passed')
 PY
