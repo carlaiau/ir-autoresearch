@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Paired JEV experiments: saved monoBERT windows with MaxP, or complete articles."""
 import argparse
+from datetime import datetime, timezone
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import importlib.metadata
@@ -98,19 +99,20 @@ class Service:
                 raise RuntimeError('missing cached response')
             for attempt in range(1, self.args.max_attempts + 1):
                 call_start = time.perf_counter()
-                event = {'qid': task['qid'], 'docid': task['docid'], 'passage_index': task.get('passage_index'), 'cache_key': key, 'attempt': attempt}
+                event = {'qid': task['qid'], 'docid': task['docid'], 'passage_index': task.get('passage_index'), 'cache_key': key, 'attempt': attempt, 'started_at_utc': datetime.now(timezone.utc).isoformat()}
                 try:
                     import msgspec
                     response = msgspec.to_builtins(self.client.system_one(**payload))
                     validate_response(response)
                 except Exception as error:
-                    status = getattr(error, 'status_code', None)
+                    status = getattr(error, 'status', getattr(error, 'status_code', None))
                     event.update(status='failed', error_type=type(error).__name__, http_status=status, seconds=time.perf_counter()-call_start)
                     self.journal('attempts.jsonl', event, self.attempts)
-                    retryable = status == 429 or (isinstance(status, int) and status >= 500) or type(error).__name__ in ('APIConnectionError', 'APITimeoutError')
+                    retryable = status == 429 or (isinstance(status, int) and status >= 500) or isinstance(error, (ConnectionError, TimeoutError))
                     if attempt == self.args.max_attempts or not retryable:
                         raise
-                    time.sleep(min(2 ** attempt, 8))
+                    retry_after = getattr(error, 'retry_after_ms', None)
+                    time.sleep(max(min(2 ** attempt, 8), (retry_after / 1000) if retry_after is not None else 0))
                 else:
                     event.update(status='success', seconds=time.perf_counter()-call_start)
                     self.journal('attempts.jsonl', event, self.attempts)
@@ -195,6 +197,7 @@ def main(argv=None):
     if min(args.workers, args.max_attempts) <= 0:
         p.error('positive workers/attempts required')
     start = time.perf_counter()
+    started_at_utc = datetime.now(timezone.utc).isoformat()
     load_env(ROOT)
     if not args.cache_only and not os.environ.get('TYPESAFE_API_KEY'):
         p.error('TYPESAFE_API_KEY missing')
@@ -239,6 +242,7 @@ def main(argv=None):
                 key = (q,r['docid'])
                 scores[key] = max(scores.get(key,-math.inf),r['score'])
             timings.append({'qid':q,'seconds':time.perf_counter()-query_start,'scoring_calls':len(rows)})
+            atomic_write(dest/'queries.json',json.dumps(timings,indent=2)+'\n')
             atomic_write(dest/'progress.json',json.dumps({'status':'running','queries_complete':len(timings),'successful_scores':len(service.rows),'api_attempts':len(service.attempts)})+'\n')
             print(f'{args.mode}: {len(timings)}/{len(tasks)} queries; {len(service.rows)} scores; {len(service.attempts)} API attempts',flush=True)
         atomic_write(dest/'run.trec',render_run(runs,scores,top_k))
@@ -248,6 +252,7 @@ def main(argv=None):
         diagnostics = paired(source,dest,runs,top_k)
         counts = accounting(service.rows,*rates)
         metadata = {'stage':'reranking','status':'complete','method':'jev-'+args.mode,**context,
+            'started_at_utc':started_at_utc,'finished_at_utc':datetime.now(timezone.utc).isoformat(),
             'metrics':metrics,'stage1_run_sha256':baseline['run_sha256'],'stage1_manifest_sha256':sha(source/'manifest.json'),
             'collection_sha256':baseline['collection_sha256'],'topics_sha256':baseline['topics_sha256'],'qrels_sha256':baseline['qrels_sha256'],
             'monobert_manifest_sha256':sha(mono/'manifest.json'),'monobert_passages_sha256':sha(mono/'passages.jsonl'),
@@ -278,7 +283,7 @@ def main(argv=None):
         atomic_write(dest/'progress.json',json.dumps({'status':'complete','successful_scores':len(service.rows),'api_attempts':len(service.attempts)})+'\n')
         print(dest,flush=True)
     except BaseException as error:
-        failure = {'status':'failed','error_type':type(error).__name__,'http_status':getattr(error,'status_code',None),
+        failure = {'status':'failed','error_type':type(error).__name__,'http_status':getattr(error,'status',getattr(error,'status_code',None)),
                    'total_wall_seconds':time.perf_counter()-start,'api_attempts':len(service.attempts) if service else 0,
                    'successful_scores':len(service.rows) if service else 0,'note':'No complete evaluation. Successful responses cached; failed-request charges unknown.'}
         if service:
