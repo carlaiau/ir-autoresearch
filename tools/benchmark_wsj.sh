@@ -5,7 +5,11 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 source "$repo_root/tools/load_env.sh"
 key_source="$(load_repo_env_with_key_source "$repo_root")"
+load_repo_env "$repo_root"
 export JASSJR_OPENAI_KEY_SOURCE="$key_source"
+if [[ "${JASSJR_JEV_RERANK:-off}" != "off" ]]; then
+  export JASSJR_OPENAI_RERANK_MODE=off
+fi
 branch_name="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
 branch_name="${branch_name:-detached-head}"
 
@@ -259,6 +263,8 @@ else
   collection_file="$input_path"
 fi
 
+export JASSJR_JEV_COLLECTION="$collection_file"
+
 printf "Building Go binaries in %s\n" "$workdir"
 go build -o "$index_bin" "$repo_root/index/JASSjr_index.go"
 go build -o "$search_bin" "$repo_root/search/JASSjr_search.go"
@@ -283,7 +289,7 @@ index_output="$(
 seed_dense_vectors_from_existing_artifact "$repo_root" "$workdir"
 
 search_cmd=("$search_bin")
-if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" != "off" || "${JASSJR_SEMANTIC_MODE:-off}" != "off" ]]; then
+if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" != "off" || "${JASSJR_SEMANTIC_MODE:-off}" != "off" || "${JASSJR_OPENAI_QUERY_REWRITE_MODE:-off}" != "off" || "${JASSJR_JEV_RERANK:-off}" != "off" ]]; then
   "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$smoke_metadata_file" < "$smoke_topics_file" >/dev/null
   "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$topics_metadata_file" < "$topics_file" >/dev/null
   search_cmd=("$repo_root/tools/run_search_pipeline.sh" "--workdir" "$workdir")

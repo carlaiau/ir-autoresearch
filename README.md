@@ -2,10 +2,10 @@
 
 This repository provides a compact sandbox for experimenting with a simple, understandable IR system. The aim is to enable an agent to iteratively optimize indexing and ranking strategies, evaluate each iteration with `trec_eval`, and preserve only the changes that improve overall retrieval effectiveness. Computational efficiency work is deferred for now; benchmark data is optional context when available, not part of the current approval gate.
 
-## Current Results
+## Experimental Progression
 
 <!-- README_METRICS_TABLE_START -->
-Current accepted leader [`codex/search-rwexp-default-weight`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rwexp-default-weight) improves `MAP` from `0.2080` on to `0.2867` (`+0.0787 (+37.8%)`). It also raises `P@5` from `0.4320` to `0.6000`.
+Current accepted leader [`codex/search-jev-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-jev-recall) improves `MAP` from `0.2080` on `original` to `0.3265` (`+0.1185 (+57.0%)`). It also raises `P@5` from `0.4320` to `0.7040`.
 
 | Branch | Issue | MAP | MAP Δ | P@5 | P@20 | R-prec | bpref | recall | Index (s) | Search (s) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -27,6 +27,7 @@ Current accepted leader [`codex/search-rwexp-default-weight`](https://github.com
 | [`codex/search-llm-rewrite-sidecar`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-llm-rewrite-sidecar) | [#47](https://github.com/carlaiau/ir-autoresearch/issues/47) | 0.2861 | **+0.0031** | 0.5960 | 0.4970 | 0.3288 | 0.3613 | 0.6769 | 13.37 | 11.57 |
 | [`codex/search-rewrite-rm3exp`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rewrite-rm3exp) | [#50](https://github.com/carlaiau/ir-autoresearch/issues/50) | 0.2867 | **+0.0006** | 0.6000 | 0.4950 | 0.3302 | 0.3624 | 0.6768 | 13.13 | 12.20 |
 | [`codex/search-rwexp-default-weight`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-rwexp-default-weight) | [#53](https://github.com/carlaiau/ir-autoresearch/issues/53) | 0.2867 | +0.0000 | 0.6000 | 0.4950 | 0.3302 | 0.3625 | 0.6768 | 13.17 | 11.88 |
+| [`codex/search-jev-recall`](https://github.com/carlaiau/ir-autoresearch/tree/codex/search-jev-recall) | [#61](https://github.com/carlaiau/ir-autoresearch/issues/61) | 0.3265 | **+0.0398** | 0.7040 | 0.5700 | 0.3463 | 0.3904 | 0.6704 | n/a | n/a |
 
 **Legend**
 - `MAP`: Mean Average Precision. A single overall ranking-quality score across all queries; higher is better.
@@ -42,6 +43,29 @@ Generated files:
 
 - `docs/metrics/branch-comparisons.tsv`
 - `docs/metrics/branch-comparisons.md`
+
+## JEV versus the earlier reranking experiments
+
+The progression above records historical accepted runs, not a controlled ablation: retrieval sources, candidate depths and text budgets evolved between rows. `MAP Δ` is the difference from the preceding displayed row. `main` remains the approval baseline; `original` is read-only initialization history. No new timing benchmark was run for JEV.
+
+| Experiment / final reranker | MAP | Rprec | P@10 | bpref | Reciprocal rank | JEV MAP gain |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| [DuoBERT-style sparse passage scaffold](https://github.com/carlaiau/ir-autoresearch/pull/29) | 0.2418 | 0.2836 | 0.4300 | 0.3074 | 0.6687 | +35.0% |
+| [OpenAI mono, GPT-5-mini](https://github.com/carlaiau/ir-autoresearch/pull/31) | 0.2485 | 0.2781 | 0.4780 | 0.3086 | 0.7069 | +31.4% |
+| [OpenAI mono + RM3](https://github.com/carlaiau/ir-autoresearch/pull/35) | 0.2691 | 0.3053 | 0.5220 | 0.3275 | 0.7752 | +21.3% |
+| Tri-source recall + OpenAI mono | 0.2739 | 0.3113 | 0.5200 | 0.3426 | 0.7895 | +19.2% |
+| Latest historical expanded recall + OpenAI mono | 0.2867 | 0.3302 | 0.5360 | 0.3625 | 0.8053 | +13.9% |
+| [JEV on the post-#25 index](https://github.com/carlaiau/ir-autoresearch/pull/59) | 0.2925 | 0.3143 | 0.6100 | 0.3445 | 0.8322 | +11.6% |
+| Identical current fused candidates, before JEV | 0.2833 | 0.3159 | 0.5060 | 0.3545 | 0.7730 | +15.2% |
+| **Retained expanded recall + JEV pointwise** | **0.3265** | **0.3463** | **0.6660** | **0.3904** | **0.8963** | — |
+
+- **The clearest reranking evidence is the same-candidate comparison:** JEV raises MAP from 0.2833 to 0.3265 and P@10 from 0.5060 to 0.6660. AP improves on 46 of 50 topics and declines on 4. The retrieved set and order below rank 100 are unchanged.
+- **Retaining recall expansion matters:** current fusion retrieves 4,175 judged-relevant documents, versus 3,755 in the post-#25 experiment. JEV then scores the top 100 using original article text, producing a higher MAP than the earlier JEV-only fork. These historical runs do not isolate each recall source's contribution.
+- **JEV exceeds every listed prior reranking stage on all five headline metrics.** Against the latest historical OpenAI-mono pipeline, MAP rises 13.9% and P@10 rises 24.3%. Total retrieved relevance is slightly lower (4,175 versus 4,215), so this is an ordering improvement, not a claim of uniformly higher recall. A fresh same-candidate OpenAI comparison has not been run.
+- **“Mono/duo BERT” describes the earlier design lineage, not measured pretrained BERT checkpoints.** PR #29 explicitly used a sparse passage scaffold; the model-backed accepted runs used GPT-5-mini mono scoring. The archived accepted reports do not establish a model-backed duo result. This table therefore does not claim superiority over published monoBERT/duoBERT benchmarks.
+- **Configuration differences remain:** JEV uses up to 24,000 original-text characters per article; earlier mono runs used a 220-indexed-term input budget and different reranking depths. The result supports the complete JEV pipeline, not a model-only causal claim. Choice/listwise ranking and a matched text-budget control remain separate experiments; no speed or cost superiority is claimed.
+
+See the [experiment record](docs/experiments/jev-recall.md), [paired analysis](experiment_evaluations/codex/search-jev-recall/analysis.json), and [full evaluation](experiment_evaluations/codex/search-jev-recall/trec_eval-20260917-160716.txt). To reproduce the accepted configuration, use the environment settings and command in the experiment record; external retrieval and JEV are opt-in when no configuration is supplied.
 
 ## Inspiration And Provenance
 

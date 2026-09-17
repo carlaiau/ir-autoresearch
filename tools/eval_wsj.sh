@@ -5,7 +5,11 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 source "$repo_root/tools/load_env.sh"
 key_source="$(load_repo_env_with_key_source "$repo_root")"
+load_repo_env "$repo_root"
 export JASSJR_OPENAI_KEY_SOURCE="$key_source"
+if [[ "${JASSJR_JEV_RERANK:-off}" != "off" ]]; then
+  export JASSJR_OPENAI_RERANK_MODE=off
+fi
 branch_name="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
 branch_name="${branch_name:-detached-head}"
 
@@ -204,6 +208,8 @@ else
   collection_file="$input_path"
 fi
 
+export JASSJR_JEV_COLLECTION="$collection_file"
+
 printf "Building Go binaries in %s\n" "$workdir"
 go build -o "$index_bin" "$repo_root/index/JASSjr_index.go"
 go build -o "$search_bin" "$repo_root/search/JASSjr_search.go"
@@ -235,7 +241,7 @@ sleep 2
 printf "Running topics from %s\n" "$topics_file"
 (
   cd "$workdir" || exit 1
-  if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" && "${JASSJR_SEMANTIC_MODE:-off}" == "off" ]]; then
+  if [[ "${JASSJR_OPENAI_RERANK_MODE:-off}" == "off" && "${JASSJR_SEMANTIC_MODE:-off}" == "off" && "${JASSJR_OPENAI_QUERY_REWRITE_MODE:-off}" == "off" && "${JASSJR_JEV_RERANK:-off}" == "off" ]]; then
     "$search_bin" < "$topics_file" > "$results_file"
     cat > "$rerank_metadata_file" <<EOF
 JASSJR_OPENAI_RERANK_MODE: off
@@ -245,6 +251,12 @@ EOF
     "$repo_root/tools/run_search_pipeline.sh" --workdir "$workdir" --metadata-file "$rerank_metadata_file" < "$topics_file" > "$results_file"
   fi
 )
+
+if [[ "${JASSJR_JEV_RERANK:-off}" != "off" ]]; then
+  cp "$workdir/jev-metadata.json" "$eval_output_dir/jev-$timestamp.json"
+  cp "$workdir/pre-jev.trec" "$eval_output_dir/pre-jev-$timestamp.trec"
+  cp "$results_file" "$eval_output_dir/jev-$timestamp.trec"
+fi
 
 printf "Run file written to %s\n" "$results_file"
 printf "Evaluating with trec_eval against %s\n" "$qrels_file"
@@ -258,6 +270,10 @@ printf "%s\n" "$summary"
   printf "collection: %s\n" "$collection_file"
   printf "topics: %s\n" "$topics_file"
   printf "qrels: %s\n\n" "$qrels_file"
+  emit_env_setting JASSJR_JEV_RERANK
+  emit_env_setting JASSJR_JEV_TOP_K
+  emit_env_setting JASSJR_JEV_MODEL
+  emit_env_setting JASSJR_OPENAI_QUERY_REWRITE_MODE
   emit_env_setting JASSJR_BM25_K1
   emit_env_setting JASSJR_BM25_B
   emit_env_setting JASSJR_FEEDBACK_DOCS

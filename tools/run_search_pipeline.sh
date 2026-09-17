@@ -11,7 +11,7 @@ usage() {
 Usage: $0 --workdir <dir> [--metadata-file <file>]
 
 Read topics from stdin, run the lexical searcher, and optionally apply
-tri-source fusion and OpenAI-backed reranking before writing the final
+recall fusion and optional OpenAI or JEV reranking before writing the final
 TREC run to stdout.
 EOF
 }
@@ -46,6 +46,7 @@ fi
 workdir="$(cd "$workdir" >/dev/null 2>&1 && pwd)"
 source "$repo_root/tools/load_env.sh"
 key_source="$(load_repo_env_with_key_source "$repo_root")"
+load_repo_env "$repo_root"
 export JASSJR_OPENAI_KEY_SOURCE="$key_source"
 
 pipeline_tmpdir="$(mktemp -d "$workdir/pipeline-run.XXXXXX")"
@@ -76,7 +77,17 @@ pipeline_metadata_file="$pipeline_tmpdir/pipeline.txt"
 trap 'rm -rf "$pipeline_tmpdir"' EXIT
 cat > "$topics_stdin_file"
 
+jev_mode="${JASSJR_JEV_RERANK:-off}"
+case "$jev_mode" in
+  off|pointwise) ;;
+  on) jev_mode=pointwise ;;
+  *) printf 'JASSJR_JEV_RERANK must be off or pointwise\n' >&2; exit 1 ;;
+esac
 openai_mode="${JASSJR_OPENAI_RERANK_MODE:-off}"
+if [[ "$jev_mode" != "off" ]]; then
+  openai_mode=off
+  export JASSJR_OPENAI_RERANK_MODE=off
+fi
 semantic_mode="${JASSJR_SEMANTIC_MODE:-off}"
 query_rewrite_mode="${JASSJR_OPENAI_QUERY_REWRITE_MODE:-off}"
 rrf_k="${JASSJR_FUSION_RRF_K:-60}"
@@ -116,6 +127,23 @@ append_metadata() {
   printf "\n" >> "$pipeline_metadata_file"
 }
 
+apply_jev() {
+  local input_run="$1"
+  [[ "$jev_mode" != "off" ]] || return 0
+  if [[ ! -f "${JASSJR_JEV_COLLECTION:-}" ]]; then
+    printf 'JASSJR_JEV_COLLECTION must name the original WSJ collection file\n' >&2
+    exit 1
+  fi
+  cp "$input_run" "$workdir/pre-jev.trec"
+  "${JASSJR_JEV_PYTHON:-python3}" "$repo_root/tools/rerank_jev.py" \
+    --collection "$JASSJR_JEV_COLLECTION" --topics "$topics_stdin_file" \
+    --run "$workdir/pre-jev.trec" --output "$final_results_file" \
+    --metadata "$workdir/jev-metadata.json" \
+    --cache "${JASSJR_JEV_CACHE:-$repo_root/wsj-eval/jev-cache}" \
+    --top-k "${JASSJR_JEV_TOP_K:-100}" --model "${JASSJR_JEV_MODEL:-jev-latest}"
+  printf 'JASSJR_JEV_RERANK: %s\nJASSJR_JEV_METADATA: %s\n' "$jev_mode" "$workdir/jev-metadata.json" >> "$pipeline_metadata_file"
+}
+
 write_off_metadata() {
   cat >> "$pipeline_metadata_file" <<EOF
 JASSJR_OPENAI_RERANK_MODE: off
@@ -125,7 +153,7 @@ EOF
 
 (
   cd "$workdir" || exit 1
-  if [[ "$semantic_mode" == "off" && "$openai_mode" == "off" && "$query_rewrite_mode" == "off" ]]; then
+  if [[ "$semantic_mode" == "off" && "$openai_mode" == "off" && "$query_rewrite_mode" == "off" && "$jev_mode" == "off" ]]; then
     ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
   else
     env JASSJR_RERANK_DOCS=0 ./jassjr-search < "$topics_stdin_file" > "$raw_results_file"
@@ -149,6 +177,11 @@ if [[ "$semantic_mode" == "off" && "$query_rewrite_mode" == "off" ]]; then
     python3 "${python_args[@]}"
     output_file="$final_results_file"
     append_metadata "$rerank_metadata_file"
+  fi
+
+  if [[ "$jev_mode" != "off" ]]; then
+    apply_jev "$output_file"
+    output_file="$final_results_file"
   fi
 
   if [[ -n "$metadata_file" ]]; then
@@ -362,6 +395,8 @@ else
     --metadata-file "$rerank_metadata_file"
   append_metadata "$rerank_metadata_file"
 fi
+
+apply_jev "$candidate_output"
 
 if [[ -n "$metadata_file" ]]; then
   cp "$pipeline_metadata_file" "$metadata_file"

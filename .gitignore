@@ -9,3 +9,5 @@ wsj-benchmark/
 wsj-eval
 smoke-eval
 .env
+
+__pycache__/
