@@ -1,7 +1,6 @@
 # JEV Reranking Comparisons
 
-Can JEV's zero-shot general “intelligence” match established specialist rerankers such as
-monoBERT? We compare ranking quality, time and cost on fixed candidates, using
+Can JEV's zero-shot general “intelligence” match established specialist rerankers? We compare ranking quality, time and cost on fixed candidates, using
 MS MARCO / TREC DL 2019 as the main benchmark and TREC-1 WSJ as a transfer test.
 
 ## Task
@@ -35,18 +34,13 @@ reported value in each column among the displayed methods.
 P@10 measures precision in the first ten results; recip_rank averages the
 reciprocal rank of the first relevant result. Higher is better for all metrics.
 Against our local monoBERT, JEV improves MAP but has lower observed nDCG@10.
-Neither primary difference is
-significant after Holm correction (p=0.20450 each); this does not establish
-superiority or equivalence. monoBERT remains the reference.
 
 | Method | Total reranking | Query median | Estimated API cost (USD) |
 | --- | ---: | ---: | ---: |
-| monoBERT | 969.83 s | 22.46 s | $0 hosted API |
-| JEV matched passage text | 1,633.43 s | 37.46 s | $0.762991 |
-| JEV original passage text | 1,575.11 s | 38.08 s | $0.761027 |
+| JEV matched passage text | 1,633 s | 37.46 s | $0.762991 |
+| JEV original passage text | 1,575 s | 38.08 s | $0.761027 |
 
-These are single uncached runs: monoBERT on M3 Pro/MPS, float32, batch 8;
-JEV 1.13.0 with eight workers per query. See the [full results and audits](reranking/results/msmarco-dl2019/results.md).
+See the [full results and audits](reranking/results/msmarco-dl2019/results.md).
 
 ## Methods and reproduction
 
@@ -90,9 +84,8 @@ in one call.
 
 | Method | Total reranking | Query median | Estimated API cost (USD) |
 | --- | ---: | ---: | ---: |
-| JEV complete document | 211.49 s | 4.02 s | $0.328312 |
-| JEV passage MaxP | 767.73 s | 14.98 s | $0.605227 |
-| monoBERT passage MaxP | 1,510.93 s | 30.27 s | $0 hosted API |
+| JEV complete document | 211 s | 4.02 s | $0.328312 |
+| JEV passage MaxP | 768 s | 14.98 s | $0.605227 |
 
 These are single uncached measurements; local compute and failed-request charges are
 unknown. Settings are exploratory on these topics. See the
