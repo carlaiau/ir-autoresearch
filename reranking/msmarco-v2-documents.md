@@ -4,7 +4,9 @@
 Status: all 5,679 candidate documents recovered and verified; input frozen.
 [Supplied baseline](results/msmarco-v2-dl2021-documents/supplied-baseline/results.md):
 MAP 0.2126, P@10 0.6684, NIST MRR 0.8367, NDCG@10 0.5116.
-Large-window implementation is complete and live context validation is in progress; no measured JEV results yet.
+[Context validation](results/msmarco-v2-dl2021-documents/context-validation/results.md)
+passed: 6,090 large windows, maximum accepted probe 29,989 tokens, complete text
+coverage. Small-passage MaxP requires 111,426 calls. No measured JEV results yet.
 
 Compare JEV large-window MaxP with JEV small-passage MaxP on the official
 TREC DL 2021 document top-100 lists. All 57 judged queries have 100 candidates:

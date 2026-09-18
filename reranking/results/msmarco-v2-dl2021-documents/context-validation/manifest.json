@@ -1,0 +1,30 @@
+{
+  "all_response_tokens": {
+    "input_tokens": 29079759,
+    "output_tokens": 42988
+  },
+  "api_attempts": 1977,
+  "cache_hits": 0,
+  "compute_cost_usd": null,
+  "elapsed_seconds": 784.9611235840712,
+  "estimated_new_api_cost_usd": 1.221349878,
+  "estimated_uncached_api_cost_usd": 1.221349878,
+  "failed_api_attempts": 23,
+  "new_response_tokens": {
+    "input_tokens": 29079759,
+    "output_tokens": 42988
+  },
+  "new_scoring_calls": 1954,
+  "pairs": 5700,
+  "plan_sha256": "7a8709e88f0cd9d6d4bffc0e6f9f39f53637823a2c7bad88e62f189e96dacafe",
+  "policy": {
+    "initial_text_utf8_bytes": 110000,
+    "overlap_utf8_bytes": 4000,
+    "probe_max_input_tokens": 30000,
+    "probe_payload_above_utf8_bytes": 28000,
+    "provider_state_question_limit": 32000
+  },
+  "purpose": "context sizing only; scores not used to select policy or measured ranking",
+  "status": "complete",
+  "windows": 6090
+}
