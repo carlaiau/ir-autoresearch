@@ -1,0 +1,55 @@
+{
+  "dataset": "WSJ/TREC, topics 51\u2013100",
+  "rows": [
+    {
+      "label": "JEV complete document",
+      "color": "#087f8c",
+      "metrics": {
+        "map": 0.3055,
+        "P_10": 0.634
+      },
+      "manifest_sha256": "6828d5c6cd13671bc295b025e67174f473eab3b3459779a217c140e70c9e08b1",
+      "source": "https://github.com/carlaiau/jev-reranking/blob/642740c/reranking/results/jev-full-documents-top100-20260918/manifest.json"
+    },
+    {
+      "label": "JEV passage MaxP",
+      "color": "#4178b5",
+      "metrics": {
+        "map": 0.3053,
+        "P_10": 0.6
+      },
+      "manifest_sha256": "d46132a028aba32b38498441b6ae78115c62fef35736abb01fecbea9ac4f4d1b",
+      "source": "https://github.com/carlaiau/jev-reranking/blob/642740c/reranking/results/jev-passages-maxp-top100-20260918-retry/manifest.json"
+    },
+    {
+      "label": "JEV Noul duo \u00b7 rejected",
+      "color": "#b97528",
+      "metrics": {
+        "map": 0.3019,
+        "P_10": 0.62
+      },
+      "manifest_sha256": "37d8a9370b2450faee7b28ac044c0ee3b9da0f3a7d2a86f27a90bbf85c89fb7a",
+      "source": "https://github.com/carlaiau/jev-reranking/blob/633c11b/reranking/results/jev-duo-noul-top20-20260918/manifest.json"
+    },
+    {
+      "label": "monoBERT passage MaxP",
+      "color": "#768499",
+      "metrics": {
+        "map": 0.2693,
+        "P_10": 0.496
+      },
+      "manifest_sha256": "499c0c1b365756987e0e1528b41469177c7ce0cfabcafb6d8bd5f010568188d2",
+      "source": "https://github.com/carlaiau/jev-reranking/blob/642740c/reranking/results/monobert-maxp-top100-20260918/manifest.json"
+    },
+    {
+      "label": "Stage 1 \u00b7 lexical baseline",
+      "color": "#b7c0cd",
+      "metrics": {
+        "map": 0.2521,
+        "P_10": 0.446
+      },
+      "manifest_sha256": "65228181d2984dee1bfb8c98717e769fb114ec03fc3d03183ee145c0511485c5",
+      "source": "https://github.com/carlaiau/jev-reranking/blob/642740c/stage1/results/integrated-main-20260918/manifest.json"
+    }
+  ]
+}

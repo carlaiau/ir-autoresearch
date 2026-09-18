@@ -13,6 +13,22 @@ rule, candidate depth, API calls, timing and cost alongside the raw `trec_eval`.
 
 ## Results
 
+> [!IMPORTANT]
+> **Full-document JEV has the highest measured MAP and P@10 in this comparison.**
+> **MAP 0.3055** — up **21.2%** from the lexical baseline (0.2521).
+> **P@10 0.6340** — up **42.2%** from the lexical baseline (0.4460), or
+> **6.34 relevant results in the top 10 on average**, versus 4.46 before reranking.
+>
+> Passage MaxP is almost tied on MAP (0.3053) and leads reciprocal rank (0.8457).
+> Adding the Noul duo pass reduces MAP to 0.3019 while increasing time and cost.
+
+![MAP and P@10 across five methods. Full-document JEV leads with MAP 0.3055 and P@10 0.6340; the lexical baseline scores 0.2521 and 0.4460.](docs/metrics/jev-reranking.svg)
+
+*Same WSJ/TREC candidates and 50 topics. Higher is better; each panel starts at
+zero and uses its own scale. These measured differences are not significance
+tests. Exact values and result links follow.
+[Chart data](docs/metrics/jev-reranking-chart.json) · [Regenerate](tools/plot_jev_results.py).*
+
 | Method | MAP | P@10 | recip_rank | Status |
 | --- | ---: | ---: | ---: | --- |
 | [JEV pointwise: complete document](reranking/results/jev-full-documents-top100-20260918/results.md) | **0.3055** | **0.6340** | 0.8063 | Evaluated; best MAP and P@10 in this comparison |
