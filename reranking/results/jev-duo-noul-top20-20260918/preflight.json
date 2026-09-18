@@ -1,0 +1,8 @@
+{
+  "queries": 50,
+  "ordered_comparisons": 19000,
+  "maximum_request_characters": 42546,
+  "minimum_request_characters": 1229,
+  "truncation": false,
+  "token_limit_policy": "complete documents; provider rejection fails rather than truncates"
+}

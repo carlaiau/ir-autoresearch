@@ -5,6 +5,9 @@ This experiment applies the original duoBERT **Sum** aggregation idea to JEV
 Noul probabilities. It uses complete articles rather than duoBERT's truncated
 BERT inputs; it is not a reproduction of the trained duoBERT checkpoint.
 
+Completed: **rejected configuration**, MAP 0.3019 versus input 0.3055.
+See the [measured outcome](results/jev-duo-noul-top20-20260918/summary.md).
+
 ## Fixed protocol
 
 Start with the saved [whole-document JEV pointwise run](results/jev-full-documents-top100-20260918/results.md),

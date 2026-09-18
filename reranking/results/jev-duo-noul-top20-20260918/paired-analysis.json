@@ -1,0 +1,358 @@
+{
+  "ap_improved": 42,
+  "ap_worse": 7,
+  "ap_tied": 1,
+  "mean_candidate_recall_at_k": 0.17009824806258933,
+  "per_query": [
+    {
+      "qid": "100",
+      "stage1_ap": 0.0471,
+      "reranked_ap": 0.1398,
+      "ap_delta": 0.0927,
+      "candidate_recall_at_k": 0.12631578947368421
+    },
+    {
+      "qid": "51",
+      "stage1_ap": 0.8326,
+      "reranked_ap": 0.8296,
+      "ap_delta": -0.003,
+      "candidate_recall_at_k": 0.19230769230769232
+    },
+    {
+      "qid": "52",
+      "stage1_ap": 0.8181,
+      "reranked_ap": 0.8181,
+      "ap_delta": 0.0,
+      "candidate_recall_at_k": 0.0796812749003984
+    },
+    {
+      "qid": "53",
+      "stage1_ap": 0.3494,
+      "reranked_ap": 0.3501,
+      "ap_delta": 0.0007,
+      "candidate_recall_at_k": 0.0472972972972973
+    },
+    {
+      "qid": "54",
+      "stage1_ap": 0.5298,
+      "reranked_ap": 0.5025,
+      "ap_delta": -0.0273,
+      "candidate_recall_at_k": 0.2222222222222222
+    },
+    {
+      "qid": "55",
+      "stage1_ap": 0.3888,
+      "reranked_ap": 0.4048,
+      "ap_delta": 0.016,
+      "candidate_recall_at_k": 0.03368794326241135
+    },
+    {
+      "qid": "56",
+      "stage1_ap": 0.4782,
+      "reranked_ap": 0.4841,
+      "ap_delta": 0.0059,
+      "candidate_recall_at_k": 0.0338409475465313
+    },
+    {
+      "qid": "57",
+      "stage1_ap": 0.654,
+      "reranked_ap": 0.6511,
+      "ap_delta": -0.0029,
+      "candidate_recall_at_k": 0.10734463276836158
+    },
+    {
+      "qid": "58",
+      "stage1_ap": 0.5312,
+      "reranked_ap": 0.6789,
+      "ap_delta": 0.1477,
+      "candidate_recall_at_k": 0.31666666666666665
+    },
+    {
+      "qid": "59",
+      "stage1_ap": 0.0017,
+      "reranked_ap": 0.0039,
+      "ap_delta": 0.0022,
+      "candidate_recall_at_k": 0.013888888888888888
+    },
+    {
+      "qid": "60",
+      "stage1_ap": 0.0437,
+      "reranked_ap": 0.0682,
+      "ap_delta": 0.0245,
+      "candidate_recall_at_k": 0.08888888888888889
+    },
+    {
+      "qid": "61",
+      "stage1_ap": 0.6218,
+      "reranked_ap": 0.6488,
+      "ap_delta": 0.027,
+      "candidate_recall_at_k": 0.14388489208633093
+    },
+    {
+      "qid": "62",
+      "stage1_ap": 0.1835,
+      "reranked_ap": 0.2401,
+      "ap_delta": 0.0566,
+      "candidate_recall_at_k": 0.14285714285714285
+    },
+    {
+      "qid": "63",
+      "stage1_ap": 0.1039,
+      "reranked_ap": 0.1294,
+      "ap_delta": 0.0255,
+      "candidate_recall_at_k": 0.3333333333333333
+    },
+    {
+      "qid": "64",
+      "stage1_ap": 0.2956,
+      "reranked_ap": 0.3619,
+      "ap_delta": 0.0663,
+      "candidate_recall_at_k": 0.1590909090909091
+    },
+    {
+      "qid": "65",
+      "stage1_ap": 0.1659,
+      "reranked_ap": 0.2808,
+      "ap_delta": 0.1149,
+      "candidate_recall_at_k": 0.35
+    },
+    {
+      "qid": "66",
+      "stage1_ap": 0.1119,
+      "reranked_ap": 0.3342,
+      "ap_delta": 0.2223,
+      "candidate_recall_at_k": 0.3333333333333333
+    },
+    {
+      "qid": "67",
+      "stage1_ap": 0.0026,
+      "reranked_ap": 0.0022,
+      "ap_delta": -0.0004,
+      "candidate_recall_at_k": 0.0
+    },
+    {
+      "qid": "68",
+      "stage1_ap": 0.0721,
+      "reranked_ap": 0.169,
+      "ap_delta": 0.0969,
+      "candidate_recall_at_k": 0.16326530612244897
+    },
+    {
+      "qid": "69",
+      "stage1_ap": 0.2262,
+      "reranked_ap": 0.4595,
+      "ap_delta": 0.2333,
+      "candidate_recall_at_k": 0.3870967741935484
+    },
+    {
+      "qid": "70",
+      "stage1_ap": 0.4847,
+      "reranked_ap": 0.8194,
+      "ap_delta": 0.3347,
+      "candidate_recall_at_k": 0.8666666666666667
+    },
+    {
+      "qid": "71",
+      "stage1_ap": 0.1492,
+      "reranked_ap": 0.1793,
+      "ap_delta": 0.0301,
+      "candidate_recall_at_k": 0.18055555555555555
+    },
+    {
+      "qid": "72",
+      "stage1_ap": 0.0959,
+      "reranked_ap": 0.1125,
+      "ap_delta": 0.0166,
+      "candidate_recall_at_k": 0.10810810810810811
+    },
+    {
+      "qid": "73",
+      "stage1_ap": 0.0051,
+      "reranked_ap": 0.0091,
+      "ap_delta": 0.004,
+      "candidate_recall_at_k": 0.03896103896103896
+    },
+    {
+      "qid": "74",
+      "stage1_ap": 0.0016,
+      "reranked_ap": 0.0053,
+      "ap_delta": 0.0037,
+      "candidate_recall_at_k": 0.003663003663003663
+    },
+    {
+      "qid": "75",
+      "stage1_ap": 0.0574,
+      "reranked_ap": 0.1369,
+      "ap_delta": 0.0795,
+      "candidate_recall_at_k": 0.11627906976744186
+    },
+    {
+      "qid": "76",
+      "stage1_ap": 0.3523,
+      "reranked_ap": 0.3883,
+      "ap_delta": 0.036,
+      "candidate_recall_at_k": 0.08376963350785341
+    },
+    {
+      "qid": "77",
+      "stage1_ap": 0.5993,
+      "reranked_ap": 0.6259,
+      "ap_delta": 0.0266,
+      "candidate_recall_at_k": 0.631578947368421
+    },
+    {
+      "qid": "78",
+      "stage1_ap": 0.4687,
+      "reranked_ap": 0.5398,
+      "ap_delta": 0.0711,
+      "candidate_recall_at_k": 0.35714285714285715
+    },
+    {
+      "qid": "79",
+      "stage1_ap": 0.0127,
+      "reranked_ap": 0.0581,
+      "ap_delta": 0.0454,
+      "candidate_recall_at_k": 0.05102040816326531
+    },
+    {
+      "qid": "80",
+      "stage1_ap": 0.1915,
+      "reranked_ap": 0.1968,
+      "ap_delta": 0.0053,
+      "candidate_recall_at_k": 0.03902439024390244
+    },
+    {
+      "qid": "81",
+      "stage1_ap": 0.3025,
+      "reranked_ap": 0.2773,
+      "ap_delta": -0.0252,
+      "candidate_recall_at_k": 0.6666666666666666
+    },
+    {
+      "qid": "82",
+      "stage1_ap": 0.4402,
+      "reranked_ap": 0.4536,
+      "ap_delta": 0.0134,
+      "candidate_recall_at_k": 0.06309148264984227
+    },
+    {
+      "qid": "83",
+      "stage1_ap": 0.0496,
+      "reranked_ap": 0.0895,
+      "ap_delta": 0.0399,
+      "candidate_recall_at_k": 0.096
+    },
+    {
+      "qid": "84",
+      "stage1_ap": 0.0685,
+      "reranked_ap": 0.1513,
+      "ap_delta": 0.0828,
+      "candidate_recall_at_k": 0.08461538461538462
+    },
+    {
+      "qid": "85",
+      "stage1_ap": 0.2205,
+      "reranked_ap": 0.2355,
+      "ap_delta": 0.015,
+      "candidate_recall_at_k": 0.055970149253731345
+    },
+    {
+      "qid": "86",
+      "stage1_ap": 0.2081,
+      "reranked_ap": 0.2731,
+      "ap_delta": 0.065,
+      "candidate_recall_at_k": 0.07368421052631578
+    },
+    {
+      "qid": "87",
+      "stage1_ap": 0.0854,
+      "reranked_ap": 0.117,
+      "ap_delta": 0.0316,
+      "candidate_recall_at_k": 0.07352941176470588
+    },
+    {
+      "qid": "88",
+      "stage1_ap": 0.0844,
+      "reranked_ap": 0.0878,
+      "ap_delta": 0.0034,
+      "candidate_recall_at_k": 0.030303030303030304
+    },
+    {
+      "qid": "89",
+      "stage1_ap": 0.0842,
+      "reranked_ap": 0.0925,
+      "ap_delta": 0.0083,
+      "candidate_recall_at_k": 0.08695652173913043
+    },
+    {
+      "qid": "90",
+      "stage1_ap": 0.4051,
+      "reranked_ap": 0.4022,
+      "ap_delta": -0.0029,
+      "candidate_recall_at_k": 0.06796116504854369
+    },
+    {
+      "qid": "91",
+      "stage1_ap": 0.0059,
+      "reranked_ap": 0.0056,
+      "ap_delta": -0.0003,
+      "candidate_recall_at_k": 0.0
+    },
+    {
+      "qid": "92",
+      "stage1_ap": 0.039,
+      "reranked_ap": 0.0659,
+      "ap_delta": 0.0269,
+      "candidate_recall_at_k": 0.12195121951219512
+    },
+    {
+      "qid": "93",
+      "stage1_ap": 0.5693,
+      "reranked_ap": 0.6236,
+      "ap_delta": 0.0543,
+      "candidate_recall_at_k": 0.5
+    },
+    {
+      "qid": "94",
+      "stage1_ap": 0.0551,
+      "reranked_ap": 0.1588,
+      "ap_delta": 0.1037,
+      "candidate_recall_at_k": 0.13432835820895522
+    },
+    {
+      "qid": "95",
+      "stage1_ap": 0.1172,
+      "reranked_ap": 0.2464,
+      "ap_delta": 0.1292,
+      "candidate_recall_at_k": 0.25
+    },
+    {
+      "qid": "96",
+      "stage1_ap": 0.0829,
+      "reranked_ap": 0.1453,
+      "ap_delta": 0.0624,
+      "candidate_recall_at_k": 0.1232876712328767
+    },
+    {
+      "qid": "97",
+      "stage1_ap": 0.0844,
+      "reranked_ap": 0.1231,
+      "ap_delta": 0.0387,
+      "candidate_recall_at_k": 0.08888888888888889
+    },
+    {
+      "qid": "98",
+      "stage1_ap": 0.3128,
+      "reranked_ap": 0.3502,
+      "ap_delta": 0.0374,
+      "candidate_recall_at_k": 0.0967741935483871
+    },
+    {
+      "qid": "99",
+      "stage1_ap": 0.5147,
+      "reranked_ap": 0.5697,
+      "ap_delta": 0.055,
+      "candidate_recall_at_k": 0.1391304347826087
+    }
+  ]
+}

@@ -11,7 +11,7 @@ reranking**. Stage 2 reads its saved candidates and writes separate reports unde
 | [monoBERT MaxP](monobert.md) | Query + each passage; maximum passage score | 0.2693 |
 | [JEV passage MaxP](jev-comparison.md) | Query + each identical monoBERT window; maximum Noul score | 0.3053 |
 | [JEV complete document](jev-comparison.md) | Query + entire parsed article; one Noul score | 0.3055 |
-| [JEV duo Noul](jev-duo.md) | Top 20 pointwise documents; all ordered pairs; Sum | In progress |
+| [JEV duo Noul](jev-duo.md) | Top 20 pointwise documents; all ordered pairs; Sum; rejected | [0.3019](results/jev-duo-noul-top20-20260918/summary.md) |
 | duoBERT | Query + document pair; pair selection/aggregation still to implement | Planned |
 
 See the [paired JEV comparison](results/jev-comparison-20260918.md) for all five

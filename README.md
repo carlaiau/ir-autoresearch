@@ -9,6 +9,7 @@ run is the sole baseline for JEV, monoBERT and duoBERT experiments.
 | Stage 2: JEV passage MaxP | Evaluated; hosted JEV | **0.3053** | [Results](reranking/results/jev-passages-maxp-top100-20260918-retry/results.md) |
 | Stage 2: JEV complete document | Evaluated; hosted JEV | **0.3055** | [Results](reranking/results/jev-full-documents-top100-20260918/results.md) |
 | Stage 2: monoBERT MaxP, top 100 | Evaluated; local Apple GPU | **0.2693** | [Full-document results](reranking/results/monobert-maxp-top100-20260918/results.md) |
+| Stage 2: JEV duo Noul, top 20 | Rejected; worse than pointwise input | **0.3019** | [Outcome and cost](reranking/results/jev-duo-noul-top20-20260918/summary.md) |
 | Stage 2: duoBERT | Planned | Pending | [Reranking methodology](reranking/README.md) |
 
 The stage-1 baseline uses BM25 (`k1=0.7`, `b=0.3`) with five feedback documents,

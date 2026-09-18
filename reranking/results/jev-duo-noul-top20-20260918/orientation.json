@@ -1,0 +1,352 @@
+[
+  {
+    "qid": "51",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 3,
+    "both_orientations_below_half": 11,
+    "mean_complement_deviation": 0.05794736842105264
+  },
+  {
+    "qid": "52",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 15,
+    "both_orientations_below_half": 17,
+    "mean_complement_deviation": 0.05878947368421054
+  },
+  {
+    "qid": "53",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 7,
+    "both_orientations_below_half": 13,
+    "mean_complement_deviation": 0.07100000000000002
+  },
+  {
+    "qid": "54",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 62,
+    "both_orientations_below_half": 6,
+    "mean_complement_deviation": 0.1466842105263158
+  },
+  {
+    "qid": "55",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 66,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.16636842105263158
+  },
+  {
+    "qid": "56",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 47,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.13305263157894737
+  },
+  {
+    "qid": "57",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 32,
+    "both_orientations_below_half": 12,
+    "mean_complement_deviation": 0.05936842105263159
+  },
+  {
+    "qid": "58",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 16,
+    "both_orientations_below_half": 16,
+    "mean_complement_deviation": 0.07073684210526317
+  },
+  {
+    "qid": "59",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 2,
+    "both_orientations_below_half": 61,
+    "mean_complement_deviation": 0.1665263157894737
+  },
+  {
+    "qid": "60",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 122,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.2833157894736842
+  },
+  {
+    "qid": "61",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 125,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.3144736842105263
+  },
+  {
+    "qid": "62",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 50,
+    "both_orientations_below_half": 10,
+    "mean_complement_deviation": 0.09721052631578948
+  },
+  {
+    "qid": "63",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 55,
+    "both_orientations_below_half": 2,
+    "mean_complement_deviation": 0.14300000000000002
+  },
+  {
+    "qid": "64",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 68,
+    "both_orientations_below_half": 2,
+    "mean_complement_deviation": 0.14794736842105263
+  },
+  {
+    "qid": "65",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 94,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.24542105263157896
+  },
+  {
+    "qid": "66",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 4,
+    "both_orientations_below_half": 55,
+    "mean_complement_deviation": 0.23447368421052633
+  },
+  {
+    "qid": "67",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 94,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.22726315789473683
+  },
+  {
+    "qid": "68",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 34,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.11731578947368422
+  },
+  {
+    "qid": "69",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 60,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.21247368421052634
+  },
+  {
+    "qid": "70",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 14,
+    "both_orientations_below_half": 10,
+    "mean_complement_deviation": 0.10636842105263158
+  },
+  {
+    "qid": "71",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 68,
+    "both_orientations_below_half": 5,
+    "mean_complement_deviation": 0.21410526315789474
+  },
+  {
+    "qid": "72",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 73,
+    "both_orientations_below_half": 3,
+    "mean_complement_deviation": 0.1621578947368421
+  },
+  {
+    "qid": "73",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 92,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.24157894736842103
+  },
+  {
+    "qid": "74",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 149,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.37647368421052635
+  },
+  {
+    "qid": "75",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 34,
+    "both_orientations_below_half": 4,
+    "mean_complement_deviation": 0.10368421052631581
+  },
+  {
+    "qid": "76",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 110,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.22626315789473686
+  },
+  {
+    "qid": "77",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 45,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.16142105263157897
+  },
+  {
+    "qid": "78",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 4,
+    "both_orientations_below_half": 39,
+    "mean_complement_deviation": 0.11831578947368421
+  },
+  {
+    "qid": "79",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 18,
+    "both_orientations_below_half": 8,
+    "mean_complement_deviation": 0.08784210526315792
+  },
+  {
+    "qid": "80",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 55,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.2156842105263158
+  },
+  {
+    "qid": "81",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 51,
+    "both_orientations_below_half": 3,
+    "mean_complement_deviation": 0.16178947368421054
+  },
+  {
+    "qid": "82",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 9,
+    "both_orientations_below_half": 34,
+    "mean_complement_deviation": 0.06568421052631582
+  },
+  {
+    "qid": "83",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 35,
+    "both_orientations_below_half": 6,
+    "mean_complement_deviation": 0.10963157894736843
+  },
+  {
+    "qid": "84",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 22,
+    "both_orientations_below_half": 10,
+    "mean_complement_deviation": 0.08910526315789476
+  },
+  {
+    "qid": "85",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 66,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.15163157894736842
+  },
+  {
+    "qid": "86",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 70,
+    "both_orientations_below_half": 6,
+    "mean_complement_deviation": 0.16347368421052633
+  },
+  {
+    "qid": "87",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 109,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.2578947368421053
+  },
+  {
+    "qid": "88",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 40,
+    "both_orientations_below_half": 14,
+    "mean_complement_deviation": 0.06984210526315791
+  },
+  {
+    "qid": "89",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 15,
+    "both_orientations_below_half": 4,
+    "mean_complement_deviation": 0.09073684210526319
+  },
+  {
+    "qid": "90",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 41,
+    "both_orientations_below_half": 2,
+    "mean_complement_deviation": 0.09668421052631579
+  },
+  {
+    "qid": "91",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 133,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.3013684210526316
+  },
+  {
+    "qid": "92",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 79,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.20026315789473684
+  },
+  {
+    "qid": "93",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 17,
+    "both_orientations_below_half": 21,
+    "mean_complement_deviation": 0.0952105263157895
+  },
+  {
+    "qid": "94",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 35,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.1600526315789474
+  },
+  {
+    "qid": "95",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 65,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.24826315789473685
+  },
+  {
+    "qid": "96",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 56,
+    "both_orientations_below_half": 1,
+    "mean_complement_deviation": 0.15610526315789475
+  },
+  {
+    "qid": "97",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 17,
+    "both_orientations_below_half": 11,
+    "mean_complement_deviation": 0.0778421052631579
+  },
+  {
+    "qid": "98",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 14,
+    "both_orientations_below_half": 28,
+    "mean_complement_deviation": 0.07868421052631581
+  },
+  {
+    "qid": "99",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 25,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.10926315789473685
+  },
+  {
+    "qid": "100",
+    "unordered_pairs": 190,
+    "both_orientations_above_half": 79,
+    "both_orientations_below_half": 0,
+    "mean_complement_deviation": 0.22663157894736843
+  }
+]

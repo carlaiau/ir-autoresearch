@@ -7,7 +7,8 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'reranking'))
-from jev_duo import DuoService, aggregate, tasks_for, payload_for, probability
+from jev_duo import DuoService, aggregate, tasks_for, payload_for, probability, run, load_inputs
+from stage_artifacts import sha
 from jev import render_run
 from run import accounting
 
@@ -76,5 +77,35 @@ class Tests(unittest.TestCase):
             with self.assertRaises(ValueError): service.score(task,'changed query')
             self.assertEqual(len(client.calls),1)
             self.assertNotIn('private contents',(root/'attempts.jsonl').read_text())
+
+    def test_end_to_end_and_tampered_input(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);stage=root/'stage';point=root/'point';stage.mkdir();point.mkdir()
+            collection=root/'collection.xml'
+            collection.write_text('<DOC><DOCNO>a</DOCNO><TEXT>A entire article.</TEXT></DOC>\n<DOC><DOCNO>b</DOCNO><TEXT>B entire article.</TEXT></DOC>\n<DOC><DOCNO>c</DOCNO><TEXT>C untouched tail.</TEXT></DOC>')
+            (stage/'run.trec').write_text('1 Q0 a 1 3 baseline\n1 Q0 b 2 2 baseline\n1 Q0 c 3 1 baseline\n')
+            (point/'run.trec').write_text((stage/'run.trec').read_text())
+            (stage/'topics.txt').write_text('1 query text\n');(stage/'qrels.txt').write_text('1 0 a 0\n1 0 b 1\n1 0 c 0\n')
+            metrics={'map':.5,'Rprec':0,'P_10':.1,'bpref':0,'recip_rank':.5}
+            baseline={'stage':'stage1','status':'complete','collection':str(collection),'collection_sha256':sha(collection),'search_seconds':.1,'metrics':metrics}
+            for name,key in [('run.trec','run_sha256'),('topics.txt','topics_sha256'),('qrels.txt','qrels_sha256')]:baseline[key]=sha(stage/name)
+            (stage/'manifest.json').write_text(json.dumps(baseline))
+            pointwise=dict(baseline,stage='reranking',method='jev-documents',top_k=3,stage1_run_sha256=baseline['run_sha256'],stage1_manifest_sha256=sha(stage/'manifest.json'),rerank_seconds=.2,estimated_new_api_cost_usd=.01)
+            (point/'manifest.json').write_text(json.dumps(pointwise))
+            args=SimpleNamespace(stage1=stage,pointwise=point,collection=None,top_k=2,results_dir=root/'output',cache=root/'cache',cache_only=False,model='test-model',max_attempts=1,workers=2,input_usd_per_million=.042,output_usd_per_million=0,pricing_source='test')
+            class PairClient(Client):
+                def system_one(self,**payload):
+                    value=super().system_one(**payload)
+                    value['answers']['a_more_relevant']['noul']=.9 if 'B entire' in payload['state']['document_a'] else .1
+                    return value
+            result=run(args,lambda a,d:DuoService(a,d,PairClient()))
+            self.assertEqual(result['metrics']['map'],1)
+            self.assertEqual(result['scoring_calls'],2)
+            self.assertEqual(result['api_attempts'],2)
+            self.assertEqual([r.split()[2] for r in (args.results_dir/'run.trec').read_text().splitlines()],['b','a','c'])
+            self.assertIsNone(result['compute_cost_usd'])
+            self.assertTrue((args.results_dir/'pointwise-paired.json').exists())
+            (point/'run.trec').write_text('tampered')
+            with self.assertRaises(ValueError):load_inputs(stage,point,None,2)
 
 if __name__=='__main__': unittest.main()
