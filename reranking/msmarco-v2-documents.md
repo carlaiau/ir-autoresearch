@@ -6,9 +6,11 @@ Status: all 5,679 candidate documents recovered and verified; input frozen.
 MAP 0.2126, P@10 0.6684, NIST MRR 0.8367, NDCG@10 0.5116.
 [Context validation](results/msmarco-v2-dl2021-documents/context-validation/results.md)
 passed: 6,090 large windows, maximum accepted probe 29,989 tokens, complete text
-coverage. Small-passage MaxP requires 111,426 calls. No measured JEV results yet.
+coverage. Large-window JEV inference is running. Small-passage MaxP was cancelled
+before its first call; it was only needed for a direct monoBERT comparison.
+Historical preflight counts are retained as preparation evidence.
 
-Compare JEV large-window MaxP with JEV small-passage MaxP on the official
+Evaluate JEV large-window MaxP against supplied retrieval and published rerankers on the official
 TREC DL 2021 document top-100 lists. All 57 judged queries have 100 candidates:
 5,700 pairs, 5,679 unique documents. This is separate from the DL2019 passage
 experiment and frozen WSJ baseline. No monoBERT inference is required.
@@ -67,10 +69,6 @@ Reranker score ties preserve original supplied ranks; synthetic monotonic output
 scores preserve that ordering in evaluation. The supplied baseline retains the
 original retrieval scores and trec_eval's score-tie handling.
 
-- **JEV passage MaxP:** pinned BERT tokenizer from existing monoBERT configuration;
-  384-token windows with 64-token overlap, query-adjusted to the 512-token pair
-  limit. Score all decoded windows and take each document's maximum. Preserve
-  intervals and token-slice hashes. Decoding changes normalization.
 - **JEV large-window MaxP:** overlapping windows sized for JEV's context budget,
   preserving the complete original canonical text. Take the maximum Noul score
   across all windows. Short documents fit one window. This user-approved design
@@ -78,8 +76,8 @@ original retrieval scores and trec_eval's score-tie handling.
   at most 110,000 UTF-8 bytes of original text, with up to 4,000 bytes of overlap.
   Boundaries always fall between Unicode characters.
 
-Both use the same Noul question, pinned `jev-1.13.0`, eight workers within each
-query, explicit retries and separate empty caches. The prompt is in
+The active run uses the frozen Noul question, pinned `jev-1.13.0`, eight workers
+within each query, explicit retries and a fresh cache. The prompt is in
 `msmarco_v2_documents.py`. It is frozen before evaluation, with no test-set tuning.
 
 JEV documentation currently specifies 32k tokens for state plus the longest
@@ -112,12 +110,15 @@ binary relevant, unlike the earlier passage task. NCG@100 divides retrieved gain
 by ideal gain at rank 100 (not all judged gain); it must stay constant under
 reranking. Record exact evaluation commands and original judgments.
 
-Predeclare three headline comparisons: each JEV arm versus supplied retrieval,
-and large-window versus small-passage MaxP. Use paired bootstrap intervals (10,000
-resamples) and sign randomization (100,000 draws), seed 78, with Holm correction
-across these three NDCG@10 tests. Published-reference comparisons remain aggregate
-and descriptive without source runs. Unknown model training exposure limits
-held-out claims. Report query-level changes and any quality/time/cost tradeoff.
+The remaining headline comparison is large-window JEV versus supplied retrieval.
+Use paired bootstrap intervals (10,000 resamples) and sign randomization
+(100,000 draws), seed 78, for its NDCG@10 difference. The original three-comparison
+plan was reduced at the user's request during inference, before final effectiveness
+evaluation. Report the single-comparison p-value; the cancelled comparisons will
+not be tested. Published-reference
+comparisons remain descriptive without per-query source runs. Record this scope
+change in [scope-change.json](results/msmarco-v2-dl2021-documents/scope-change.json).
+Unknown model training exposure limits held-out claims.
 
 Record actual attempts, retries, successful scores, cache hits, returned token
 usage, setup, total reranking time and query p50/p95. Rate verified 2026-09-18:
@@ -139,28 +140,20 @@ python reranking/msmarco_v2_documents.py validate-windows \
   --results-dir reranking/results/msmarco-v2-dl2021-documents/context-validation \
   --cache .cache/msmarco-v2-dl2021/context-validation
 python reranking/msmarco_v2_documents.py preflight --model-cache /path/to/tokenizer-cache
-python reranking/msmarco_v2_documents.py jev-passages \
-  --model-cache /path/to/tokenizer-cache \
-  --results-dir reranking/results/msmarco-v2-dl2021-documents/jev-passages \
-  --cache .cache/msmarco-v2-dl2021/jev-passages
 python reranking/msmarco_v2_documents.py jev-large-windows \
   --model-cache /path/to/tokenizer-cache \
   --results-dir reranking/results/msmarco-v2-dl2021-documents/jev-large-windows \
   --cache .cache/msmarco-v2-dl2021/jev-large-windows
 ```
 
-The superseded `jev-full` command has been removed. Run the measured conditions
-sequentially to avoid mutual contention; each uses eight concurrent requests.
-After validation and preflight, the durable queue can run both automatically:
+The superseded `jev-full` command has been removed. The small-passage command is
+retained for future explicitly authorized monoBERT comparisons, but is outside
+this experiment. The compatibility launcher `run_msmarco_v2_pair.py` now starts
+only the approved large-window condition.
 
-```sh
-python reranking/run_msmarco_v2_pair.py \
-  --env-root /path/to/credential-checkout \
-  --model-cache /path/to/tokenizer-cache
-```
-
-`run-queue.json` records queued/running/completed/failed states. A failed first
-condition stops the queue; existing results and caches are never overwritten.
+The original two-run controller was stopped without interrupting its large-window
+child. Follow `jev-large-windows/progress.json` and its final `manifest.json` for
+current status; the cancelled queue is preserved in local `run-queue.json`.
 
 Use the installed JEV/tokenizer environment; `--env-root` can point to an existing
 checkout's ignored credentials. Prepare only once; frozen inputs/results cannot

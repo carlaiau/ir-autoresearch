@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the two frozen JEV document conditions sequentially, with durable status."""
+"""Run the approved large-window JEV document condition, with durable status."""
 import argparse
 from datetime import datetime, timezone
 import subprocess
@@ -14,7 +14,8 @@ def main():
     base=ROOT/'reranking/results/msmarco-v2-dl2021-documents'
     state_path=base/'run-queue.json'
     if state_path.exists():raise ValueError('run queue already exists; preserve earlier attempts')
-    conditions=['jev-large-windows','jev-passages']
+    # Small-passage MaxP was cancelled by the user; never enqueue it here.
+    conditions=['jev-large-windows']
     for name in conditions:
         if (base/name).exists():raise ValueError('result directory already exists')
     state={'status':'running','order':conditions,'conditions':{name:{'status':'queued'} for name in conditions}}
