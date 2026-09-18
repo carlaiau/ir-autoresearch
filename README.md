@@ -16,6 +16,7 @@ all grades; MAP, P@10 and recip_rank treat only grades 2–3 as relevant.
 
 | Method | Source | nDCG@10 | MAP | P@10 | recip_rank |
 | --- | --- | ---: | ---: | ---: | ---: |
+| BM25, no reranking (`bm25base_p`) | Paper, Table 4 | 0.5058 | 0.3013 | — | 0.7036 |
 | monoBERT | Our local implementation | 0.7177 | 0.4488 | **0.6233** | 0.8717 |
 | JEV matched passage text | Our run | 0.6825 | **0.4748** | 0.6116 | 0.8594 |
 | JEV original passage text | Our run | 0.6835 | 0.4729 | 0.6163 | 0.8447 |
@@ -23,9 +24,11 @@ all grades; MAP, P@10 and recip_rank treat only grades 2–3 as relevant.
 | TU Vienna neural (`TUW19-p3-re`) | Paper, Table 4 | 0.6746 | 0.4113 | — | 0.8568 |
 
 Published rows come from [Table 4 of the TREC DL 2019 overview](https://trec.nist.gov/pubs/trec28/papers/OVERVIEW.DL.pdf#page=9)
-and are classified there as reranking runs. They are historical references, not
-local reproductions or part of our paired tests; exact candidate identity has
-not been audited against our manifest. `recip_rank` uses the paper's NIST MRR,
+and are historical references, not local reproductions or part of our paired
+tests. BM25 is a separate full-retrieval baseline before reranking, not the
+verified original ranking of our candidates. The two published neural runs are
+classified as reranking; their exact candidate identity has not been audited
+against our manifest. `recip_rank` uses the paper's NIST MRR,
 not its separate MS MARCO MRR. P@10 is not reported there. Bold marks the highest
 reported value in each column among the displayed methods.
 
