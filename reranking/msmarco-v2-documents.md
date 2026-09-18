@@ -6,7 +6,9 @@ Status: all 5,679 candidate documents recovered and verified; input frozen.
 MAP 0.2126, P@10 0.6684, NIST MRR 0.8367, NDCG@10 0.5116.
 [Context validation](results/msmarco-v2-dl2021-documents/context-validation/results.md)
 passed: 6,090 large windows, maximum accepted probe 29,989 tokens, complete text
-coverage. Large-window JEV inference is running. Small-passage MaxP was cancelled
+coverage. Large-window JEV inference and the independent audit are complete:
+[results](results/msmarco-v2-dl2021-documents/results.md) report MAP 0.2790,
+P@10 0.8930, NIST MRR 1.0000 and NDCG@10 0.7535. Small-passage MaxP was cancelled
 before its first call; it was only needed for a direct monoBERT comparison.
 Historical preflight counts are retained as preparation evidence.
 
@@ -152,8 +154,10 @@ this experiment. The compatibility launcher `run_msmarco_v2_pair.py` now starts
 only the approved large-window condition.
 
 The original two-run controller was stopped without interrupting its large-window
-child. Follow `jev-large-windows/progress.json` and its final `manifest.json` for
-current status; the cancelled queue is preserved in local `run-queue.json`.
+child, which subsequently completed. The final `jev-large-windows/manifest.json`
+and `audit.json` record completion; `run-queue.json` records the cancelled arm.
+Run `python reranking/audit_msmarco_v2.py` to reproduce the offline audit using
+the retained local documents and response cache; this makes no API requests.
 
 Use the installed JEV/tokenizer environment; `--env-root` can point to an existing
 checkout's ignored credentials. Prepare only once; frozen inputs/results cannot

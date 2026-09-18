@@ -1,0 +1,93 @@
+{
+  "candidate_pairs": 5700,
+  "checks": [
+    "input/source/plan/run hashes",
+    "complete original-text coverage",
+    "exact window identities and content hashes",
+    "cached response score and usage agreement",
+    "MaxP and stable ranking reconstruction",
+    "attempt accounting",
+    "token accounting",
+    "query timing",
+    "byte-identical trec_eval reproduction",
+    "candidate recall and NCG invariance"
+  ],
+  "context_audit": {
+    "complete_original_character_coverage": true,
+    "maximum_final_probed_input_tokens": 29989,
+    "probe_scores_sha256": "2bcef36d9b63fb663dff9768091d580aae10a81501825ffea8ebb67aa1701c8c",
+    "provider_probed_final_windows": 1925,
+    "small_windows_below_byte_threshold": 4165,
+    "status": "passed",
+    "validation_manifest_sha256": "4395e4142d9feeaabc40059482bfe2af144ba67f3da51086ed1b9e7cbc5e5a20"
+  },
+  "estimated_scoring_api_cost_usd": 1.7623359600000001,
+  "failed_scoring_attempts": 0,
+  "input_tokens": 41960380,
+  "primary_comparison": "JEV large-window MaxP versus supplied ranking; NDCG@10",
+  "queries": 57,
+  "scored_windows": 6090,
+  "scoring_api_attempts": 6090,
+  "statistics": {
+    "P_10": {
+      "bootstrap_95_ci": [
+        0.15789473684210525,
+        0.2947368421052632
+      ],
+      "bootstrap_samples": 10000,
+      "improved": 38,
+      "mean_delta": 0.22456140350877193,
+      "seed": 78,
+      "sign_randomization_draws": 100000,
+      "tied": 15,
+      "two_sided_randomization_p": 9.99990000099999e-06,
+      "worse": 4
+    },
+    "map": {
+      "bootstrap_95_ci": [
+        0.05098228070175439,
+        0.08328947368421052
+      ],
+      "bootstrap_samples": 10000,
+      "improved": 55,
+      "mean_delta": 0.06637894736842105,
+      "seed": 78,
+      "sign_randomization_draws": 100000,
+      "tied": 0,
+      "two_sided_randomization_p": 9.99990000099999e-06,
+      "worse": 2
+    },
+    "ndcg_cut_10": {
+      "bootstrap_95_ci": [
+        0.19344364035087722,
+        0.29272442982456137
+      ],
+      "bootstrap_samples": 10000,
+      "improved": 53,
+      "mean_delta": 0.24193508771929825,
+      "seed": 78,
+      "sign_randomization_draws": 100000,
+      "tied": 1,
+      "two_sided_randomization_p": 9.99990000099999e-06,
+      "worse": 3
+    },
+    "recip_rank": {
+      "bootstrap_95_ci": [
+        0.08999473684210525,
+        0.2421282894736842
+      ],
+      "bootstrap_samples": 10000,
+      "improved": 14,
+      "mean_delta": 0.16333859649122806,
+      "seed": 78,
+      "sign_randomization_draws": 100000,
+      "tied": 43,
+      "two_sided_randomization_p": 0.00015999840001599985,
+      "worse": 0
+    }
+  },
+  "statistics_note": "Statistics use saved trec_eval per-query metrics rounded to four decimals. Only NDCG@10 is the declared primary test; remaining intervals/tests are descriptive. Small-passage comparisons were cancelled by user before final evaluation.",
+  "status": "passed",
+  "unique_documents": 5679,
+  "validation_api_cost_usd": 1.221349878
+}
