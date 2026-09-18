@@ -1,0 +1,217 @@
+[
+  {
+    "qid": "19335",
+    "scoring_calls": 1000,
+    "seconds": 36.302363709080964
+  },
+  {
+    "qid": "47923",
+    "scoring_calls": 1000,
+    "seconds": 36.627796332817525
+  },
+  {
+    "qid": "87181",
+    "scoring_calls": 1000,
+    "seconds": 37.411538457963616
+  },
+  {
+    "qid": "87452",
+    "scoring_calls": 1000,
+    "seconds": 36.600964500103146
+  },
+  {
+    "qid": "104861",
+    "scoring_calls": 1000,
+    "seconds": 37.55387545796111
+  },
+  {
+    "qid": "130510",
+    "scoring_calls": 1000,
+    "seconds": 37.51320254197344
+  },
+  {
+    "qid": "131843",
+    "scoring_calls": 1000,
+    "seconds": 37.664415292209014
+  },
+  {
+    "qid": "146187",
+    "scoring_calls": 1000,
+    "seconds": 36.607401749817654
+  },
+  {
+    "qid": "148538",
+    "scoring_calls": 1000,
+    "seconds": 37.46178420819342
+  },
+  {
+    "qid": "156493",
+    "scoring_calls": 1000,
+    "seconds": 37.667511750012636
+  },
+  {
+    "qid": "168216",
+    "scoring_calls": 1000,
+    "seconds": 37.10790754086338
+  },
+  {
+    "qid": "182539",
+    "scoring_calls": 1000,
+    "seconds": 37.21975774993189
+  },
+  {
+    "qid": "183378",
+    "scoring_calls": 1000,
+    "seconds": 37.63631737488322
+  },
+  {
+    "qid": "207786",
+    "scoring_calls": 1000,
+    "seconds": 38.10123620904051
+  },
+  {
+    "qid": "264014",
+    "scoring_calls": 1000,
+    "seconds": 37.61398445884697
+  },
+  {
+    "qid": "359349",
+    "scoring_calls": 1000,
+    "seconds": 38.3128878751304
+  },
+  {
+    "qid": "405717",
+    "scoring_calls": 1000,
+    "seconds": 37.0539037080016
+  },
+  {
+    "qid": "443396",
+    "scoring_calls": 1000,
+    "seconds": 37.15930166700855
+  },
+  {
+    "qid": "451602",
+    "scoring_calls": 1000,
+    "seconds": 37.18293995806016
+  },
+  {
+    "qid": "489204",
+    "scoring_calls": 1000,
+    "seconds": 38.492936624912545
+  },
+  {
+    "qid": "490595",
+    "scoring_calls": 1000,
+    "seconds": 38.03006891719997
+  },
+  {
+    "qid": "527433",
+    "scoring_calls": 1000,
+    "seconds": 36.22825195919722
+  },
+  {
+    "qid": "573724",
+    "scoring_calls": 1000,
+    "seconds": 36.59001762489788
+  },
+  {
+    "qid": "833860",
+    "scoring_calls": 1000,
+    "seconds": 36.65952725009993
+  },
+  {
+    "qid": "855410",
+    "scoring_calls": 5,
+    "seconds": 0.27315829205326736
+  },
+  {
+    "qid": "915593",
+    "scoring_calls": 1000,
+    "seconds": 38.18725145794451
+  },
+  {
+    "qid": "962179",
+    "scoring_calls": 1000,
+    "seconds": 37.32339233299717
+  },
+  {
+    "qid": "1037798",
+    "scoring_calls": 1000,
+    "seconds": 37.57810745900497
+  },
+  {
+    "qid": "1063750",
+    "scoring_calls": 1000,
+    "seconds": 37.682748874882236
+  },
+  {
+    "qid": "1103812",
+    "scoring_calls": 1000,
+    "seconds": 126.6826660418883
+  },
+  {
+    "qid": "1106007",
+    "scoring_calls": 1000,
+    "seconds": 35.53187862504274
+  },
+  {
+    "qid": "1110199",
+    "scoring_calls": 1000,
+    "seconds": 36.27356241596863
+  },
+  {
+    "qid": "1112341",
+    "scoring_calls": 1000,
+    "seconds": 35.71098112501204
+  },
+  {
+    "qid": "1113437",
+    "scoring_calls": 1000,
+    "seconds": 38.14437504205853
+  },
+  {
+    "qid": "1114646",
+    "scoring_calls": 1000,
+    "seconds": 37.27289070794359
+  },
+  {
+    "qid": "1114819",
+    "scoring_calls": 1000,
+    "seconds": 38.356450708117336
+  },
+  {
+    "qid": "1115776",
+    "scoring_calls": 1000,
+    "seconds": 38.20980954100378
+  },
+  {
+    "qid": "1117099",
+    "scoring_calls": 1000,
+    "seconds": 38.396784542128444
+  },
+  {
+    "qid": "1121402",
+    "scoring_calls": 1000,
+    "seconds": 37.38113904208876
+  },
+  {
+    "qid": "1121709",
+    "scoring_calls": 37,
+    "seconds": 1.4031439169775695
+  },
+  {
+    "qid": "1124210",
+    "scoring_calls": 1000,
+    "seconds": 38.50575412507169
+  },
+  {
+    "qid": "1129237",
+    "scoring_calls": 1000,
+    "seconds": 38.90074099996127
+  },
+  {
+    "qid": "1133167",
+    "scoring_calls": 1000,
+    "seconds": 38.58150020893663
+  }
+]

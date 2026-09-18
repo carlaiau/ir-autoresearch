@@ -6,7 +6,12 @@ interaction; do not use the GitHub connector/plugin.
 ## Purpose and scope
 
 This repository compares reranking methods on a fixed WSJ/TREC candidate set.
-Stage 1 is lexical retrieval; stage 2 is reranking. For bounded maintenance or
+Stage 1 is lexical retrieval; stage 2 is reranking. Issue #73 additionally
+authorizes MS MARCO v1 / TREC DL 2019 supplied passage candidates, with a separate
+monoBERT reference and nDCG@10 headline metric; follow `reranking/msmarco.md`.
+The fixed WSJ rules below continue to apply to WSJ, not as a baseline for the new
+dataset. Pairwise JEV and new context-window strategies are follow-up work.
+For bounded maintenance or
 documentation requests, complete the requested work without starting experiments.
 
 Read before changes:

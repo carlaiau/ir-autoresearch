@@ -88,7 +88,9 @@ class Service:
     def score(self, task, query):
         start = time.perf_counter()
         identity = {k: v for k, v in task.items() if k != 'text'}
-        payload = {'model': self.args.model, 'state': {'query': query, 'candidate_article': task['text']}, 'questions': {'relevant': QUESTION}}
+        payload = {'model': self.args.model,
+                   'state': {'query': query, getattr(self.args, 'state_field', 'candidate_article'): task['text']},
+                   'questions': {'relevant': getattr(self.args, 'question', QUESTION)}}
         key = digest({'endpoint': self.endpoint, 'mode': self.args.mode, 'identity': identity, 'payload': payload})
         path = self.args.cache / (key + '.json')
         hit = path.exists()

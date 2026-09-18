@@ -1,17 +1,115 @@
 # JEV Reranking Comparisons
 
-This repository compares **JEV-based reranking methods**: scoring individual
-passages, scoring complete documents, and comparing documents against each other.
-The aim is to measure which methods improve relevance, and how much additional
-search time, model usage and cost each requires. monoBERT and duoBERT provide
-reference approaches for those comparisons.
+The overall goal is to test whether **JEV's general “intelligence” can match the
+reranking performance of specialist models** such as monoBERT, while measuring
+the time and cost required. Here, matching performance means measured ranking
+quality on shared candidates and judgments, rather than a claim about general
+intelligence itself.
 
-Experiments use the same WSJ/TREC collection, 50 topics and saved lexical
-candidates. Stage 1 is fixed at **MAP 0.2521 before all reranking**; the research
-focus is stage 2. Each experiment records its model, document coverage, scoring
-rule, candidate depth, API calls, timing and cost alongside the raw `trec_eval`.
+The main benchmark compares **JEV pointwise reranking against monoBERT** on the
+**MS MARCO v1 / TREC Deep Learning 2019 passage reranking task**, evaluated with
+**NIST human relevance judgments**. Given a query and a fixed set of candidate
+passages, each model scores the passages and sorts them by relevance. We measure
+ranking quality alongside reranking time, model usage and cost.
 
-## Results
+The main benchmark uses **43 judged queries and 41,042 supplied query–passage
+pairs**. Every method receives the same candidates; no local corpus indexing or
+new retrieval is needed. MS MARCO supplies the passage corpus and monoBERT's
+training domain; the evaluation uses the separate NIST test judgments. The
+[WSJ document benchmark](#secondary-benchmark-wsj-document-reranking) remains a
+secondary test of transfer to another collection.
+
+## Task and NIST relevance labels
+
+The [TREC 2019 Deep Learning overview, section 2.2 and section 5](https://trec.nist.gov/pubs/trec28/papers/OVERVIEW.DL.pdf)
+describes reranking up to 1,000 supplied BM25 passage candidates per query. Its
+passage judgments distinguish answering a query from merely sharing its topic:
+
+| Grade | NIST label | Meaning, paraphrased |
+| --- | --- | --- |
+| 3 | Perfectly relevant | Focuses on the query and gives the exact answer. |
+| 2 | Highly relevant | Provides an answer, possibly unclear or mixed with unrelated material. |
+| 1 | Related | Discusses the topic without answering the query. |
+| 0 | Irrelevant | Has no connection to the query. |
+
+**nDCG@10 is our primary metric**: it measures the quality and order of the first
+ten results using all four grades, with `trec_eval` linear gains. **MAP** measures
+average precision across queries using binary relevance: grades **2 and 3** count
+as relevant; grades **0 and 1** do not. Grade 1 still earns partial credit in
+nDCG, following the paper's passage evaluation convention. Higher is better for
+both metrics. These are passage labels; the paper's document task uses a different
+meaning for grade 1.
+
+We retain all supplied candidates for the 43 judged queries: 41 queries have
+1,000 candidates, and two have 5 and 37. Judgments select the evaluation queries
+and assess the output; they do not select candidate passages or enter model
+prompts. Downloads, candidate IDs and judgments are frozen in the
+[input manifest](reranking/results/msmarco-dl2019/input/manifest.json).
+
+## Passage reranking results
+
+| Method | nDCG@10 (primary) | MAP | Total reranking time | Query median | Estimated API cost (USD) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| monoBERT | **0.7177** | 0.4488 | 969.83 s | 22.46 s | $0 hosted API; local compute unknown |
+| JEV matched passage text | 0.6825 | **0.4748** | 1,633.43 s | 37.46 s | $0.762991 |
+| JEV original passage text | 0.6835 | 0.4729 | 1,575.11 s | 38.08 s | $0.761027 |
+
+JEV improved binary MAP but had lower observed nDCG@10 and longer measured
+reranking time. Neither primary difference was statistically significant after
+Holm correction (adjusted p=0.20450 for each comparison). **monoBERT remains the
+reference**; these results establish a measured tradeoff, not JEV superiority or
+model equivalence. Candidate recall across the complete supplied set is 0.6943
+for all methods.
+
+These are single uncached runs, executed sequentially. monoBERT ran on an Apple
+M3 Pro with MPS, float32 and batch size 8; hosted JEV 1.13.0 used eight workers per
+query. Query medians exclude shared setup. JEV costs estimate successful responses;
+six failed API attempts recovered, and their billing is unknown. Local compute
+cost is unknown. Supplied-candidate retrieval time is unavailable, so these are
+**reranking times, not end-to-end search times**.
+
+See the [full comparison, paired statistics and audits](reranking/results/msmarco-dl2019/results.md)
+for all metrics, per-query changes, timing boundaries and raw evidence.
+
+## Compared methods and reproduction
+
+- **monoBERT:** `castorini/monobert-large-msmarco` scores each query–passage pair
+  locally. This is the baseline for the passage task.
+- **JEV matched passage text:** pointwise Noul scoring uses the decoded passage
+  text from the same token windows used by monoBERT. This controls the amount of
+  evidence available in each scoring call.
+- **JEV original passage text:** the same pointwise JEV method uses the supplied
+  passage as written, preserving its original casing and spacing. “Original”
+  means the dataset passage, not the complete source web article.
+
+Matching windows is intended to remove the advantage of JEV seeing an entire
+article at once when it exceeds monoBERT's input window. In this MS MARCO run,
+all supplied passages fit one BERT window, with no truncation, so both conditions
+have full passage coverage. Their measured difference is text normalization,
+**not larger context coverage**. The WSJ comparison below separately tests
+matched passage windows versus complete articles. MS MARCO is monoBERT's training domain; JEV's training
+exposure is unknown, so equal training conditions are not established.
+
+Start with the [passage benchmark protocol and run commands](reranking/msmarco.md).
+It covers preparation, frozen inputs, inference and evaluation. Reports, raw
+`trec_eval`, model versions, timing, usage and audits are under
+[`reranking/results/msmarco-dl2019/`](reranking/results/msmarco-dl2019/results.md).
+Dataset text, model downloads, credentials and response caches stay outside Git.
+
+JEV pairwise and new context-window strategies are deferred to follow-up work.
+The rejected WSJ pairwise attempt is preserved below; no original duoBERT
+checkpoint result is claimed for this passage benchmark.
+
+## Secondary benchmark: WSJ document reranking
+
+This secondary benchmark is based on the **TREC-1 WSJ collection** and uses
+50 topics. We run **our own retrieval step**, using the JASSjr-derived lexical
+engine with BM25 and query expansion, then freeze its candidates for reranking.
+Its stage-1 baseline is fixed at **MAP 0.2521 before all reranking**, independently
+of the monoBERT reference above. Its metrics cannot be compared directly with the
+passage task because the collection, queries and judgments differ.
+
+### WSJ results
 
 | Method | MAP | P@10 | recip_rank | Status |
 | --- | ---: | ---: | ---: | --- |
@@ -28,8 +126,12 @@ Higher is better for all three metrics; full reports also include Rprec and bpre
 
 Pointwise JEV scores the top 100 candidates using Noul. The passage method uses
 the identical windows supplied to monoBERT and takes the highest passage score
-for each document (MaxP). The complete-document method scores the entire parsed
-article once. Both use JEV 1.13.0 and eight concurrent calls per query; see the
+for each document (MaxP). This gives both models the same evidence per call and
+removes JEV's advantage of seeing a long article all at once. monoBERT still
+covers the article across multiple windows; it does not simply discard the tail.
+The complete-document method instead lets JEV score the entire parsed article
+in one call, testing the benefit of that broader context separately. Both JEV
+methods use JEV 1.13.0 and eight concurrent calls per query; see the
 [implementation and run commands](reranking/jev-comparison.md).
 
 The Noul duo experiment takes the top 20 from the complete-document pointwise
@@ -39,7 +141,7 @@ Its negative result and implementation remain on a separate experiment branch;
 the link above points to that preserved evidence. Model-backed duoBERT and
 multi-document JEV Choice comparisons are not yet measured in this table.
 
-## Time, calls and cost
+### WSJ time, calls and cost
 
 | Method | Successful scoring calls | Added reranking time, all 50 topics | Query median | Estimated API cost |
 | --- | ---: | ---: | ---: | ---: |
@@ -61,7 +163,7 @@ methods, and any failed-request charges are unknown. The
 records the failed first passage run and its known usage. Reported settings are
 exploratory on these topics, not held-out validation.
 
-## Repository workflow
+### WSJ retrieval and reranking workflow
 
 **Stage 1 — freeze candidate retrieval.** The JASSjr-derived engine uses BM25
 with pseudo-relevance feedback. Its saved baseline excludes dense retrieval,
