@@ -1,0 +1,13 @@
+{
+  "status": "complete",
+  "queries": 57,
+  "candidate_pairs": 5700,
+  "unique_documents": 5679,
+  "missing_documents": 0,
+  "members_complete": 60,
+  "archive_md5": "eea90100409a254fdb157b8e4e349deb",
+  "archive_sha256": "9341a286835112a07755615672216b375a956e519d19a4b1ce82001a0fb7bfff",
+  "archive_bytes": 34648862720,
+  "extraction_seconds": 4083.8233697910327,
+  "verification": "Official archive MD5 matched; every selected file SHA-256 and JSON docid matched; complete title/headings/body strings present; exact selected candidate ID set verified. Extraction time is data preparation, not retrieval or reranking time."
+}

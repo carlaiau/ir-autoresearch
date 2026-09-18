@@ -1,0 +1,52 @@
+{
+  "artifacts_sha256": {
+    "candidates.json": "fabf223fdec23461879a19e2cab2b7f5b24875133c2168e97fa44ba00a2f58fd",
+    "document-hashes.json": "6e6220ef53638a6fcb31018b99f0d371ca45bc556db20e390ced0ef8dc05f3fd",
+    "qrels.txt": "34a83a80453671b7c944131daabff60d657b96c53bc9b7785c83c7e28bf2660a"
+  },
+  "binary_relevance_threshold": 1,
+  "branch": "codex/search-jev-v2-documents",
+  "candidate_pairs": 5700,
+  "commit": "b8f3bb37384f44ce3413c60f7ef80e18818aeadc",
+  "content_policy": "TITLE, HEADINGS, BODY; complete original field strings, separated with field labels; URL excluded",
+  "created_at_utc": "2026-09-18T03:46:33.064575+00:00",
+  "dataset": "msmarco-v2-trec-dl2021-documents",
+  "dirty": true,
+  "extraction_sha256": "75cfa5547f1295c212d6b83a2a2908fe21b1b21fd93b2c08f610ae7b87a2803e",
+  "files_sha256": {
+    "candidates.gz": "cefefdd13c4335f208126c30f458d6623ba8f2e1a584aa19d07c64156b2c8134",
+    "qrels.txt": "34a83a80453671b7c944131daabff60d657b96c53bc9b7785c83c7e28bf2660a",
+    "queries.tsv": "d7c24b788f01cb9ee9f1ec663dfc623594a94c6c878cd8b7fb040a35d634921a"
+  },
+  "input_identity_sha256": "062f04f7d7516861a1c2b19393d4bbf0a930addfb077c3b58fdcde475948e63e",
+  "platform": "macOS-26.4-arm64-arm-64bit-Mach-O",
+  "processor": "arm",
+  "published_references": {
+    "CIP_run2": {
+      "P_10": 0.814,
+      "map": 0.2478,
+      "ncg_100": 0.4376,
+      "ndcg_cut_10": 0.6783,
+      "recall_100": 0.3195,
+      "recip_rank": 0.9373
+    },
+    "pash_doc_r3": {
+      "P_10": 0.8526,
+      "map": 0.2672,
+      "ncg_100": 0.4376,
+      "ndcg_cut_10": 0.7164,
+      "recall_100": 0.3195,
+      "recip_rank": 0.9772
+    }
+  },
+  "queries": 57,
+  "source_urls": {
+    "candidates.gz": "https://msmarco.z22.web.core.windows.net/msmarcoranking/2021_document_top100.txt.gz",
+    "qrels.txt": "https://trec.nist.gov/data/deep/2021.qrels.docs.final.txt",
+    "queries.tsv": "https://msmarco.z22.web.core.windows.net/msmarcoranking/2021_queries.tsv"
+  },
+  "status": "frozen",
+  "tie_break": "reranker score ties retain supplied rank; reranked output uses monotonic synthetic scores; baseline retains original scores and trec_eval tie handling",
+  "top_k": 100,
+  "unique_documents": 5679
+}

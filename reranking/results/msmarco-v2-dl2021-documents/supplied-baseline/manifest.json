@@ -1,0 +1,15 @@
+{
+  "input_manifest_sha256": "a747e50e69da7797feeaf50b1e6320258b28c507db2e1a914f4dc29ce616e79f",
+  "method": "supplied-ranking",
+  "metrics": {
+    "P_10": 0.6684,
+    "map": 0.2126,
+    "ncg_100": 0.43757980419380393,
+    "ndcg_cut_10": 0.5116,
+    "recall_100": 0.3195,
+    "recip_rank": 0.8367
+  },
+  "retrieval_seconds": null,
+  "run_sha256": "7ac2dbda55a951c3fca036572f50d8b0bf13a941f765aaa3452a4febe8a151ff",
+  "status": "complete"
+}

@@ -1,0 +1,12 @@
+{
+  "changed_at_utc": "2026-09-18T04:12:25.980336+00:00",
+  "active_condition": "jev-large-windows",
+  "cancelled_condition": "jev-passages",
+  "cancelled_before_start": true,
+  "cancelled_api_attempts": 0,
+  "reason": "User cancelled small-passage MaxP: needed only for direct monoBERT comparisons; this experiment uses published references.",
+  "queue_controller_stopped": true,
+  "large_window_process_preserved": true,
+  "primary_comparison": "large-window JEV versus supplied ranking; published references descriptive",
+  "statistical_plan": "One NDCG@10 hypothesis: bootstrap 10000 resamples and sign randomization 100000 draws, seed 78. Report a single-comparison p-value. Scope changed by user during inference, before final effectiveness evaluation; cancelled comparisons will not be tested."
+}

@@ -1,0 +1,21 @@
+{
+  "conditions": {
+    "jev-large-windows": {
+      "started_at_utc": "2026-09-18T04:08:53.512777+00:00",
+      "status": "complete"
+    },
+    "jev-passages": {
+      "status": "cancelled",
+      "cancelled_at_utc": "2026-09-18T04:12:25.980336+00:00",
+      "reason": "User cancelled small-passage MaxP: needed only for direct monoBERT comparisons; this experiment uses published references.",
+      "api_attempts": 0
+    }
+  },
+  "order": [
+    "jev-large-windows",
+    "jev-passages"
+  ],
+  "status": "complete_with_cancelled_arm",
+  "active_progress_path": "jev-large-windows/progress.json",
+  "note": "Large-window child completed independently after the controller was stopped. Its final manifest and the offline audit confirm completion; small-passage inference never started."
+}
