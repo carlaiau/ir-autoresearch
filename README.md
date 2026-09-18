@@ -1,7 +1,11 @@
 # Two-stage retrieval and reranking research
 
 **Stage 1 is fixed at MAP 0.2521, before all reranking.** Its saved candidate
-run is the sole baseline for JEV, monoBERT and duoBERT experiments.
+run is the sole baseline for the WSJ JEV, monoBERT and duoBERT experiments.
+
+An additional [MS MARCO / TREC DL 2019 passage benchmark](reranking/msmarco.md)
+compares JEV pointwise reranking with a local monoBERT reference. Its candidates,
+judgments and results are separate from WSJ; the WSJ baseline is unchanged.
 
 | Stage | Status | MAP | Results |
 | --- | --- | ---: | --- |

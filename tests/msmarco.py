@@ -11,9 +11,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'reranking'))
 from msmarco import (QUESTION, evaluation, freeze, read_inputs, validate_scores,
                      verified_inputs)
 from jev_compare import Service
+from audit_msmarco import holm, statistics
 
 
 class Tests(unittest.TestCase):
+    def test_paired_statistics_and_multiple_comparisons(self):
+        null = statistics([0, 0, 0], bootstrap=100, permutations=100)
+        self.assertEqual(null['bootstrap_95_ci'], [0, 0])
+        self.assertEqual(null['two_sided_randomization_p'], 1)
+        gain = statistics([.1]*20, bootstrap=100, permutations=1000)
+        self.assertGreater(gain['bootstrap_95_ci'][0], 0)
+        self.assertLess(gain['two_sided_randomization_p'], .01)
+        self.assertEqual(holm({'a': .02, 'b': .03}), {'a': .04, 'b': .04})
+
     def data(self, root):
         data = root / 'data'
         data.mkdir()

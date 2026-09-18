@@ -1,5 +1,11 @@
 # Two-stage research program
 
+The [MS MARCO / TREC DL 2019 pointwise benchmark](reranking/msmarco.md), issue #73,
+is an explicitly authorized additional dataset. It uses frozen supplied passage
+candidates and a monoBERT reference, with nDCG@10 as its primary metric. Keep its
+artifacts and conclusions separate from WSJ. The current scope excludes pairwise
+JEV and new context-window strategies; those are follow-up work.
+
 Read AGENTS.md, stage1/README.md and reranking/README.md before experimenting.
 The immediate objective is reranking research: improve effectiveness and quantify
 the additional search time and cost on an unchanged candidate set.

@@ -1,10 +1,15 @@
 # Stage 2: reranking research
 
-Compare rerankers on the **fixed stage-1 MAP 0.2521 baseline, before all
+For WSJ, compare rerankers on the **fixed stage-1 MAP 0.2521 baseline, before all
 reranking**. Stage 2 reads its saved candidates and writes separate reports under
 `reranking/results/`. Indexing and the frozen lexical run are unchanged.
 
 ## Implementations and results
+
+The additional [MS MARCO / TREC DL 2019 benchmark](msmarco.md) uses supplied
+passage candidates and a monoBERT reranking reference. Its headline metric is
+nDCG@10 and its artifacts live under `results/msmarco-dl2019/`. It does not replace
+the WSJ baseline below. JEV pairwise and new context-window methods are deferred.
 
 | Method | Scoring unit and document score | MAP |
 | --- | --- | ---: |
