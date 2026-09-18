@@ -10,6 +10,10 @@ The additional [MS MARCO / TREC DL 2019 benchmark](msmarco.md) uses supplied
 passage candidates and a monoBERT reranking reference. Its headline metric is
 nDCG@10 and its artifacts live under `results/msmarco-dl2019/`. It does not replace
 the WSJ baseline below. JEV pairwise and new context-window methods are deferred.
+The [completed comparison](results/msmarco-dl2019/results.md) has nDCG@10 0.7177
+for monoBERT, 0.6825 for JEV matched text and 0.6835 for JEV original text.
+JEV's MAP is higher, with longer measured reranking time; the primary differences
+are not significant at Holm-adjusted 0.05. Retain monoBERT as the reference.
 
 | Method | Scoring unit and document score | MAP |
 | --- | --- | ---: |

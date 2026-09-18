@@ -6,6 +6,12 @@ candidates and a monoBERT reference, with nDCG@10 as its primary metric. Keep it
 artifacts and conclusions separate from WSJ. The current scope excludes pairwise
 JEV and new context-window strategies; those are follow-up work.
 
+The [completed MS MARCO comparison](reranking/results/msmarco-dl2019/results.md)
+retains monoBERT as its reference. Both JEV pointwise conditions increased MAP,
+but had lower observed nDCG@10 and longer reranking times in the measured
+configurations. The primary differences were not significant after paired-test
+correction; preserve this result without promoting JEV as a superior replacement.
+
 Read AGENTS.md, stage1/README.md and reranking/README.md before experimenting.
 The immediate objective is reranking research: improve effectiveness and quantify
 the additional search time and cost on an unchanged candidate set.

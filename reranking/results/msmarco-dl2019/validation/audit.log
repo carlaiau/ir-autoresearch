@@ -1,0 +1,4 @@
+{'status': 'passed', 'candidate_pairs': 41042, 'scoring_windows': 41042, 'pairs_needing_multiple_windows': 0, 'pairs_changed_by_decode_normalization': 40804, 'covered_tokens': 3060170, 'coverage_fraction': 1.0, 'ranking_reconstructed': True, 'batch_and_token_counters_verified': True}
+{'status': 'passed', 'candidate_pairs': 41042, 'scoring_units': 41042, 'payload_hashes_and_boundaries_verified': True, 'ranking_reconstructed': True, 'attempt_usage_cost_verified': True}
+{'status': 'passed', 'candidate_pairs': 41042, 'scoring_units': 41042, 'payload_hashes_and_boundaries_verified': True, 'ranking_reconstructed': True, 'attempt_usage_cost_verified': True}
+All audits and paired comparisons complete.

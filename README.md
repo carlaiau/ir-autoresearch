@@ -7,6 +7,12 @@ An additional [MS MARCO / TREC DL 2019 passage benchmark](reranking/msmarco.md)
 compares JEV pointwise reranking with a local monoBERT reference. Its candidates,
 judgments and results are separate from WSJ; the WSJ baseline is unchanged.
 
+The completed MS MARCO comparison scored all 41,042 candidate pairs for 43 judged
+queries. nDCG@10: **monoBERT 0.7177**, **JEV matched text 0.6825**, **JEV original
+text 0.6835**. JEV improved MAP but took longer in these configurations; the
+nDCG differences were not significant after paired-test correction. See the
+[full comparison, timing and cost](reranking/results/msmarco-dl2019/results.md).
+
 | Stage | Status | MAP | Results |
 | --- | --- | ---: | --- |
 | Stage 1: BM25 + query expansion | Fixed baseline; all reranking disabled | **0.2521** | [Saved baseline](stage1/results/integrated-main-20260918/results.md) |

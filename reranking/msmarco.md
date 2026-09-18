@@ -55,7 +55,8 @@ in the environment or ignored `.env` files. The committed input manifest must
 remain unchanged when reproducing; `prepare` is only for initial creation.
 
 ```sh
-.venv-monobert/bin/python reranking/msmarco.py prepare
+# Initial input creation only; the checked-in frozen input already exists:
+# .venv-monobert/bin/python reranking/msmarco.py prepare
 .venv-monobert/bin/python reranking/msmarco.py monobert \
   --results-dir reranking/results/msmarco-dl2019/monobert
 .venv-monobert/bin/python reranking/msmarco.py jev-matched \
@@ -88,7 +89,24 @@ full coverage and reconstructed every ranking. All candidates fit a single
 window; **none** needed MaxP across multiple windows. BERT decode normalization
 changes the supplied text for 40,804 pairs. Consequently the two JEV conditions
 test decoded versus original text representation, not a long-context advantage.
-The JEV comparisons remain pending until their complete evidence is recorded.
+The [completed comparison](results/msmarco-dl2019/results.md) reports both JEV
+conditions, the paired tests, measured time/cost and all audit links. JEV matched
+text achieved nDCG@10 0.6825 / MAP 0.4748; original text achieved 0.6835 / 0.4729.
+Both improve MAP but have lower observed nDCG@10 and longer measured reranking
+time than monoBERT. The primary differences are not significant after Holm
+correction (adjusted p=0.20450 for each comparison). This supports a measured
+tradeoff, not a superiority claim. Total estimated successful-response API cost
+is $1.524018; six recovered failed attempts have unknown billing.
+
+Run the independent audit and regenerate the comparison from saved evidence:
+
+```sh
+.venv-monobert/bin/python reranking/audit_msmarco.py
+```
+
+The audit verifies candidate identity/recall, coverage, exact payload hashes,
+ranking reconstruction and usage/cost accounting, then runs the prespecified
+paired tests. Use `--root` and `--data` for relocated result/data directories.
 
 Run `bash tests/msmarco.sh`, `bash tests/monobert.sh`, `bash tests/jev_compare.sh`,
 `bash tests/two_stage.sh` and `./tests/smoke.sh` before the experiment.

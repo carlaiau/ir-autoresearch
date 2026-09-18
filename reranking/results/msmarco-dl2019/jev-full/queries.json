@@ -1,0 +1,217 @@
+[
+  {
+    "qid": "19335",
+    "scoring_calls": 1000,
+    "seconds": 37.549443166004494
+  },
+  {
+    "qid": "47923",
+    "scoring_calls": 1000,
+    "seconds": 38.1412194580771
+  },
+  {
+    "qid": "87181",
+    "scoring_calls": 1000,
+    "seconds": 37.30572620895691
+  },
+  {
+    "qid": "87452",
+    "scoring_calls": 1000,
+    "seconds": 37.86528754211031
+  },
+  {
+    "qid": "104861",
+    "scoring_calls": 1000,
+    "seconds": 37.67234270903282
+  },
+  {
+    "qid": "130510",
+    "scoring_calls": 1000,
+    "seconds": 40.10726245911792
+  },
+  {
+    "qid": "131843",
+    "scoring_calls": 1000,
+    "seconds": 38.78937749983743
+  },
+  {
+    "qid": "146187",
+    "scoring_calls": 1000,
+    "seconds": 38.28377962484956
+  },
+  {
+    "qid": "148538",
+    "scoring_calls": 1000,
+    "seconds": 37.634797333041206
+  },
+  {
+    "qid": "156493",
+    "scoring_calls": 1000,
+    "seconds": 37.387412291020155
+  },
+  {
+    "qid": "168216",
+    "scoring_calls": 1000,
+    "seconds": 38.93964379187673
+  },
+  {
+    "qid": "182539",
+    "scoring_calls": 1000,
+    "seconds": 39.03645308385603
+  },
+  {
+    "qid": "183378",
+    "scoring_calls": 1000,
+    "seconds": 38.67393520800397
+  },
+  {
+    "qid": "207786",
+    "scoring_calls": 1000,
+    "seconds": 38.51858474989422
+  },
+  {
+    "qid": "264014",
+    "scoring_calls": 1000,
+    "seconds": 38.63929354096763
+  },
+  {
+    "qid": "359349",
+    "scoring_calls": 1000,
+    "seconds": 39.23486112500541
+  },
+  {
+    "qid": "405717",
+    "scoring_calls": 1000,
+    "seconds": 39.13270041602664
+  },
+  {
+    "qid": "443396",
+    "scoring_calls": 1000,
+    "seconds": 38.57717604096979
+  },
+  {
+    "qid": "451602",
+    "scoring_calls": 1000,
+    "seconds": 39.11099966708571
+  },
+  {
+    "qid": "489204",
+    "scoring_calls": 1000,
+    "seconds": 39.90876379213296
+  },
+  {
+    "qid": "490595",
+    "scoring_calls": 1000,
+    "seconds": 38.29020699998364
+  },
+  {
+    "qid": "527433",
+    "scoring_calls": 1000,
+    "seconds": 39.8584915001411
+  },
+  {
+    "qid": "573724",
+    "scoring_calls": 1000,
+    "seconds": 40.00724787497893
+  },
+  {
+    "qid": "833860",
+    "scoring_calls": 1000,
+    "seconds": 37.578496707836166
+  },
+  {
+    "qid": "855410",
+    "scoring_calls": 5,
+    "seconds": 0.36140749999321997
+  },
+  {
+    "qid": "915593",
+    "scoring_calls": 1000,
+    "seconds": 38.07501312484965
+  },
+  {
+    "qid": "962179",
+    "scoring_calls": 1000,
+    "seconds": 38.56272962503135
+  },
+  {
+    "qid": "1037798",
+    "scoring_calls": 1000,
+    "seconds": 38.61109295906499
+  },
+  {
+    "qid": "1063750",
+    "scoring_calls": 1000,
+    "seconds": 37.65221158415079
+  },
+  {
+    "qid": "1103812",
+    "scoring_calls": 1000,
+    "seconds": 37.88177179102786
+  },
+  {
+    "qid": "1106007",
+    "scoring_calls": 1000,
+    "seconds": 39.06707716686651
+  },
+  {
+    "qid": "1110199",
+    "scoring_calls": 1000,
+    "seconds": 37.98225333401933
+  },
+  {
+    "qid": "1112341",
+    "scoring_calls": 1000,
+    "seconds": 37.083106291946024
+  },
+  {
+    "qid": "1113437",
+    "scoring_calls": 1000,
+    "seconds": 37.35409041703679
+  },
+  {
+    "qid": "1114646",
+    "scoring_calls": 1000,
+    "seconds": 36.695946499938145
+  },
+  {
+    "qid": "1114819",
+    "scoring_calls": 1000,
+    "seconds": 36.81151258316822
+  },
+  {
+    "qid": "1115776",
+    "scoring_calls": 1000,
+    "seconds": 37.58788224984892
+  },
+  {
+    "qid": "1117099",
+    "scoring_calls": 1000,
+    "seconds": 38.86346208304167
+  },
+  {
+    "qid": "1121402",
+    "scoring_calls": 1000,
+    "seconds": 37.52261108299717
+  },
+  {
+    "qid": "1121709",
+    "scoring_calls": 37,
+    "seconds": 1.4498741670977324
+  },
+  {
+    "qid": "1124210",
+    "scoring_calls": 1000,
+    "seconds": 36.88235666695982
+  },
+  {
+    "qid": "1129237",
+    "scoring_calls": 1000,
+    "seconds": 37.05975349992514
+  },
+  {
+    "qid": "1133167",
+    "scoring_calls": 1000,
+    "seconds": 36.86653458396904
+  }
+]
