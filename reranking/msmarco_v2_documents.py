@@ -23,8 +23,9 @@ QUESTION={'type':'noul','instructions':'Does this document text provide substant
 URLS={'queries.tsv':'https://msmarco.z22.web.core.windows.net/msmarcoranking/2021_queries.tsv',
       'candidates.gz':'https://msmarco.z22.web.core.windows.net/msmarcoranking/2021_document_top100.txt.gz',
       'qrels.txt':'https://trec.nist.gov/data/deep/2021.qrels.docs.final.txt'}
-REFERENCE={'pash_doc_r3':{'recip_rank':.9772,'ndcg_cut_10':.7164,'ncg_100':.4376,'map':.2672},
-           'CIP_run2':{'recip_rank':.9373,'ndcg_cut_10':.6783,'ncg_100':.4376,'map':.2478}}
+# Overview Table 2; P_10 and recall_100 from official NIST trec-browser summaries.
+REFERENCE={'pash_doc_r3':{'recip_rank':.9772,'ndcg_cut_10':.7164,'ncg_100':.4376,'map':.2672,'P_10':.8526,'recall_100':.3195},
+           'CIP_run2':{'recip_rank':.9373,'ndcg_cut_10':.6783,'ncg_100':.4376,'map':.2478,'P_10':.8140,'recall_100':.3195}}
 
 def save(path,value):atomic_write(path,json.dumps(value,indent=2,sort_keys=True)+'\n')
 

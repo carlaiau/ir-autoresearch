@@ -3,23 +3,42 @@
 [Issue #78](https://github.com/carlaiau/jev-reranking/issues/78).
 Status: implementation and candidate-text preparation; no JEV results yet.
 
-Compare full-document pointwise JEV with JEV passage MaxP on the official
+Compare JEV large-window MaxP with JEV small-passage MaxP on the official
 TREC DL 2021 document top-100 lists. All 57 judged queries have 100 candidates:
 5,700 pairs, 5,679 unique documents. This is separate from the DL2019 passage
 experiment and frozen WSJ baseline. No monoBERT inference is required.
 
 ## Published references
 
-| Run | NDCG@10 | MAP, depth 100 | NIST MRR | NCG@100 |
-| --- | ---: | ---: | ---: | ---: |
-| PASH `pash_doc_r3` | 0.7164 | 0.2672 | 0.9772 | 0.4376 |
-| CIP `CIP_run2` | 0.6783 | 0.2478 | 0.9373 | 0.4376 |
+| Published run | MAP, depth 100 | P@10 | NIST MRR | NDCG@10 | NCG@100 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| PASH `pash_doc_r3` | 0.2672 | 0.8526 | 0.9772 | 0.7164 | 0.4376 |
+| BERT `CIP_run2` | 0.2478 | 0.8140 | 0.9373 | 0.6783 | 0.4376 |
+| BERT MaxP `CIP_run3` | 0.2457 | 0.8175 | 0.9567 | 0.6668 | 0.4376 |
 
 Source: [TREC 2021 overview, Table 2](https://www.microsoft.com/en-us/research/uploads/prod/2022/05/trec2021-deeplearning-overview-final.pdf).
+P@10 is available in the official NIST summaries for
+[PASH](https://pages.nist.gov/trec-browser/trec30/deep/results/#pash_doc_r3),
+[CIP run 2](https://pages.nist.gov/trec-browser/trec30/deep/results/#cip_run2) and
+[CIP run 3](https://pages.nist.gov/trec-browser/trec30/deep/results/#cip_run3).
+Their MAP, MRR and NDCG@10 also agree with the overview; all three report
+recall@100 of 0.3195. Verified 2026-09-18.
+
+PASH combines DeBERTa-2.6B and T5-3B in a multistage system. CIP run 2 uses
+BERT-large and averages its four highest passage scores. CIP run 3 uses the
+highest passage score (MaxP), making it a useful additional architectural
+reference for our window aggregation. Their training differs too, so the CIP
+comparison does not isolate aggregation alone. See the official
+[run descriptions](https://pages.nist.gov/trec-browser/trec30/deep/runs/#cip_run2).
+PASH and CIP run 2 remain the two preselected references; CIP run 3 is additional
+context identified before any JEV evaluation.
+
 These are published reranking systems, not locally reproduced checkpoints.
 Original run downloads return HTTP 401 as checked on 2026-09-18. Compare
 aggregates; paired tests against these systems require their per-query outputs.
-Published P@10, time and cost are not supplied by this table; leave them unknown.
+Comparable timing, call counts and dollar cost are not supplied by these result
+tables; leave them unknown. NIST MRR is `recip_rank`, not sparse-label MS MARCO
+MRR@10. Published references do not require running their models locally.
 
 The [2023 overview](https://trec.nist.gov/pubs/trec32/papers/Overview_deep.pdf)
 is additional context. Its document table uses 82 different queries and all
@@ -47,18 +66,24 @@ original retrieval scores and trec_eval's score-tie handling.
   384-token windows with 64-token overlap, query-adjusted to the 512-token pair
   limit. Score all decoded windows and take each document's maximum. Preserve
   intervals and token-slice hashes. Decoding changes normalization.
-- **JEV full document:** one score per complete canonical document, no truncation.
+- **JEV large-window MaxP:** overlapping windows sized for JEV's context budget,
+  preserving the complete original canonical text. Take the maximum Noul score
+  across all windows. Short documents fit one window. This user-approved design
+  replaces the original single-call full-document arm; implementation and exact
+  window sizing remain pending context validation.
 
 Both use the same Noul question, pinned `jev-1.13.0`, eight workers within each
 query, explicit retries and separate empty caches. The prompt is in
 `msmarco_v2_documents.py`. It is frozen before evaluation, with no test-set tuning.
 
 JEV documentation currently specifies 32k tokens for state plus the longest
-question. Preflight reports payload sizes and flags requests over the provider's
-rough 150,000-English-character illustration; this is not an exact tokenizer
-count. Resolve any flagged full-document inputs before inference. Do not silently
-truncate, skip documents, or mix passage fallback into a full-document run.
-Other provider input-limit failures stop the run and preserve partial evidence.
+question. Reserve space for the query, instructions, criteria and formatting.
+The published API and installed SDK expose no exact JEV tokenizer or token-count
+endpoint. Validate sizing and freeze the overlap policy before measured inference;
+BERT tokens and character heuristics are not exact JEV counts. Record any sizing
+probe calls separately. Preserve window offsets/hashes and check full coverage,
+including document tails. Do not truncate, skip documents or shrink the query set.
+Provider input-limit failures stop the run and preserve partial evidence.
 
 ## Evaluation and accounting
 
@@ -69,7 +94,7 @@ by ideal gain at rank 100 (not all judged gain); it must stay constant under
 reranking. Record exact evaluation commands and original judgments.
 
 Predeclare three headline comparisons: each JEV arm versus supplied retrieval,
-and full-document versus passage MaxP. Use paired bootstrap intervals (10,000
+and large-window versus small-passage MaxP. Use paired bootstrap intervals (10,000
 resamples) and sign randomization (100,000 draws), seed 78, with Holm correction
 across these three NDCG@10 tests. Published-reference comparisons remain aggregate
 and descriptive without source runs. Unknown model training exposure limits
@@ -96,11 +121,11 @@ python reranking/msmarco_v2_documents.py jev-passages \
   --model-cache /path/to/tokenizer-cache \
   --results-dir reranking/results/msmarco-v2-dl2021-documents/jev-passages \
   --cache .cache/msmarco-v2-dl2021/jev-passages
-python reranking/msmarco_v2_documents.py jev-full \
-  --model-cache /path/to/tokenizer-cache \
-  --results-dir reranking/results/msmarco-v2-dl2021-documents/jev-full \
-  --cache .cache/msmarco-v2-dl2021/jev-full
 ```
+
+The existing `jev-full` command implements the superseded single-call condition;
+do not use it for the approved large-window experiment. Its replacement command
+will be documented after window sizing is validated and implemented.
 
 Use the installed JEV/tokenizer environment; `--env-root` can point to an existing
 checkout's ignored credentials. Prepare only once; frozen inputs/results cannot
