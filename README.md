@@ -14,15 +14,25 @@ all grades; MAP, P@10 and recip_rank treat only grades 2–3 as relevant.
 
 ## Passage reranking results
 
-| Method | nDCG@10 | MAP | P@10 | recip_rank |
-| --- | ---: | ---: | ---: | ---: |
-| monoBERT | **0.7177** | 0.4488 | **0.6233** | **0.8717** |
-| JEV matched passage text | 0.6825 | **0.4748** | 0.6116 | 0.8594 |
-| JEV original passage text | 0.6835 | 0.4729 | 0.6163 | 0.8447 |
+| Method | Source | nDCG@10 | MAP | P@10 | recip_rank |
+| --- | --- | ---: | ---: | ---: | ---: |
+| monoBERT | Our local implementation | 0.7177 | 0.4488 | **0.6233** | 0.8717 |
+| JEV matched passage text | Our run | 0.6825 | **0.4748** | 0.6116 | 0.8594 |
+| JEV original passage text | Our run | 0.6835 | 0.4729 | 0.6163 | 0.8447 |
+| IDST BERT (`idst_bert_pr2`) | Paper, Table 4 | **0.7379** | 0.4565 | — | **0.8818** |
+| TU Vienna neural (`TUW19-p3-re`) | Paper, Table 4 | 0.6746 | 0.4113 | — | 0.8568 |
+
+Published rows come from [Table 4 of the TREC DL 2019 overview](https://trec.nist.gov/pubs/trec28/papers/OVERVIEW.DL.pdf#page=9)
+and are classified there as reranking runs. They are historical references, not
+local reproductions or part of our paired tests; exact candidate identity has
+not been audited against our manifest. `recip_rank` uses the paper's NIST MRR,
+not its separate MS MARCO MRR. P@10 is not reported there. Bold marks the highest
+reported value in each column among the displayed methods.
 
 P@10 measures precision in the first ten results; recip_rank averages the
 reciprocal rank of the first relevant result. Higher is better for all metrics.
-JEV improves MAP but has lower observed nDCG@10. Neither primary difference is
+Against our local monoBERT, JEV improves MAP but has lower observed nDCG@10.
+Neither primary difference is
 significant after Holm correction (p=0.20450 each); this does not establish
 superiority or equivalence. monoBERT remains the reference.
 
@@ -37,7 +47,8 @@ JEV 1.13.0 with eight workers per query. See the [full results and audits](reran
 
 ## Methods and reproduction
 
-- monoBERT uses `castorini/monobert-large-msmarco`.
+- monoBERT was implemented and run locally in this repository using the pretrained
+  `castorini/monobert-large-msmarco` checkpoint; we did not retrain the model.
 - JEV matched passage text uses the decoded token windows supplied to monoBERT.
 - JEV original passage text uses the dataset passage with its original casing
   and spacing, not its source article.
