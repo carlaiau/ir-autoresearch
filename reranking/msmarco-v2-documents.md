@@ -1,7 +1,10 @@
 # MS MARCO v2: document reranking with JEV
 
 [Issue #78](https://github.com/carlaiau/jev-reranking/issues/78).
-Status: implementation and candidate-text preparation; no JEV results yet.
+Status: all 5,679 candidate documents recovered and verified; input frozen.
+[Supplied baseline](results/msmarco-v2-dl2021-documents/supplied-baseline/results.md):
+MAP 0.2126, P@10 0.6684, NIST MRR 0.8367, NDCG@10 0.5116.
+Large-window implementation remains pending; no JEV results yet.
 
 Compare JEV large-window MaxP with JEV small-passage MaxP on the official
 TREC DL 2021 document top-100 lists. All 57 judged queries have 100 candidates:
