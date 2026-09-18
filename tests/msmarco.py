@@ -6,15 +6,53 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'reranking'))
-from msmarco import (QUESTION, evaluation, freeze, read_inputs, validate_scores,
+from msmarco import (QUESTION, evaluation, execute, freeze, read_inputs, validate_scores,
                      verified_inputs)
 from jev_compare import Service
-from audit_msmarco import holm, statistics
+from audit_msmarco import audit_mono, holm, statistics
+
+
+class FakeBackend:
+    limit, special_tokens, device, parameters = 512, 3, 'cpu', 0
+    unexpected_keys, versions = [], {'synthetic': 'test'}
+    def __init__(self, args): pass
+    def tokenize(self, text): return list(range(len(text.split())))
+    def encode(self, text, **kwargs): return self.tokenize(text)
+    def decode(self, ids, **kwargs): return ' '.join(map(str, ids))
+    def num_special_tokens_to_add(self, pair): return 3
+    def pair(self, query, passage):
+        return {'input_ids': [101]+query+[102]+passage+[102]}
+    def predict(self, batch): return [-.5]*len(batch)
 
 
 class Tests(unittest.TestCase):
+    def test_complete_adapter_audit_and_failure_isolation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); data = self.data(root); source = root/'input'
+            freeze(data, source)
+            args = SimpleNamespace(data=data, input=source, method='monobert', results_dir=root/'mono',
+                                   top_k=1000, passage_tokens=384, overlap_tokens=64, batch_size=8)
+            with patch('msmarco.BertBackend', FakeBackend):
+                execute(args)
+            runs, queries, docs, _, _ = read_inputs(data)
+            result = audit_mono(args.results_dir, source, runs, queries, docs, FakeBackend(None))
+            self.assertEqual(result['status'], 'passed')
+            self.assertEqual(result['candidate_pairs'], 2)
+            with self.assertRaises(FileExistsError), patch('msmarco.BertBackend', FakeBackend):
+                execute(args)
+            args.results_dir = root/'failed'
+            class Broken(FakeBackend):
+                def predict(self, batch): raise RuntimeError('synthetic failure')
+            with self.assertRaises(RuntimeError), patch('msmarco.BertBackend', Broken):
+                execute(args)
+            failure = json.loads((args.results_dir/'failure.json').read_text())
+            self.assertEqual(failure['status'], 'failed')
+            self.assertEqual(failure['counters']['model_forward_calls_attempted'], 1)
+            self.assertFalse((args.results_dir/'manifest.json').exists())
+
     def test_paired_statistics_and_multiple_comparisons(self):
         null = statistics([0, 0, 0], bootstrap=100, permutations=100)
         self.assertEqual(null['bootstrap_95_ci'], [0, 0])
