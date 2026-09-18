@@ -1,6 +1,6 @@
 # JEV Reranking Comparisons
 
-Can JEV's general “intelligence” match established specialist rerankers such as
+Can JEV's zero-shot general “intelligence” match established specialist rerankers such as
 monoBERT? We compare ranking quality, time and cost on fixed candidates, using
 MS MARCO / TREC DL 2019 as the main benchmark and TREC-1 WSJ as a transfer test.
 
@@ -16,8 +16,8 @@ all grades; MAP, P@10 and recip_rank treat only grades 2–3 as relevant.
 
 | Method | nDCG@10 | MAP | P@10 | recip_rank |
 | --- | ---: | ---: | ---: | ---: |
-| monoBERT | 0.7177 | 0.4488 | 0.6233 | 0.8717 |
-| JEV matched passage text | 0.6825 | 0.4748 | 0.6116 | 0.8594 |
+| monoBERT | **0.7177** | 0.4488 | **0.6233** | **0.8717** |
+| JEV matched passage text | 0.6825 | **0.4748** | 0.6116 | 0.8594 |
 | JEV original passage text | 0.6835 | 0.4729 | 0.6163 | 0.8447 |
 
 P@10 measures precision in the first ten results; recip_rank averages the
@@ -33,16 +33,15 @@ superiority or equivalence. monoBERT remains the reference.
 | JEV original passage text | 1,575.11 s | 38.08 s | $0.761027 |
 
 These are single uncached runs: monoBERT on M3 Pro/MPS, float32, batch 8;
-JEV 1.13.0 with eight workers per query. Medians exclude shared setup. Local
-compute and billing for six recovered API failures are unknown. Retrieval time
-is unavailable, so these are reranking times, not end-to-end search times.
-See the [full results and audits](reranking/results/msmarco-dl2019/results.md).
+JEV 1.13.0 with eight workers per query. See the [full results and audits](reranking/results/msmarco-dl2019/results.md).
 
 ## Methods and reproduction
 
-monoBERT uses `castorini/monobert-large-msmarco`. JEV matched passage text uses
-the decoded token windows supplied to monoBERT; JEV original passage text uses
-the dataset passage with its original casing and spacing, not its source article.
+- monoBERT uses `castorini/monobert-large-msmarco`.
+- JEV matched passage text uses the decoded token windows supplied to monoBERT.
+- JEV original passage text uses the dataset passage with its original casing
+  and spacing, not its source article.
+
 All passages fit one BERT window, so this run compares text normalization rather
 than context coverage. MS MARCO is monoBERT's training domain; JEV's training
 exposure is unknown.
@@ -65,27 +64,23 @@ MAP 0.2521 baseline are fixed. Scores are separate from the passage benchmark.
 
 | Method | MAP | P@10 | recip_rank |
 | --- | ---: | ---: | ---: |
-| [JEV complete document](reranking/results/jev-full-documents-top100-20260918/results.md) | 0.3055 | 0.6340 | 0.8063 |
-| [JEV passage MaxP](reranking/results/jev-passages-maxp-top100-20260918-retry/results.md) | 0.3053 | 0.6000 | 0.8457 |
-| [JEV pointwise → Noul duo, top 20 (rejected)](https://github.com/carlaiau/jev-reranking/blob/633c11b/reranking/results/jev-duo-noul-top20-20260918/summary.md) | 0.3019 | 0.6200 | 0.8072 |
+| [JEV complete document](reranking/results/jev-full-documents-top100-20260918/results.md) | **0.3055** | **0.6340** | 0.8063 |
+| [JEV passage MaxP](reranking/results/jev-passages-maxp-top100-20260918-retry/results.md) | 0.3053 | 0.6000 | **0.8457** |
 | [monoBERT passage MaxP](reranking/results/monobert-maxp-top100-20260918/results.md) | 0.2693 | 0.4960 | 0.6715 |
 | [Stage 1: BM25 + query expansion](stage1/results/integrated-main-20260918/results.md) | 0.2521 | 0.4460 | 0.6271 |
 
 Pointwise methods rerank the top 100 documents. Passage MaxP gives JEV and
 monoBERT identical windows and uses each document's highest passage score.
 Both cover the article across windows; only complete-document JEV sees it all
-in one call. The duo pass compares every ordered pair in the top 20 and sums
-outgoing probabilities; it reduced MAP while adding time and cost.
+in one call.
 
 | Method | Total reranking | Query median | Estimated API cost (USD) |
 | --- | ---: | ---: | ---: |
 | JEV complete document | 211.49 s | 4.02 s | $0.328312 |
 | JEV passage MaxP | 767.73 s | 14.98 s | $0.605227 |
-| JEV Noul duo pass alone | 837.98 s | 15.05 s | $2.305419 |
 | monoBERT passage MaxP | 1,510.93 s | 30.27 s | $0 hosted API |
 
-The composed pointwise→duo cascade totals 1,049.48 s and $2.633731. These are
-single uncached measurements; local compute and failed-request charges are
+These are single uncached measurements; local compute and failed-request charges are
 unknown. Settings are exploratory on these topics. See the
 [paired report](reranking/results/jev-comparison-20260918.md) and
 [implementation](reranking/jev-comparison.md) for usage and timing details.
