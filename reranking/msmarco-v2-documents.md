@@ -4,7 +4,7 @@
 Status: all 5,679 candidate documents recovered and verified; input frozen.
 [Supplied baseline](results/msmarco-v2-dl2021-documents/supplied-baseline/results.md):
 MAP 0.2126, P@10 0.6684, NIST MRR 0.8367, NDCG@10 0.5116.
-Large-window implementation remains pending; no JEV results yet.
+Large-window implementation is complete and live context validation is in progress; no measured JEV results yet.
 
 Compare JEV large-window MaxP with JEV small-passage MaxP on the official
 TREC DL 2021 document top-100 lists. All 57 judged queries have 100 candidates:
@@ -72,8 +72,9 @@ original retrieval scores and trec_eval's score-tie handling.
 - **JEV large-window MaxP:** overlapping windows sized for JEV's context budget,
   preserving the complete original canonical text. Take the maximum Noul score
   across all windows. Short documents fit one window. This user-approved design
-  replaces the original single-call full-document arm; implementation and exact
-  window sizing remain pending context validation.
+  replaces the original single-call full-document arm. Initial windows contain
+  at most 110,000 UTF-8 bytes of original text, with up to 4,000 bytes of overlap.
+  Boundaries always fall between Unicode characters.
 
 Both use the same Noul question, pinned `jev-1.13.0`, eight workers within each
 query, explicit retries and separate empty caches. The prompt is in
@@ -82,11 +83,24 @@ query, explicit retries and separate empty caches. The prompt is in
 JEV documentation currently specifies 32k tokens for state plus the longest
 question. Reserve space for the query, instructions, criteria and formatting.
 The published API and installed SDK expose no exact JEV tokenizer or token-count
-endpoint. Validate sizing and freeze the overlap policy before measured inference;
-BERT tokens and character heuristics are not exact JEV counts. Record any sizing
-probe calls separately. Preserve window offsets/hashes and check full coverage,
-including document tails. Do not truncate, skip documents or shrink the query set.
-Provider input-limit failures stop the run and preserve partial evidence.
+endpoint. UTF-8 byte lengths are a sizing proxy, not model token counts.
+Every initial request above 28,000 serialized UTF-8 bytes is probed against JEV.
+If the provider rejects its context size, or reports more than 30,000 input
+tokens, halve that text window's byte cap and repeat with overlap. Smaller
+requests use a conservative byte threshold without a claim of exact tokenization.
+Unrelated API errors stop validation. Actual relevance scores and qrels are never
+used to choose window sizes.
+
+Freeze the resulting per-query/document character intervals in
+`large-window-plan.json`. Before timed runs, audit complete text coverage and
+confirm every final request above the probe threshold has an accepted probe
+within the token budget. These are empirical checks of the current dataset and
+provider, not a universal tokenizer guarantee. Provider input-limit failures in
+the measured runs stop execution and preserve evidence rather than silently
+changing the plan. Probe cost/time is separate; measured runs use fresh caches.
+
+MaxP uses the maximum window probability as a ranking score; it does not imply
+that the maximum is a calibrated probability for the entire document.
 
 ## Evaluation and accounting
 
@@ -119,16 +133,32 @@ Download the three small inputs into ignored `.cache/msmarco-v2-dl2021/`, named
 ```sh
 python3 reranking/fetch_msmarco_v2.py .cache/msmarco-v2-dl2021
 python reranking/msmarco_v2_documents.py prepare
+python reranking/msmarco_v2_documents.py validate-windows \
+  --results-dir reranking/results/msmarco-v2-dl2021-documents/context-validation \
+  --cache .cache/msmarco-v2-dl2021/context-validation
 python reranking/msmarco_v2_documents.py preflight --model-cache /path/to/tokenizer-cache
 python reranking/msmarco_v2_documents.py jev-passages \
   --model-cache /path/to/tokenizer-cache \
   --results-dir reranking/results/msmarco-v2-dl2021-documents/jev-passages \
   --cache .cache/msmarco-v2-dl2021/jev-passages
+python reranking/msmarco_v2_documents.py jev-large-windows \
+  --model-cache /path/to/tokenizer-cache \
+  --results-dir reranking/results/msmarco-v2-dl2021-documents/jev-large-windows \
+  --cache .cache/msmarco-v2-dl2021/jev-large-windows
 ```
 
-The existing `jev-full` command implements the superseded single-call condition;
-do not use it for the approved large-window experiment. Its replacement command
-will be documented after window sizing is validated and implemented.
+The superseded `jev-full` command has been removed. Run the measured conditions
+sequentially to avoid mutual contention; each uses eight concurrent requests.
+After validation and preflight, the durable queue can run both automatically:
+
+```sh
+python reranking/run_msmarco_v2_pair.py \
+  --env-root /path/to/credential-checkout \
+  --model-cache /path/to/tokenizer-cache
+```
+
+`run-queue.json` records queued/running/completed/failed states. A failed first
+condition stops the queue; existing results and caches are never overwritten.
 
 Use the installed JEV/tokenizer environment; `--env-root` can point to an existing
 checkout's ignored credentials. Prepare only once; frozen inputs/results cannot

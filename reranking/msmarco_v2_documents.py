@@ -144,23 +144,135 @@ def prepare_tasks(runs,queries,docs,tokenizer):
             full[q].append({'qid':q,'docid':d,'document_tokens':len(ids),'text':docs[d]})
     return tasks,full
 
+# Bytes are a conservative sizing proxy, not JEV tokens. Large payloads are
+# empirically checked with the provider before boundaries are frozen.
+WINDOW_POLICY={'initial_text_utf8_bytes':110000,'overlap_utf8_bytes':4000,
+               'probe_payload_above_utf8_bytes':28000,'probe_max_input_tokens':30000,
+               'provider_state_question_limit':32000}
+
+def byte_spans(text,cap,overlap=4000):
+    if cap<=overlap or overlap<0:raise ValueError('invalid window size')
+    offsets=[0]
+    for c in text:offsets.append(offsets[-1]+len(c.encode('utf-8')))
+    import bisect
+    a=0
+    while a<len(text):
+        b=bisect.bisect_right(offsets,offsets[a]+cap)-1
+        if b<=a:raise ValueError('window cannot fit character')
+        yield a,b
+        if b==len(text):break
+        a=max(a+1,bisect.bisect_left(offsets,offsets[b]-overlap))
+
+def window_task(q,d,text,a,b,i):
+    return {'qid':q,'docid':d,'passage_index':i,'character_start':a,'character_end':b,
+            'document_characters':len(text),'text':text[a:b]}
+
+def payload_bytes(task,query):
+    return len(json.dumps({'model':'jev-1.13.0','state':{'query':query,'candidate_document':task['text']},
+                          'questions':{'relevant':QUESTION}},ensure_ascii=False).encode('utf-8'))
+
+def large_tasks(args,runs,queries,docs):
+    plan=json.loads((args.input.parent/'large-window-plan.json').read_text())
+    if plan['input_manifest_sha256']!=sha(args.input/'manifest.json') or plan['policy']!=WINDOW_POLICY or plan['question']!=QUESTION or plan['model']!=args.model:
+        raise ValueError('large-window plan mismatch')
+    tasks={q:[] for q in runs};seen=set()
+    for pair in plan['pairs']:
+        q,d=pair['qid'],pair['docid'];text=docs[d];spans=pair['spans']
+        if (q,d) in seen:raise ValueError('duplicate window plan pair')
+        seen.add((q,d));coverage(spans,len(text))
+        if spans!=sorted(spans) or any(a<0 or b>len(text) or a>=b for a,b in spans):raise ValueError('invalid intervals')
+        tasks[q].extend(window_task(q,d,text,a,b,i) for i,(a,b) in enumerate(spans))
+    if seen!={(q,d) for q,rows in runs.items() for d,_,_ in rows}:raise ValueError('window plan candidate mismatch')
+    return tasks
+
+def validate_windows(args):
+    runs,queries,docs,_=verified(args)
+    plan_path=args.input.parent/'large-window-plan.json'
+    if plan_path.exists():raise ValueError('window plan already frozen')
+    dest=args.results_dir;dest.mkdir(parents=True,exist_ok=False)
+    if args.cache.exists() and any(args.cache.iterdir()):raise ValueError('validation requires fresh cache')
+    service=PinnedService(args,dest);pairs=[];probe_index=0;start=time.perf_counter()
+    try:
+        for q,rows in runs.items():
+            for d,_,_ in rows:
+                text=docs[d];pending=list(byte_spans(text,WINDOW_POLICY['initial_text_utf8_bytes']));accepted=[]
+                while pending:
+                    a,b=pending.pop(0);task=window_task(q,d,text,a,b,probe_index);split=False
+                    if payload_bytes(task,queries[q])>WINDOW_POLICY['probe_payload_above_utf8_bytes']:
+                        probe_index+=1
+                        try:
+                            row=service.score(task,queries[q])
+                        except Exception as error:
+                            status=getattr(error,'status',getattr(error,'status_code',None))
+                            detail=str(error).lower()
+                            if status not in (400,413,422) or not any(t in detail for t in ('token','context','too long','too large')):raise
+                            split=True
+                        else:
+                            usage=row['response']['usage'].get('input_tokens')
+                            if not isinstance(usage,int) or usage<=0:raise ValueError('missing provider token usage')
+                            split=usage>WINDOW_POLICY['probe_max_input_tokens']
+                    if split:
+                        cap=len(text[a:b].encode('utf-8'))//2
+                        if cap<=WINDOW_POLICY['overlap_utf8_bytes']:raise ValueError('cannot safely split context')
+                        pending[0:0]=[(a+x,a+y) for x,y in byte_spans(text[a:b],cap)]
+                    else:accepted.append([a,b])
+                accepted.sort();coverage(accepted,len(text));pairs.append({'qid':q,'docid':d,'spans':accepted})
+            save(dest/'progress.json',{'status':'running','pairs_validated':len(pairs),'api_attempts':len(service.attempts)})
+            print(f'context validation: {len(pairs)}/5700 pairs; {len(service.attempts)} attempts',flush=True)
+        plan={'input_manifest_sha256':sha(args.input/'manifest.json'),'policy':WINDOW_POLICY,'question':QUESTION,'model':args.model,'pairs':pairs}
+        save(plan_path,plan)
+        report={'status':'complete','purpose':'context sizing only; scores not used to select policy or measured ranking','policy':WINDOW_POLICY,
+                'plan_sha256':sha(plan_path),'pairs':len(pairs),'windows':sum(len(p['spans']) for p in pairs),
+                'api_attempts':len(service.attempts),'failed_api_attempts':sum(r['status']=='failed' for r in service.attempts),
+                'elapsed_seconds':time.perf_counter()-start,**accounting(service.rows,args.input_usd_per_million,args.output_usd_per_million)}
+        save(dest/'manifest.json',report);save(dest/'progress.json',{'status':'complete','pairs_validated':len(pairs),'api_attempts':len(service.attempts)});print(json.dumps(report,indent=2))
+    except BaseException as error:
+        save(dest/'failure.json',{'status':'failed','error_type':type(error).__name__,'api_attempts':len(service.attempts),
+                                 **accounting(service.rows,args.input_usd_per_million,args.output_usd_per_million)})
+        raise
+    finally:service.close()
+
 def tokenizer_for(args):
     from transformers import BertTokenizerFast
     return BertTokenizerFast.from_pretrained(MODEL,revision=REVISION,cache_dir=args.model_cache,local_files_only=True)
 
+def audit_large_windows(args,tasks,queries):
+    validation=args.input.parent/'context-validation'
+    meta=json.loads((validation/'manifest.json').read_text())
+    if meta['status']!='complete' or meta['plan_sha256']!=sha(args.input.parent/'large-window-plan.json'):
+        raise ValueError('context validation not complete or plan changed')
+    rows=[json.loads(line) for line in (validation/'scores.jsonl').read_text().splitlines()]
+    evidence={(r['qid'],r['docid'],r['character_start'],r['character_end'],r['payload_text_sha256']):r for r in rows}
+    probed=0;maximum=0;short=0
+    for jobs in tasks.values():
+        for t in jobs:
+            if payload_bytes(t,queries[t['qid']])<=WINDOW_POLICY['probe_payload_above_utf8_bytes']:
+                short+=1;continue
+            key=(t['qid'],t['docid'],t['character_start'],t['character_end'],digest(t['text']))
+            r=evidence.get(key)
+            if r is None or r['response']['model']!=args.model:raise ValueError('missing final-window provider probe')
+            n=r['response']['usage']['input_tokens']
+            if not 0<n<=WINDOW_POLICY['probe_max_input_tokens']:raise ValueError('final window exceeds token target')
+            maximum=max(maximum,n);probed+=1
+    return {'status':'passed','provider_probed_final_windows':probed,'small_windows_below_byte_threshold':short,
+            'maximum_final_probed_input_tokens':maximum,'complete_original_character_coverage':True,
+            'validation_manifest_sha256':sha(validation/'manifest.json'),'probe_scores_sha256':sha(validation/'scores.jsonl')}
+
 def preflight(args):
     runs,queries,docs,meta=verified(args)
-    parts,full=prepare_tasks(runs,queries,docs,tokenizer_for(args))
+    parts,_=prepare_tasks(runs,queries,docs,tokenizer_for(args))
+    full=large_tasks(args,runs,queries,docs)
+    context_audit=audit_large_windows(args,full,queries)
     def payload(t):return {'model':'jev-1.13.0','state':{'query':queries[t['qid']],'candidate_document':t['text']},'questions':{'relevant':QUESTION}}
-    result={'status':'preflight','input_manifest_sha256':sha(args.input/'manifest.json'),'model':'jev-1.13.0','tokenizer':MODEL,'tokenizer_revision':REVISION,
-            'question':QUESTION,'context_policy':'32k provider tokens for state plus longest question; BERT counts and character heuristics are not exact JEV counts',
+    result={'status':'preflight','runner_sha256':sha(Path(__file__)),'context_audit':context_audit,'input_manifest_sha256':sha(args.input/'manifest.json'),'model':'jev-1.13.0','tokenizer':MODEL,'tokenizer_revision':REVISION,
+            'large_window_plan_sha256':sha(args.input.parent/'large-window-plan.json'),'question':QUESTION,'context_policy':'32k provider tokens for state plus longest question; BERT counts and character heuristics are not exact JEV counts',
             'pricing_source':'https://docs.typesafe.ai/models; verified 2026-09-18','input_usd_per_million':.042,'output_usd_per_million':0,'conditions':{}}
-    for name,tasks in [('jev-passages',parts),('jev-full',full)]:
+    for name,tasks in [('jev-passages',parts),('jev-large-windows',full)]:
         sizes=[len(json.dumps(payload(t),ensure_ascii=False)) for jobs in tasks.values() for t in jobs]
         result['conditions'][name]={'scoring_calls':len(sizes),'maximum_payload_characters':max(sizes),'total_payload_characters':sum(sizes),
                                  'rough_input_tokens_at_4_chars_per_token':sum(sizes)/4,'rough_api_cost_usd_at_4_chars_per_token':sum(sizes)/4*.042/1e6,
                                  'requests_over_150000_characters':[{'qid':t['qid'],'docid':t['docid'],'characters':len(json.dumps(payload(t),ensure_ascii=False))} for jobs in tasks.values() for t in jobs if len(json.dumps(payload(t),ensure_ascii=False))>150000]}
-    result['estimate_note']='Character/4 is a planning heuristic, not a token count or guaranteed cost/context bound; validate oversized documents before inference.'
+    result['estimate_note']='Character/4 estimates are rough, not exact token/cost bounds. Large-window context validation and coverage passed; see context_audit. Probe spend is separate.'
     save(args.input.parent/'preflight.json',result);print(json.dumps(result,indent=2))
 
 
@@ -176,14 +288,16 @@ def execute(args,service_factory=PinnedService):
     if not args.cache_only and args.cache.exists() and any(args.cache.iterdir()):raise ValueError('uncached run requires empty cache')
     pre=json.loads((args.input.parent/'preflight.json').read_text())
     if pre['input_manifest_sha256']!=sha(args.input/'manifest.json') or pre['question']!=QUESTION or pre['model']!=args.model:raise ValueError('preflight mismatch')
-    if args.command=='jev-full' and pre['conditions']['jev-full']['requests_over_150000_characters']:
-        raise ValueError('oversized complete documents: resolve context protocol before full run')
+    if pre['runner_sha256']!=sha(Path(__file__)):raise ValueError('runner changed since preflight')
+    if pre['large_window_plan_sha256']!=sha(args.input.parent/'large-window-plan.json'):raise ValueError('window plan changed')
     dest=args.results_dir;dest.mkdir(parents=True,exist_ok=False)
     meta={'dataset':DATASET,'status':'running','method':args.command,**provenance(),
           'started_at_utc':datetime.now(timezone.utc).isoformat(),'input_manifest_sha256':sha(args.input/'manifest.json'),
           'preflight_sha256':sha(args.input.parent/'preflight.json'),'input_identity_sha256':frozen['input_identity_sha256'],
           'queries':len(runs),'candidate_pairs':sum(map(len,runs.values())),'top_k':100,'binary_relevance_threshold':1,
-          'tokenizer':MODEL,'tokenizer_revision':REVISION,'question':QUESTION,'model_requested':args.model,
+          'tokenizer':MODEL if args.command=='jev-passages' else None,'tokenizer_revision':REVISION if args.command=='jev-passages' else None,
+          'large_window_plan_sha256':pre['large_window_plan_sha256'],'context_audit':pre['context_audit'],
+          'question':QUESTION,'model_requested':args.model,
           'workers':args.workers,'sdk_retries':0,'max_attempts':args.max_attempts,'retrieval_seconds':None,'compute_cost_usd':None,
           'source_sha256':{f:sha(ROOT/f) for f in ('reranking/msmarco_v2_documents.py','reranking/jev_compare.py','reranking/monobert.py','reranking/jev.py','reranking/run.py','tools/stage_artifacts.py')},
           'timing_scope':'reranking includes tokenizer setup, task preparation, inference/retries and output; excludes input verification and evaluation; query percentiles exclude shared preparation',
@@ -191,8 +305,8 @@ def execute(args,service_factory=PinnedService):
           'input_usd_per_million':args.input_usd_per_million,'output_usd_per_million':args.output_usd_per_million,'pricing_source':args.pricing_source}
     save(dest/'attempt-manifest.json',meta);service=None;start=time.perf_counter()
     try:
-        parts,full=prepare_tasks(runs,queries,docs,tokenizer_for(args))
-        tasks=parts if args.command=='jev-passages' else full
+        if args.command=='jev-passages':tasks=prepare_tasks(runs,queries,docs,tokenizer_for(args))[0]
+        else:tasks=large_tasks(args,runs,queries,docs)
         expected=pre['conditions'][args.command]['scoring_calls']
         if sum(map(len,tasks.values()))!=expected:raise ValueError('preflight task count mismatch')
         preparation=time.perf_counter()-start
@@ -213,7 +327,7 @@ def execute(args,service_factory=PinnedService):
                     query_p50_seconds=percentile([r['seconds'] for r in timings],.5),query_p95_seconds=percentile([r['seconds'] for r in timings],.95),
                     scoring_calls=len(service.rows),api_attempts=len(service.attempts),failed_api_attempts=sum(r['status']=='failed' for r in service.attempts),
                     models_returned=sorted({r['response']['model'] for r in service.rows}),run_sha256=sha(dest/'run.trec'),
-                    content_policy='all overlapping decoded BERT windows, MaxP' if args.command=='jev-passages' else 'complete original canonical document, one score',
+                    content_policy='all overlapping decoded BERT windows, MaxP' if args.command=='jev-passages' else 'original-text overlapping large windows, MaxP; frozen provider-validated boundaries',
                     coverage_fraction=1.0,truncated_documents=0,**accounting(service.rows,args.input_usd_per_million,args.output_usd_per_million))
         meta['cache_mode']='all-cached' if meta['cache_hits']==len(service.rows) else ('mixed' if meta['cache_hits'] else 'uncached')
         meta['metrics']=evaluate(args.input,dest,runs)
@@ -236,7 +350,7 @@ def execute(args,service_factory=PinnedService):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['prepare','preflight','jev-passages','jev-full'])
+    p.add_argument('command',choices=['prepare','preflight','validate-windows','jev-passages','jev-large-windows'])
     p.add_argument('--data',type=Path,default=ROOT/'.cache/msmarco-v2-dl2021')
     p.add_argument('--input',type=Path,default=ROOT/'reranking/results/msmarco-v2-dl2021-documents/input')
     p.add_argument('--model-cache',type=Path,default=ROOT/'.cache/monobert-model')
@@ -255,6 +369,7 @@ def main():
         if not args.results_dir or not args.cache:p.error('results and cache required')
         load_env(args.env_root)
         if not args.cache_only and not os.environ.get('TYPESAFE_API_KEY'):p.error('TYPESAFE_API_KEY missing')
-        execute(args)
+        if args.command=='validate-windows':validate_windows(args)
+        else:execute(args)
 
 if __name__=='__main__':main()
