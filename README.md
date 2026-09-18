@@ -1,6 +1,12 @@
-# JEV Passage Reranking Comparisons
+# JEV Reranking Comparisons
 
-This repository compares **JEV pointwise reranking against monoBERT** on the
+The overall goal is to test whether **JEV's general “intelligence” can match the
+reranking performance of specialist models** such as monoBERT, while measuring
+the time and cost required. Here, matching performance means measured ranking
+quality on shared candidates and judgments, rather than a claim about general
+intelligence itself.
+
+The main benchmark compares **JEV pointwise reranking against monoBERT** on the
 **MS MARCO v1 / TREC Deep Learning 2019 passage reranking task**, evaluated with
 **NIST human relevance judgments**. Given a query and a fixed set of candidate
 passages, each model scores the passages and sorts them by relevance. We measure
@@ -70,13 +76,18 @@ for all metrics, per-query changes, timing boundaries and raw evidence.
 - **monoBERT:** `castorini/monobert-large-msmarco` scores each query–passage pair
   locally. This is the baseline for the passage task.
 - **JEV matched passage text:** pointwise Noul scoring uses the decoded passage
-  text supplied through monoBERT's tokenizer.
-- **JEV original passage text:** the same pointwise JEV method uses the original
-  supplied passage, preserving its text representation.
+  text from the same token windows used by monoBERT. This controls the amount of
+  evidence available in each scoring call.
+- **JEV original passage text:** the same pointwise JEV method uses the supplied
+  passage as written, preserving its original casing and spacing. “Original”
+  means the dataset passage, not the complete source web article.
 
-All passages fit one BERT window, with no truncation. These JEV conditions compare
-text normalization, **not larger context coverage**, and neither supplies the
-complete source web article. MS MARCO is monoBERT's training domain; JEV's training
+Matching windows is intended to remove the advantage of JEV seeing an entire
+article at once when it exceeds monoBERT's input window. In this MS MARCO run,
+all supplied passages fit one BERT window, with no truncation, so both conditions
+have full passage coverage. Their measured difference is text normalization,
+**not larger context coverage**. The WSJ comparison below separately tests
+matched passage windows versus complete articles. MS MARCO is monoBERT's training domain; JEV's training
 exposure is unknown, so equal training conditions are not established.
 
 Start with the [passage benchmark protocol and run commands](reranking/msmarco.md).
@@ -91,7 +102,9 @@ checkpoint result is claimed for this passage benchmark.
 
 ## Secondary benchmark: WSJ document reranking
 
-The WSJ/TREC transfer benchmark uses 50 topics and saved lexical candidates.
+This secondary benchmark is based on the **TREC-1 WSJ collection** and uses
+50 topics. We run **our own retrieval step**, using the JASSjr-derived lexical
+engine with BM25 and query expansion, then freeze its candidates for reranking.
 Its stage-1 baseline is fixed at **MAP 0.2521 before all reranking**, independently
 of the monoBERT reference above. Its metrics cannot be compared directly with the
 passage task because the collection, queries and judgments differ.
@@ -113,8 +126,12 @@ Higher is better for all three metrics; full reports also include Rprec and bpre
 
 Pointwise JEV scores the top 100 candidates using Noul. The passage method uses
 the identical windows supplied to monoBERT and takes the highest passage score
-for each document (MaxP). The complete-document method scores the entire parsed
-article once. Both use JEV 1.13.0 and eight concurrent calls per query; see the
+for each document (MaxP). This gives both models the same evidence per call and
+removes JEV's advantage of seeing a long article all at once. monoBERT still
+covers the article across multiple windows; it does not simply discard the tail.
+The complete-document method instead lets JEV score the entire parsed article
+in one call, testing the benefit of that broader context separately. Both JEV
+methods use JEV 1.13.0 and eight concurrent calls per query; see the
 [implementation and run commands](reranking/jev-comparison.md).
 
 The Noul duo experiment takes the top 20 from the complete-document pointwise
