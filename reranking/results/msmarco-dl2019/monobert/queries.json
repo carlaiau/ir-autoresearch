@@ -1,0 +1,260 @@
+[
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "19335",
+    "seconds": 20.046892957994714
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "47923",
+    "seconds": 25.77376891602762
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "87181",
+    "seconds": 22.586155124939978
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "87452",
+    "seconds": 19.787643166957423
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "104861",
+    "seconds": 24.931591250002384
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "130510",
+    "seconds": 20.416600750060752
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "131843",
+    "seconds": 20.705699667101726
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "146187",
+    "seconds": 22.87497541704215
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "148538",
+    "seconds": 26.109062417177483
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "156493",
+    "seconds": 22.297907874919474
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "168216",
+    "seconds": 25.587560249958187
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "182539",
+    "seconds": 23.342091999948025
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "183378",
+    "seconds": 22.14957933407277
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "207786",
+    "seconds": 23.81697604106739
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "264014",
+    "seconds": 23.515055125113577
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "359349",
+    "seconds": 27.782891999930143
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "405717",
+    "seconds": 22.463440500199795
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "443396",
+    "seconds": 20.835662541911006
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "451602",
+    "seconds": 20.053652917034924
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "489204",
+    "seconds": 26.451092540984973
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "490595",
+    "seconds": 21.53348833299242
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "527433",
+    "seconds": 21.73371316702105
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "573724",
+    "seconds": 20.631262582959607
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "833860",
+    "seconds": 21.75362587510608
+  },
+  {
+    "model_forward_calls": 1,
+    "passage_scoring_calls": 5,
+    "qid": "855410",
+    "seconds": 0.11676070909015834
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "915593",
+    "seconds": 25.068989499937743
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "962179",
+    "seconds": 21.189758374821395
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1037798",
+    "seconds": 22.60362241603434
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1063750",
+    "seconds": 26.241045624949038
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1103812",
+    "seconds": 21.217596707865596
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1106007",
+    "seconds": 30.850194083992392
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1110199",
+    "seconds": 27.48471112502739
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1112341",
+    "seconds": 21.017028624890372
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1113437",
+    "seconds": 20.87200408312492
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1114646",
+    "seconds": 20.726163750048727
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1114819",
+    "seconds": 20.684794208034873
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1115776",
+    "seconds": 23.687357042217627
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1117099",
+    "seconds": 23.94053120794706
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1121402",
+    "seconds": 26.910842375131324
+  },
+  {
+    "model_forward_calls": 5,
+    "passage_scoring_calls": 37,
+    "qid": "1121709",
+    "seconds": 1.1985406670719385
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1124210",
+    "seconds": 32.19034874998033
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1129237",
+    "seconds": 28.04629437508993
+  },
+  {
+    "model_forward_calls": 125,
+    "passage_scoring_calls": 1000,
+    "qid": "1133167",
+    "seconds": 20.650165291968733
+  }
+]

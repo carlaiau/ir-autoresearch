@@ -1,0 +1,11 @@
+{
+  "batch_and_token_counters_verified": true,
+  "candidate_pairs": 41042,
+  "coverage_fraction": 1.0,
+  "covered_tokens": 3060170,
+  "pairs_changed_by_decode_normalization": 40804,
+  "pairs_needing_multiple_windows": 0,
+  "ranking_reconstructed": true,
+  "scoring_windows": 41042,
+  "status": "passed"
+}
