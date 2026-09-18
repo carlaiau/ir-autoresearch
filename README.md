@@ -13,14 +13,14 @@ all grades; MAP, P@10 and recip_rank treat only grades 2–3 as relevant.
 
 ### Results
 
-| Method | Source | nDCG@10 | MAP | P@10 | recip_rank |
-| --- | --- | ---: | ---: | ---: | ---: |
-| BM25, no reranking (`bm25base_p`) | Paper, Table 4 | 0.5058 | 0.3013 | — | 0.7036 |
-| monoBERT | Our local implementation | 0.7177 | 0.4488 | **0.6233** | 0.8717 |
-| JEV matched passage text | Our run | 0.6825 | **0.4748** | 0.6116 | 0.8594 |
-| JEV original passage text | Our run | 0.6835 | 0.4729 | 0.6163 | 0.8447 |
-| IDST BERT (`idst_bert_pr2`) | Paper, Table 4 | **0.7379** | 0.4565 | — | **0.8818** |
-| TU Vienna neural (`TUW19-p3-re`) | Paper, Table 4 | 0.6746 | 0.4113 | — | 0.8568 |
+| Method | Source | nDCG@10 | MAP | P@10 | recip_rank | Query median (reranking) | Estimated API cost (USD) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| BM25, no reranking (`bm25base_p`) | Paper, Table 4 | 0.5058 | 0.3013 | — | 0.7036 | — | — |
+| monoBERT | Our local implementation | 0.7177 | 0.4488 | **0.6233** | 0.8717 | 22.46 s | $0 hosted API |
+| JEV matched passage text | Our run | 0.6825 | **0.4748** | 0.6116 | 0.8594 | 37.46 s | $0.762991 |
+| JEV original passage text | Our run | 0.6835 | 0.4729 | 0.6163 | 0.8447 | 38.08 s | $0.761027 |
+| IDST BERT (`idst_bert_pr2`) | Paper, Table 4 | **0.7379** | 0.4565 | — | **0.8818** | — | — |
+| TU Vienna neural (`TUW19-p3-re`) | Paper, Table 4 | 0.6746 | 0.4113 | — | 0.8568 | — | — |
 
 Published rows come from [Table 4 of the TREC DL 2019 overview](https://trec.nist.gov/pubs/trec28/papers/OVERVIEW.DL.pdf#page=9)
 and are historical references, not local reproductions or part of our paired
@@ -29,16 +29,13 @@ verified original ranking of our candidates. The two published neural runs are
 classified as reranking; their exact candidate identity has not been audited
 against our manifest. `recip_rank` uses the paper's NIST MRR,
 not its separate MS MARCO MRR. P@10 is not reported there. Bold marks the highest
-reported value in each column among the displayed methods.
+reported effectiveness value in each column among the displayed methods.
 
 P@10 measures precision in the first ten results; recip_rank averages the
-reciprocal rank of the first relevant result. Higher is better for all metrics.
+reciprocal rank of the first relevant result. Higher effectiveness is better;
+lower time and cost are better. API costs are per complete run, not per query;
+— means unavailable or not applicable. Local compute is not included in API cost.
 Against our local monoBERT, JEV improves MAP but has lower observed nDCG@10.
-
-| Method | Total reranking | Query median | Estimated API cost (USD) |
-| --- | ---: | ---: | ---: |
-| JEV matched passage text | 1,633 s | 37.46 s | $0.762991 |
-| JEV original passage text | 1,575 s | 38.08 s | $0.761027 |
 
 See the [full results and audits](reranking/results/msmarco-dl2019/results.md).
 
@@ -78,13 +75,13 @@ supplied ranking. Its observed scores also exceed the three selected published
 references below; those comparisons are descriptive, without paired significance
 tests against the published systems.
 
-| Method | Evidence | nDCG@10 | MAP | P@10 | recip_rank |
-| --- | --- | ---: | ---: | ---: | ---: |
-| **JEV large-window MaxP** | Measured | **0.7535** | **0.2790** | **0.8930** | **1.0000** |
-| PASH `pash_doc_r3` | Published | 0.7164 | 0.2672 | 0.8526 | 0.9772 |
-| BERT `CIP_run2` | Published | 0.6783 | 0.2478 | 0.8140 | 0.9373 |
-| BERT MaxP `CIP_run3` | Published | 0.6668 | 0.2457 | 0.8175 | 0.9567 |
-| Supplied ranking | Locally evaluated | 0.5116 | 0.2126 | 0.6684 | 0.8367 |
+| Method | Evidence | nDCG@10 | MAP | P@10 | recip_rank | Query median (reranking) | Estimated API cost (USD) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **JEV large-window MaxP** | Measured | **0.7535** | **0.2790** | **0.8930** | **1.0000** | 4.81 s | $1.762336 |
+| PASH `pash_doc_r3` | Published | 0.7164 | 0.2672 | 0.8526 | 0.9772 | — | — |
+| BERT `CIP_run2` | Published | 0.6783 | 0.2478 | 0.8140 | 0.9373 | — | — |
+| BERT MaxP `CIP_run3` | Published | 0.6668 | 0.2457 | 0.8175 | 0.9567 | — | — |
+| Supplied ranking | Locally evaluated | 0.5116 | 0.2126 | 0.6684 | 0.8367 | — | — |
 
 Published references come from the [TREC 2021 overview, Table 2](https://www.microsoft.com/en-us/research/uploads/prod/2022/05/trec2021-deeplearning-overview-final.pdf)
 and official NIST summaries for [PASH](https://pages.nist.gov/trec-browser/trec30/deep/results/#pash_doc_r3),
@@ -92,15 +89,6 @@ and official NIST summaries for [PASH](https://pages.nist.gov/trec-browser/trec3
 [BERT MaxP](https://pages.nist.gov/trec-browser/trec30/deep/results/#cip_run3).
 PASH is a multistage ensemble; the BERT runs use different training and passage
 aggregation. These are published systems, not locally reproduced checkpoints.
-
-| Measured method | Scoring API calls | Total reranking | Query median | Estimated API cost (USD) |
-| --- | ---: | ---: | ---: | ---: |
-| JEV large-window MaxP | 6,090 | 309.16 s | 4.81 s | $1.762336 |
-
-This is one uncached JEV 1.13.0 run with eight workers per query and no failed
-scoring attempts. Context validation added 784.96 s and $1.221350 in successful
-API usage, separately from scoring. Local compute, failed validation charges,
-supplied retrieval time, and comparable published-system timing/cost are unknown.
 
 The primary paired comparison against the supplied ranking improves nDCG@10 by
 0.2419. A recip_rank of 1.0000 means the first result is relevant for every query, not
@@ -114,25 +102,19 @@ This uses the TREC-1 WSJ collection and 50 topics, with our own JASSjr-derived
 BM25 and query-expansion retrieval step. Its saved candidates and stage-1
 MAP 0.2521 baseline are fixed. Scores are separate from the passage benchmark.
 
-| Method | MAP | P@10 | recip_rank |
-| --- | ---: | ---: | ---: |
-| [JEV complete document](reranking/results/jev-full-documents-top100-20260918/results.md) | **0.3055** | **0.6340** | 0.8063 |
-| [JEV passage MaxP](reranking/results/jev-passages-maxp-top100-20260918-retry/results.md) | 0.3053 | 0.6000 | **0.8457** |
-| [monoBERT passage MaxP](reranking/results/monobert-maxp-top100-20260918/results.md) | 0.2693 | 0.4960 | 0.6715 |
-| [Stage 1: BM25 + query expansion](stage1/results/integrated-main-20260918/results.md) | 0.2521 | 0.4460 | 0.6271 |
+| Method | MAP | P@10 | recip_rank | Query median (reranking) | Estimated API cost (USD) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| [JEV complete document](reranking/results/jev-full-documents-top100-20260918/results.md) | **0.3055** | **0.6340** | 0.8063 | 4.02 s | $0.328312 |
+| [JEV passage MaxP](reranking/results/jev-passages-maxp-top100-20260918-retry/results.md) | 0.3053 | 0.6000 | **0.8457** | 14.98 s | $0.605227 |
+| [monoBERT passage MaxP](reranking/results/monobert-maxp-top100-20260918/results.md) | 0.2693 | 0.4960 | 0.6715 | 30.27 s | $0 hosted API |
+| [Stage 1: BM25 + query expansion](stage1/results/integrated-main-20260918/results.md) | 0.2521 | 0.4460 | 0.6271 | — | — |
 
 Pointwise methods rerank the top 100 documents. Passage MaxP gives JEV and
 monoBERT identical windows and uses each document's highest passage score.
 Both cover the article across windows; only complete-document JEV sees it all
 in one call.
 
-| Method | Total reranking | Query median | Estimated API cost (USD) |
-| --- | ---: | ---: | ---: |
-| JEV complete document | 211 s | 4.02 s | $0.328312 |
-| JEV passage MaxP | 768 s | 14.98 s | $0.605227 |
-
-These are single uncached measurements; local compute and failed-request charges are
-unknown. Settings are exploratory on these topics. See the
+See the
 [paired report](reranking/results/jev-comparison-20260918.md) and
 [implementation](reranking/jev-comparison.md) for usage and timing details.
 
