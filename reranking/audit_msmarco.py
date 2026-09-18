@@ -183,6 +183,8 @@ def main():
         current = json.loads((directory/'metrics-per-query.json').read_text())
         if current.keys() != reference.keys() or current.keys() != queries.keys():
             raise ValueError('paired query IDs mismatch')
+        if any(current[q]['recall_1000'] != reference[q]['recall_1000'] for q in queries):
+            raise ValueError('reranking changed recall of the complete candidate set')
         comparisons[method] = {
             'metrics': {m: statistics([current[q][m]-reference[q][m] for q in queries]) for m in METRICS},
             'per_query': [{'qid': q, 'delta': {m: round(current[q][m]-reference[q][m], 6) for m in METRICS}} for q in queries],

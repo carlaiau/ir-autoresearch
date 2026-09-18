@@ -76,5 +76,19 @@ reference run. Failed attempts remain preserved; cached-only replay requires
 model files and response caches remain uncommitted. New experiment evidence goes
 under `reranking/results/msmarco-dl2019/`.
 
+## Measured monoBERT reference
+
+The [completed baseline](results/msmarco-dl2019/monobert/results.md) scored all
+41,042 pairs: nDCG@10 **0.7177**, MAP **0.4488**, P@10 **0.6233**.
+Reranking took **969.83 s**; query p50/p95 were **22.46 / 28.02 s**, excluding
+shared setup. These are one-run measurements, not repeated benchmark medians.
+
+The [independent audit](results/msmarco-dl2019/monobert/audit.json) confirmed
+full coverage and reconstructed every ranking. All candidates fit a single
+window; **none** needed MaxP across multiple windows. BERT decode normalization
+changes the supplied text for 40,804 pairs. Consequently the two JEV conditions
+test decoded versus original text representation, not a long-context advantage.
+The JEV comparisons remain pending until their complete evidence is recorded.
+
 Run `bash tests/msmarco.sh`, `bash tests/monobert.sh`, `bash tests/jev_compare.sh`,
 `bash tests/two_stage.sh` and `./tests/smoke.sh` before the experiment.
