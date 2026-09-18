@@ -103,8 +103,7 @@ API usage, separately from scoring. Local compute, failed validation charges,
 supplied retrieval time, and comparable published-system timing/cost are unknown.
 
 The primary paired comparison against the supplied ranking improves nDCG@10 by
-0.2419 (95% bootstrap interval 0.1934–0.2927; randomization p < 0.0001).
-A recip_rank of 1.0000 means the first result is relevant for every query, not
+0.2419. A recip_rank of 1.0000 means the first result is relevant for every query, not
 that every result has the highest relevance grade. JEV training exposure is unknown.
 See the [full results and audit](reranking/results/msmarco-v2-dl2021-documents/results.md)
 and [protocol and reproduction](reranking/msmarco-v2-documents.md).
@@ -146,7 +145,11 @@ read-only history.
 
 ## Inspiration and provenance
 
-The experiment workflow draws on [karpathy/autoresearch](https://github.com/karpathy/autoresearch)
-(MIT); the WSJ retrieval engine derives from [andrewtrotman/JASSjr](https://github.com/andrewtrotman/JASSjr)
-(BSD-2-Clause). This project is MIT-licensed except for upstream-derived code
+The experiment workflow draws on 
+- [karpathy/autoresearch](https://github.com/karpathy/autoresearch)
+(MIT); 
+- the WSJ retrieval engine derives from [andrewtrotman/JASSjr](https://github.com/andrewtrotman/JASSjr)
+(BSD-2-Clause).
+
+This project is MIT-licensed except for upstream-derived code
 under its respective licenses. See [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
